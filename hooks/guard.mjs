@@ -23,7 +23,7 @@ const READ_WORDS = new Set([
 
 const WRITE_WORDS = new Set([
   "create", "update", "delete", "write", "save", "send", "post", "reply", "forward", "merge", "push",
-  "schedule", "respond", "share", "unshare", "add", "remove", "resolve", "unresolve", "submit", "mark",
+  "respond", "share", "unshare", "add", "remove", "resolve", "unresolve", "submit", "mark",
   "trash", "untrash", "move", "execute", "do", "call", "fork", "star", "dismiss",
   "approve", "trigger", "rerun", "comment", "react", "reaction", "upload", "invite", "archive", "edit",
   "set", "cancel", "publish", "transfer", "enable", "disable", "restore", "retire", "rename", "assign",

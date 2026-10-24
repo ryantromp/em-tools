@@ -75,3 +75,14 @@ test("CLI exits 2 with reason on a write tool", () => {
   const bad = spawnSync("node", ["hooks/guard.mjs"], { input: "not json" });
   assert.equal(bad.status, 2);
 });
+
+test("pagerduty reads pass, writes and per-person tools are blocked; incident.io blocked until verified", () => {
+  const on = [...all, "pagerduty", "incident_io"];
+  assert.equal(decide("mcp__plugin_em-tools_pagerduty__list_incidents", "plugin", allowlist, on), null);
+  assert.equal(decide("mcp__plugin_em-tools_pagerduty__list_oncalls", "plugin", allowlist, on), null);
+  for (const t of ["create_incident", "manage_incidents", "add_note_to_incident", "create_schedule_override", "list_users", "get_responder_load_metrics"]) {
+    assert.match(decide(`mcp__plugin_em-tools_pagerduty__${t}`, "plugin", allowlist, on), /blocked/, t);
+  }
+  assert.match(decide("mcp__plugin_em-tools_incident-io__list_incidents", "plugin", allowlist, on), /blocked/);
+  assert.match(decide("mcp__plugin_em-tools_pagerduty__list_incidents", "plugin", allowlist, all), /not enabled/);
+});

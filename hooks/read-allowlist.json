@@ -131,6 +131,54 @@
         "search_paths_work_iq"
       ],
       "_note": "accept_eula is blocked on purpose: the EM accepts the Work IQ licence terms themselves."
+    },
+    "pagerduty": {
+      "integration": [
+        "pagerduty"
+      ],
+      "_note": "Read tools from PagerDuty's official server (pagerduty_mcp/tools/__init__.py, checked 2026-10-24). Per-person tools (list_users, get_user_data, list_team_members, get_responder_metrics, get_responder_load_metrics) are left out on purpose.",
+      "allow": [
+        "list_incidents",
+        "get_incident",
+        "get_outlier_incident",
+        "get_past_incidents",
+        "get_related_incidents",
+        "list_incident_notes",
+        "list_alerts_from_incident",
+        "get_alert_from_incident",
+        "list_alert_grouping_settings",
+        "get_alert_grouping_setting",
+        "list_change_events",
+        "get_change_event",
+        "list_service_change_events",
+        "list_incident_change_events",
+        "list_services",
+        "get_service",
+        "get_technical_service_dependencies",
+        "list_teams",
+        "get_team",
+        "list_schedules",
+        "get_schedule",
+        "list_schedule_users",
+        "list_oncalls",
+        "list_log_entries",
+        "get_log_entry",
+        "list_escalation_policies",
+        "get_escalation_policy",
+        "list_priorities",
+        "get_incident_metrics_by_service",
+        "get_incident_metrics_by_team",
+        "get_incident_metrics_all",
+        "list_business_services",
+        "get_business_service_dependencies"
+      ]
+    },
+    "incident-io": {
+      "integration": [
+        "incident_io"
+      ],
+      "_note": "incident.io publishes no tool list we could verify (2026-10-24), so every tool is blocked until read tools are confirmed and added here. Use an incident.io export meanwhile.",
+      "allow": []
     }
   }
 }
