@@ -2,7 +2,8 @@
 // em-tools lint. Fails on:
 //   1. em-dashes anywhere in the repo,
 //   2. send, post or write calls in skills, examples and the server, and write tools on the read allowlist,
-//   3. per-person ranking or per-person numbers in team-level outputs.
+//   3. per-person ranking or per-person numbers in team-level outputs,
+//   4. a missing HR and legal line, and verdict language in underperformance records.
 //
 // Usage: scripts/lint   (exit 0 clean, 1 on any finding)
 
@@ -91,8 +92,16 @@ for (const f of examples) {
 const NEEDS_HR = /\b(underperform\w*|wellbeing|well-being|burnout|burned out|governance kit|usage policy)\b/i;
 for (const f of examples) {
   const text = readFileSync(join(ROOT, f), "utf8");
-  const needs = f.startsWith("examples/review-packet/") || NEEDS_HR.test(text);
+  const needs = f.startsWith("examples/review-packet/") || f.startsWith("examples/underperformance-record/") || NEEDS_HR.test(text);
   if (needs && !/check with your HR or legal team/i.test(text)) report(f, 0, "missing-hr-legal-line", "Add: check with your HR or legal team");
+}
+
+// 5. No verdicts in underperformance records --------------------------------------------------
+const VERDICT = /\b(risk score|risk of (failing|leaving)|likely to (fail|leave|improve)|recommend(ed|s)? (a |starting a )?(PIP|performance improvement plan)|should be (put on|placed on) a (PIP|performance improvement plan)|(is|are) (an? )?(low|poor|under)[- ]?performer|grounds for (dismissal|termination))\b/i;
+for (const f of examples.filter((x) => x.startsWith("examples/underperformance-record/"))) {
+  // A refusal may quote the question ("I can't say whether X is likely to fail"), so it is not a verdict.
+  const REFUSAL = /\b(can't|cannot|won't|will not|whether)\b/i;
+  lines(f).forEach((l, i) => VERDICT.test(l) && !REFUSAL.test(l) && report(f, i + 1, "verdict-in-record", l));
 }
 
 // Report ----------------------------------------------------------------------------------

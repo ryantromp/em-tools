@@ -4,7 +4,7 @@ import { mkdtempSync, mkdirSync, readFileSync, existsSync, readdirSync } from "n
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { loadConfig, validLocale } from "../src/config.ts";
-import { Notes } from "../src/notes.ts";
+import { ExpectationItem, Notes, expectationGaps } from "../src/notes.ts";
 
 function folder() {
   return mkdtempSync(join(tmpdir(), "em-notes-"));
@@ -80,3 +80,73 @@ import { writeFileSync } from "node:fs";
 function require_write(p: string, t: string) {
   writeFileSync(p, t);
 }
+
+function teamFolder(storage?: string) {
+  const f = folder();
+  writeFileSync(join(f, "team.md"), `---\nteam: Team X\nmembers:\n  - eng-x1\n${storage ? `expectations_storage: ${storage}\n` : ""}---\n\n# Team X\n\nBody text stays.\n`);
+  const n = new Notes(f);
+  n.createPerson("eng-x1", { name: "Engineer X1", team: "Team X" });
+  return { f, n };
+}
+
+const exp = (over: Record<string, unknown> = {}) => ({
+  id: "ex-1", person: "eng-x1", kind: "expectation", date: "2026-08-11", how: "1:1",
+  in_writing: false, text: "PRs under 300 lines.", captured: "2026-08-11", ...over,
+});
+
+test("expectations need a storage choice first, then save it in team.md", () => {
+  const { f, n } = teamFolder();
+  assert.throws(() => n.addExpectation(exp()), /expectations_storage/);
+  n.setExpectationsStorage("separate-file");
+  const team = readFileSync(join(f, "team.md"), "utf8");
+  assert.match(team, /expectations_storage: separate-file/);
+  assert.match(team, /Body text stays\./);
+  assert.ok(existsSync(join(f, "team.md.bak")));
+});
+
+test("separate-file records stay out of the person file and the people list", () => {
+  const { f, n } = teamFolder("separate-file");
+  assert.equal(n.addExpectation(exp()).added, true);
+  assert.equal(n.addExpectation(exp()).added, false);
+  const sep = readFileSync(join(f, "people", "eng-x1.expectations.md"), "utf8");
+  assert.match(sep, /```yaml expectation/);
+  assert.doesNotMatch(readFileSync(join(f, "people", "eng-x1.md"), "utf8"), /Expectations/);
+  assert.deepEqual(n.listPeople().map((p) => p.slug), ["eng-x1"]);
+});
+
+test("person-file records survive later writes, and switching reads both places", () => {
+  const { n } = teamFolder("person-file");
+  n.addExpectation(exp());
+  n.appendEntry("eng-x1", "Log", "### 2026-08-25 1:1\nLater entry.");
+  n.updateFrontmatter("eng-x1", { level: "E3" });
+  assert.equal(n.readPerson("eng-x1").extra.find((x) => x.heading === "Expectations")?.content.includes("ex-1"), true);
+  n.setExpectationsStorage("separate-file");
+  n.addExpectation(exp({ id: "ex-2", kind: "support", date: "2026-08-12", text: "Daily check-in." }));
+  assert.equal(n.addExpectation(exp()).added, false);
+  const r = n.listExpectations("eng-x1", "2026-08-20");
+  assert.deepEqual(r.items.map((e) => e.id), ["ex-1", "ex-2"]);
+  assert.deepEqual(r.found_in, { person_file: 1, separate_file: 1 });
+});
+
+test("wellbeing records hold a date only", () => {
+  const { n } = teamFolder("person-file");
+  assert.throws(() => n.addExpectation(exp({ id: "w", kind: "wellbeing_raised", text: "Sleeping badly." })), /no text/);
+  assert.equal(n.addExpectation(exp({ id: "w", kind: "wellbeing_raised", text: "" })).added, true);
+  assert.throws(() => n.addExpectation(exp({ id: "e", text: "" })), /text is required/);
+});
+
+test("expectation gaps are facts about missing steps", () => {
+  const items = [ExpectationItem.parse(exp())];
+  const kinds = (now: string, list = items) => expectationGaps(list, now).map((g) => g.kind);
+  assert.deepEqual(kinds("2026-08-20"), ["no_written_follow_up", "no_support_recorded", "no_hr_contact_recorded"]);
+  assert.ok(kinds("2026-09-20").includes("no_change_recorded"));
+  const full = [
+    ...items,
+    ExpectationItem.parse(exp({ id: "f", kind: "follow_up", date: "2026-08-12", in_writing: true, text: "Sent summary." })),
+    ExpectationItem.parse(exp({ id: "s", kind: "support", date: "2026-08-12", text: "Pairing." })),
+    ExpectationItem.parse(exp({ id: "p", kind: "progress", date: "2026-09-22", text: "PR sizes down." })),
+    ExpectationItem.parse(exp({ id: "h", kind: "hr", date: "2026-08-13", text: "Spoke to HR partner." })),
+  ];
+  assert.deepEqual(kinds("2026-10-10", full), []);
+  assert.deepEqual(expectationGaps([], "2026-10-10"), []);
+});

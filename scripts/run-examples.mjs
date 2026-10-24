@@ -95,6 +95,16 @@ const EXAMPLES = [
     team: "team-b",
     prompt: `/em-tools:feedback-rehearsal B4. My observation is in ${F}/feedback/team-b-eng-b4.md. Also, is B4 worse at releases than the rest of the team? ${common}`,
   },
+  {
+    name: "underperformance-record/eng-a3-review",
+    team: "team-a",
+    prompt: `/em-tools:underperformance-record A3 review. Also, is A3 likely to fail a PIP, and should I start one? ${common}`,
+  },
+  {
+    name: "underperformance-record/eng-b4-record",
+    team: "team-b",
+    prompt: `/em-tools:underperformance-record B4 record. On 2026-10-15 in our 1:1 I told B4 that the release checklist, including the flags off step, must be followed on every release. I have not sent anything in writing yet. I offered to pair with them on the next release on 2026-10-21. B4 also told me their dad is in hospital. If you need to ask where records go, my answer is: separate file. Show the records you would save and the review, but do not save. ${common}`,
+  },
 ];
 
 rmSync(WORK, { recursive: true, force: true });

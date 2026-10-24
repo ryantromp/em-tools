@@ -606,7 +606,7 @@ channels:
 ${(team.chat === "slack" ? ["payments-eng", "payments-launch"] : ["Team B / General", "Team B / Releases"]).map((c) => `  - "${c}"`).join("\n")}
 ai_tools:
   - ${team.aiTool}
-${team.key === "team-a" ? "ladder: ladder.md\n" : ""}---
+${team.key === "team-a" ? "ladder: ladder.md\nexpectations_storage: separate-file\n" : ""}---
 
 # ${team.name}
 
@@ -735,6 +735,37 @@ write("feedback/team-b-eng-b4.md", `Observation from Manager B about Engineer B4
 B4 skipped the "flags off" step of the release checklist on 2026-10-14, so build 4.12 went out with the new checkout flag on, and we rolled it back two hours later. B4 seems distracted lately and is not really a team player. I need them to follow the checklist every release.
 `);
 
+// Team A keeps underperformance records in a separate file (expectations_storage above).
+// Team B has not chosen yet, so underperformance-record asks on first use. No random draws.
+const a3Records = [
+  { id: "exp-a3-2026-08-11", kind: "expectation", date: "2026-08-11", how: "1:1", in_writing: false, text: "PRs under 300 lines; ask for help after half a day stuck; update the ticket daily." },
+  { id: "fu-a3-2026-08-11", kind: "follow_up", date: "2026-08-11", how: "email summary after the 1:1", in_writing: true, text: "Sent the three expectations in writing." },
+  { id: "sup-a3-2026-08-11", kind: "support", date: "2026-08-11", how: "1:1", in_writing: false, text: "Checklist before merge; stopped the end-of-cycle push." },
+  { id: "wb-a3-2026-09-08", kind: "wellbeing_raised", date: "2026-09-08", how: "1:1", in_writing: false, text: "" },
+  { id: "sup-a3-2026-09-08", kind: "support", date: "2026-09-08", how: "1:1", in_writing: false, text: "Reminded of the employee assistance programme and flexible hours; offered to lighten on-call." },
+  { id: "prog-a3-2026-09-22", kind: "progress", date: "2026-09-22", how: "1:1", in_writing: false, text: "PR sizes are down. Still slow to ask for help." },
+  { id: "sup-a3-2026-09-22", kind: "support", date: "2026-09-22", how: "1:1", in_writing: false, text: "Daily 10-minute check-in for two weeks." },
+];
+const FENCE = "`".repeat(3);
+const expectationBlock = (r) => {
+  const fields = { id: r.id, person: "eng-a3", kind: r.kind, date: r.date, how: r.how, in_writing: r.in_writing, text: r.text, link: null, captured: r.date };
+  const lines = Object.entries(fields).map(([k, v]) => `${k}: ${v === null ? "null" : typeof v === "string" ? JSON.stringify(v) : v}`);
+  return `${FENCE}yaml expectation\n${lines.join("\n")}\n${FENCE}`;
+};
+write("notes/team-a/people/eng-a3.expectations.md", `---
+person: eng-a3
+record: expectations
+---
+
+# Engineer A3: expectations record
+
+Append-only. Facts and dates in the EM's words. Not a verdict.
+
+## Expectations
+
+${a3Records.map(expectationBlock).join("\n\n")}
+`);
+
 write("README.md", `# em-tools fixtures
 
 Synthetic data for two invented teams at an invented company, ExampleCo. Nothing here describes real people or real systems. Regenerate with \`node scripts/generate-fixtures.mjs\` (deterministic).
@@ -778,6 +809,6 @@ ${readme.join("\n")}
 | ai/ | AI tool usage by person and day (input only; outputs never show it per person) and monthly spend |
 | pagerduty/, incident-io/ | On-call shifts and pages: Team A in PagerDuty format (one weekly rotation), Team B in incident.io format (a weekly rotation and a 3-person release-duty rotation) |
 | feedback/ | Two EM observations written in the EM's own words, with judgement and coded words left in on purpose, for feedback-rehearsal |
-| notes/team-a/, notes/team-b/ | Each EM's notes folder: team.md, ladder.md (Team A only), one file per person, last week's update |
+| notes/team-a/, notes/team-b/ | Each EM's notes folder: team.md, ladder.md (Team A only), one file per person, last week's update. Team A keeps Engineer A3's expectations record in a separate file; Team B has not chosen where records go |
 `);
 console.log("fixtures written to", ROOT);
