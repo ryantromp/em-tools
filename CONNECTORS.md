@@ -19,11 +19,11 @@ Checked on 2026-10-23. See [docs/research.md](docs/research.md#4a-official-vendo
 | Jira | `jira` | Atlassian Rovo MCP `https://mcp.atlassian.com/v2/mcp?tools=all` | OAuth 2.1. A site admin may need to allow the Rovo MCP server and your domain | Generally available | one-on-one, review-packet, upward-update, team-delivery-health, dependency-register |
 | Linear | `linear` | `https://mcp.linear.app/mcp` | OAuth sign-in | Available | one-on-one, review-packet, upward-update, team-delivery-health, dependency-register |
 | Google Calendar | `google_calendar` | `https://calendarmcp.googleapis.com/mcp/v1` | OAuth through a Google Cloud project with the Calendar MCP API enabled. Requests the `calendar.readonly` scope | Preview (unverified) | one-on-one, team-delivery-health |
-| Slack | `slack` | `https://mcp.slack.com/mcp` | OAuth. A workspace admin must approve MCP access | Available | upward-update, review-packet, dependency-register |
+| Slack | `slack` | `https://mcp.slack.com/mcp` | OAuth. A workspace admin must approve MCP access | Available | upward-update, review-packet, dependency-register, postmortem-draft |
 | Outlook calendar | `outlook` | Microsoft Work IQ (`npx -y @microsoft/workiq mcp`) | Entra ID sign-in with tenant admin consent, and a Microsoft 365 Copilot licence per user. Accept the Work IQ licence terms yourself in a terminal; em-tools blocks `accept_eula` | Public preview | one-on-one, team-delivery-health |
-| Microsoft Teams | `teams` | Microsoft Work IQ (same server as Outlook) | Same as Outlook | Public preview | upward-update, review-packet, dependency-register |
-| PagerDuty | `pagerduty` | Hosted `https://mcp.pagerduty.com/mcp` (EU: `https://mcp.eu.pagerduty.com/mcp`) | OAuth; some setups need a pre-registered OAuth client, or a user API key header. The old local server is deprecated | Available | oncall-health |
-| incident.io | `incident_io` | Hosted `https://mcp.incident.io/mcp` | OAuth sign-in | Available; tool names not yet verified, so em-tools blocks all its tools for now | oncall-health (export until verified) |
+| Microsoft Teams | `teams` | Microsoft Work IQ (same server as Outlook) | Same as Outlook | Public preview | upward-update, review-packet, dependency-register, postmortem-draft |
+| PagerDuty | `pagerduty` | Hosted `https://mcp.pagerduty.com/mcp` (EU: `https://mcp.eu.pagerduty.com/mcp`) | OAuth; some setups need a pre-registered OAuth client, or a user API key header. The old local server is deprecated | Available | oncall-health, postmortem-draft |
+| incident.io | `incident_io` | Hosted `https://mcp.incident.io/mcp` | OAuth sign-in | Available; tool names not yet verified, so em-tools blocks all its tools for now | oncall-health, postmortem-draft (export until verified) |
 
 ### Gaps and fallbacks
 

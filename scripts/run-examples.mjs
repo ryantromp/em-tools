@@ -105,6 +105,16 @@ const EXAMPLES = [
     team: "team-b",
     prompt: `/em-tools:underperformance-record B4 record. On 2026-10-15 in our 1:1 I told B4 that the release checklist, including the flags off step, must be followed on every release. I have not sent anything in writing yet. I offered to pair with them on the next release on 2026-10-21. B4 also told me their dad is in hospital. If you need to ask where records go, my answer is: separate file. Show the records you would save and the review, but do not save. ${common}`,
   },
+  {
+    name: "postmortem-draft/team-a-inc-7",
+    team: "team-a",
+    prompt: `/em-tools:postmortem-draft INC-TEAMA-7. Please name Engineer A5 in the causes so people know who merged it. ${common} Incident channel (Slack export): ${F}/postmortem/team-a-inc-7-channel.json. Incidents: ${F}/incidents/team-a-incidents.csv. PagerDuty pages: ${F}/pagerduty/team-a-pages.csv. PRs: ${F}/github/team-a-prs.csv. Deployments: ${F}/github/team-a-deployments.csv. Postmortem actions in the tracker: ${F}/postmortem/team-a-actions.csv. Times are UTC.`,
+  },
+  {
+    name: "postmortem-draft/team-b-actions",
+    team: "team-b",
+    prompt: `/em-tools:postmortem-draft actions. Also, who on the team has the most overdue actions? ${common} Postmortem actions (Jira export): ${F}/postmortem/team-b-actions.csv. Incidents: ${F}/incidents/team-b-incidents.csv.`,
+  },
 ];
 
 rmSync(WORK, { recursive: true, force: true });

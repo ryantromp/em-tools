@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { aiAdoption, dora, meetingLoad, prFlow, quantile, suppression } from "../src/metrics.ts";
+import { actionAge, aiAdoption, dora, meetingLoad, prFlow, quantile, suppression } from "../src/metrics.ts";
 import { parseCsv } from "../src/csv.ts";
 
 test("quantile", () => {
@@ -171,4 +171,39 @@ test("on-call edge cases from review", async () => {
   // Named time zone with daylight saving: 08:30 UTC on 2026-07-01 is 09:30 in London (working hours).
   const tz = oncallHealth([{ rotation: "p", created_at: "2026-07-01T08:30:00Z", alert: "y", actionable: "true" }], shifts.map((s) => ({ ...s, start: "2026-06-29T00:00:00Z", end: "2026-07-06T00:00:00Z" })), { from: "2026-06-29", to: "2026-07-05", timeZone: "Europe/London" }) as any;
   assert.equal(tz.rotations[0].off_hours_share_pct, 0);
+});
+
+test("action age: open, overdue, bands, close time, no owners", () => {
+  const rows = [
+    { id: "a1", incident: "INC-1", title: "Add retry alert", owner_role: "on-call engineer", owner: "Engineer X1", created_at: "2026-07-15", due: "2026-08-15", completed_at: "" },
+    { id: "a2", incident: "INC-1", title: "Runbook", owner_role: "tech lead", created_at: "2026-07-15", due: "2026-07-30", completed_at: "2026-07-25" },
+    { id: "a3", incident: "INC-2", title: "Load test", owner_role: "team", created_at: "2026-10-01", due: "", completed_at: "2026-10-30" },
+    { id: "a4", incident: "INC-2", title: "No date", created_at: "" },
+  ];
+  const r = actionAge(rows, { now: "2026-10-19" });
+  assert.equal(r.open_actions, 2);
+  assert.equal(r.closed_actions, 1);
+  assert.equal(r.undated_rows, 1);
+  assert.equal(r.median_days_to_close, 10);
+  assert.equal(r.overdue_actions, 1);
+  assert.equal(r.no_due_date, 1);
+  assert.deepEqual(r.open_by_age, { "0-30 days": 1, "31-60 days": 0, "61-90 days": 0, "over 90 days": 1 });
+  assert.equal(r.open[0].id, "a1");
+  assert.equal(r.open[0].age_days, 96);
+  assert.equal(r.by_incident["INC-1"].oldest_open_age_days, 96);
+  assert.ok(!JSON.stringify(r).includes("Engineer X1"));
+});
+
+test("action age compares calendar days, not times of day", () => {
+  const rows = [
+    { id: "today", incident: "I", created_at: "2026-10-01T23:30:00Z", due: "2026-10-19" },
+    { id: "late", incident: "I", created_at: "2026-07-21T22:00:00Z", due: "2026-10-18T09:00:00Z" },
+  ];
+  const r = actionAge(rows, { now: "2026-10-19T12:00:00Z" });
+  const byId = Object.fromEntries(r.open.map((a) => [a.id, a]));
+  assert.equal(byId.today.overdue_days, null);
+  assert.equal(byId.today.age_days, 18);
+  assert.equal(byId.late.age_days, 90);
+  assert.equal(byId.late.overdue_days, 1);
+  assert.equal(r.open_by_age["61-90 days"], 1);
 });

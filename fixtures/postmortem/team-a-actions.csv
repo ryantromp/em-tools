@@ -1,0 +1,8 @@
+id,incident,title,owner_role,owner,created_at,due,completed_at,link
+ATL-PM-1,INC-TEAMA-7,Add a full-size batch load test to CI,tech lead,Engineer A2,2026-07-15,2026-08-15,,https://linear.example.com/ATL-PM-1
+ATL-PM-2,INC-TEAMA-7,Stream payout batches instead of loading them into memory,payments engineer,Engineer A6,2026-07-15,2026-09-30,,https://linear.example.com/ATL-PM-2
+ATL-PM-3,INC-TEAMA-7,Alert on payout worker restarts,on-call engineer,Engineer A1,2026-07-15,2026-07-31,2026-07-24,https://linear.example.com/ATL-PM-3
+ATL-PM-4,INC-TEAMA-7,Add a limit check on batch size config,payments engineer,Engineer A5,2026-07-15,2026-08-01,2026-07-30,https://linear.example.com/ATL-PM-4
+ATL-PM-5,INC-TEAMA-2,Document the payout batch rerun steps in the runbook,on-call engineer,Engineer A7,2026-08-03,2026-08-21,,https://linear.example.com/ATL-PM-5
+ATL-PM-6,INC-TEAMA-6,Page only after two failed retries,on-call engineer,,2026-08-05,,,https://linear.example.com/ATL-PM-6
+ATL-PM-7,INC-TEAMA-1,Add a dashboard for webhook queue depth,team,Engineer A3,2026-07-22,2026-08-05,2026-08-12,https://linear.example.com/ATL-PM-7

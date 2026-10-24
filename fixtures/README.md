@@ -41,5 +41,6 @@ Window: 2026-04-20 to 2026-10-16 (26 weeks). Calendar runs to 2026-10-30 so upco
 | incidents/ | Incident list per team |
 | ai/ | AI tool usage by person and day (input only; outputs never show it per person) and monthly spend |
 | pagerduty/, incident-io/ | On-call shifts and pages: Team A in PagerDuty format (one weekly rotation), Team B in incident.io format (a weekly rotation and a 3-person release-duty rotation) |
+| postmortem/ | One incident channel export per team (Team A Slack, Team B Teams) that names people and includes one blaming message on purpose, plus each team's postmortem actions with owner names that must not appear in outputs |
 | feedback/ | Two EM observations written in the EM's own words, with judgement and coded words left in on purpose, for feedback-rehearsal |
 | notes/team-a/, notes/team-b/ | Each EM's notes folder: team.md, ladder.md (Team A only), one file per person, last week's update. Team A keeps Engineer A3's expectations record in a separate file; Team B has not chosen where records go |
