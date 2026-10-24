@@ -102,3 +102,35 @@ test("dependency age in working days, items only", async () => {
   assert.equal(r.finished_tickets_without_blocked_history, 1);
   assert.ok(!JSON.stringify(r).includes("someone"));
 });
+
+test("on-call health per rotation, small rotations totals only, no people or dates", async () => {
+  const { oncallHealth } = await import("../src/metrics.ts");
+  const members = ["m1", "m2", "m3", "m4"];
+  const shifts: Array<Record<string, string>> = [];
+  const day = (n: number) => new Date(Date.UTC(2026, 8, 7 + n, 9)).toISOString();
+  for (let w = 0; w < 4; w++) shifts.push({ rotation: "primary", start: day(w * 7), end: day(w * 7 + 7), member: members[w] });
+  for (let d = 0; d < 6; d++) shifts.push({ rotation: "release", start: `2026-09-${String(7 + d).padStart(2, "0")}T09:00:00Z`, end: `2026-09-${String(7 + d).padStart(2, "0")}T21:00:00Z`, member: ["r1", "r2", "r3"][d % 3] });
+  const pages = [
+    { rotation: "primary", created_at: "2026-09-08T02:00:00Z", acknowledged_at: "2026-09-08T02:10:00Z", alert: "disk", actionable: "false" },
+    { rotation: "primary", created_at: "2026-09-08T03:00:00Z", acknowledged_at: "2026-09-08T03:04:00Z", alert: "disk", actionable: "false" },
+    { rotation: "primary", created_at: "2026-09-08T04:00:00Z", acknowledged_at: "2026-09-08T04:06:00Z", alert: "api 5xx", actionable: "true" },
+    { rotation: "primary", created_at: "2026-09-16T10:00:00Z", acknowledged_at: "2026-09-16T10:02:00Z", alert: "disk", actionable: "false" },
+    { rotation: "release", created_at: "2026-09-08T10:00:00Z", alert: "crash", actionable: "true" },
+  ];
+  const r = oncallHealth(pages, shifts, { from: "2026-09-07", to: "2026-10-04" });
+  const p = r.rotations.find((x) => x.rotation === "primary") as Record<string, any>;
+  const s = r.rotations.find((x) => x.rotation === "release") as Record<string, any>;
+  assert.equal(p.size, 4);
+  assert.equal(p.shift_length_hours, 168);
+  assert.equal(p.pages, 4);
+  assert.equal(p.off_hours_share_pct, 75);
+  assert.equal(p.windows_over_2_incidents, 1);
+  assert.equal(p.twelve_hour_windows, 56);
+  assert.equal(p.average_share_of_time_on_call_pct, 25);
+  assert.equal(p.top_alerts[0].alert, "disk");
+  assert.equal(p.top_alerts[0].unactionable, 3);
+  assert.equal(s.small_rotation, true);
+  assert.equal("windows_over_2_incidents" in s, false);
+  const text = JSON.stringify(r);
+  for (const m of [...members, "r1", "r2", "r3", "2026-09-14T09", "2026-09-07"]) assert.ok(!text.includes(m), `leaked ${m}`);
+});

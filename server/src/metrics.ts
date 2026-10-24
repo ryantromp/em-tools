@@ -476,3 +476,103 @@ export function dependencyAge(rows: Row[], opts: { now?: string; agingDays?: num
     ],
   };
 }
+
+// On-call health -----------------------------------------------------------------
+
+// Per rotation, never per person. Shift rows give coverage and rotation size; the member field is
+// only counted, never returned. Pages are compared per 12 on-call hours, the window the Google SRE
+// guidance (at most about 2 incidents per 12-hour shift) assumes, whatever the shift length.
+export function oncallHealth(pages: Row[], shifts: Row[], opts: { from?: string; to?: string; timezoneOffsetMinutes?: number; workdayStartHour?: number; workdayEndHour?: number } = {}) {
+  const offset = (opts.timezoneOffsetMinutes ?? 0) * 60_000;
+  const startH = opts.workdayStartHour ?? 9;
+  const endH = opts.workdayEndHour ?? 17;
+  const rotations = new Map<string, { members: Set<string>; shiftHours: number[]; coverage: Array<[number, number]> }>();
+  for (const s of shifts) {
+    const a = toDate(s.start);
+    const b = toDate(s.end);
+    if (!a || !b || b <= a) continue;
+    if (!inWindow(a, opts.from, opts.to)) continue;
+    const r = String(s.rotation ?? "unknown");
+    if (!rotations.has(r)) rotations.set(r, { members: new Set(), shiftHours: [], coverage: [] });
+    const rot = rotations.get(r)!;
+    if (s.member) rot.members.add(String(s.member).toLowerCase());
+    rot.shiftHours.push((b.getTime() - a.getTime()) / HOUR);
+    rot.coverage.push([a.getTime(), b.getTime()]);
+  }
+  const results = [];
+  for (const [name, rot] of rotations) {
+    const ps = pages.filter((p) => String(p.rotation ?? "unknown") === name && inWindow(toDate(p.created_at), opts.from, opts.to));
+    const oncallHours = rot.shiftHours.reduce((x, y) => x + y, 0);
+    const offHours = ps.filter((p) => {
+      const d = new Date(toDate(p.created_at)!.getTime() + offset);
+      const h = d.getUTCHours() + d.getUTCMinutes() / 60;
+      return d.getUTCDay() === 0 || d.getUTCDay() === 6 || h < startH || h >= endH;
+    }).length;
+    // 12-hour windows across covered time, counting windows with more than 2 pages.
+    let windows = 0;
+    let busyWindows = 0;
+    for (const [a, b] of rot.coverage) {
+      for (let t = a; t < b; t += 12 * HOUR) {
+        windows++;
+        const n = ps.filter((p) => {
+          const c = toDate(p.created_at)!.getTime();
+          return c >= t && c < Math.min(t + 12 * HOUR, b);
+        }).length;
+        if (n > 2) busyWindows++;
+      }
+    }
+    const ack = ps
+      .map((p) => (toDate(p.acknowledged_at) && toDate(p.created_at) ? (toDate(p.acknowledged_at)!.getTime() - toDate(p.created_at)!.getTime()) / 60_000 : null))
+      .filter((x): x is number => x !== null);
+    const noisy: Record<string, { count: number; unactionable: number }> = {};
+    for (const p of ps) {
+      const k = String(p.alert ?? p.title ?? "untitled");
+      noisy[k] ??= { count: 0, unactionable: 0 };
+      noisy[k].count++;
+      if (p.actionable !== undefined && !toBool(p.actionable)) noisy[k].unactionable++;
+    }
+    const coveredFrom = Math.min(...rot.coverage.map(([a]) => a));
+    const coveredTo = Math.max(...rot.coverage.map(([, b]) => b));
+    const spanWeeks = opts.from && opts.to
+      ? Math.max(1, (new Date(opts.to).getTime() - new Date(opts.from).getTime() + DAY) / (7 * DAY))
+      : Math.max(1, (coveredTo - coveredFrom) / (7 * DAY));
+    const size = rot.members.size;
+    const small = size > 0 && size < MIN_GROUP_SIZE;
+    const base = {
+      rotation: name,
+      size,
+      shift_length_hours: round(quantile(rot.shiftHours, 0.5)),
+      pages: ps.length,
+      pages_per_week: round(ps.length / spanWeeks, 1),
+      off_hours_share_pct: ps.length ? round((offHours / ps.length) * 100, 0) : null,
+      top_alerts: Object.entries(noisy)
+        .sort((x, y) => y[1].count - x[1].count)
+        .slice(0, 10)
+        .map(([alert, v]) => ({ alert, pages: v.count, unactionable: v.unactionable })),
+    };
+    if (small) {
+      results.push({ ...base, small_rotation: true, note: `Rotation has ${size} people; per-window and response figures are held back below ${MIN_GROUP_SIZE}.` });
+      continue;
+    }
+    results.push({
+      ...base,
+      small_rotation: false,
+      oncall_hours: round(oncallHours, 0),
+      average_share_of_time_on_call_pct: size ? round((oncallHours / size / (spanWeeks * 7 * 24)) * 100, 0) : null,
+      incidents_per_12_oncall_hours: oncallHours ? round((ps.length / oncallHours) * 12, 2) : null,
+      twelve_hour_windows: windows,
+      windows_over_2_incidents: busyWindows,
+      median_minutes_to_acknowledge: round(quantile(ack, 0.5), 0),
+    });
+  }
+  return {
+    rotations: results,
+    method: [
+      "Per rotation only. Shift members are counted for rotation size and never returned.",
+      "Pages are compared per 12 on-call hours, and shifts of any length are split into 12-hour windows, because the Google SRE guidance (at most about 2 incidents per 12-hour shift, at most 25% of time on call) assumes 12-hour shifts.",
+      `Off-hours: weekends or outside ${startH}:00 to ${endH}:00 in the given time zone.`,
+      `Rotations under ${MIN_GROUP_SIZE} people show totals only.`,
+      "No shift dates are returned, because a dated shift identifies who was on call.",
+    ],
+  };
+}
