@@ -107,7 +107,7 @@ const TEAM_B = {
 
 const TEAMS = [TEAM_A, TEAM_B];
 const email = (team, p) => `${p.slug}@${team.domain}`;
-const ghLogin = (p) => p.slug.replace("-", "");
+const ghLogin = (p) => p.slug;
 
 // Files ----------------------------------------------------------------------------
 function write(rel, content) {

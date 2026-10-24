@@ -7,7 +7,7 @@ team: Team B
 sub_team: iOS
 start_date: 2021-11-01
 email: eng-b4@team-b.example
-github: engb4
+github: eng-b4
 one_on_one_cadence: weekly
 next_one_on_one: 2026-10-22
 career_goals:

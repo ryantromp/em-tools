@@ -7,7 +7,7 @@ team: Team A
 sub_team: Ledger
 start_date: 2023-10-02
 email: eng-a7@team-a.example
-github: enga7
+github: eng-a7
 one_on_one_cadence: biweekly
 next_one_on_one: 2026-10-20
 career_goals:

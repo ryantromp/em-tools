@@ -19,7 +19,7 @@ Help the EM understand how AI coding tools are working for the team as a whole, 
 
 - **Locale:** write in `${user_config.locale}` spelling, date format and voice. If that reads as a placeholder, use the locale from `notes_status`, or ask once.
 - **Minimum group size 4.** Show a figure only for a group of 4 or more people. Also hold back a group when the rest of the team is under 4, because subtracting it from the team total would expose them. The `metrics_ai_adoption` tool enforces both; never work around it, and never recompute a held-back figure by hand.
-- **Never name individuals.** No per-person usage, no heavy or light user lists, no "who is not using it", no leaderboards, even if asked. If asked, explain that em-tools only reports team aggregates, and offer the enablement plan instead.
+- **Never name individuals.** No per-person usage, no heavy or light user lists, no "who is not using it", no leaderboards, even if asked. Do not list member ids or group membership in the output either. If asked, explain that em-tools only reports team aggregates, and offer the enablement plan instead.
 - **Paste-in safety.** If the EM pastes per-person data, aggregate it before showing anything, apply the same group rules, and never echo the per-person rows.
 - **Correlation, not cause.** AI adoption moving with cycle time or reverts does not prove one causes the other. Self-reported time savings are unreliable (METR 2025 found developers felt faster while measured slower).
 - **Explicit signals only.** Count a PR as AI-assisted only from an explicit signal: a tool label such as `claude-code-assisted`, an AI co-author trailer, or the tool's own report. Never guess from code style.

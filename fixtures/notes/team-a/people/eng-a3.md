@@ -7,7 +7,7 @@ team: Team A
 sub_team: null
 start_date: 2024-05-13
 email: eng-a3@team-a.example
-github: enga3
+github: eng-a3
 one_on_one_cadence: biweekly
 next_one_on_one: 2026-10-20
 career_goals:
