@@ -1,0 +1,6 @@
+interviewer,trained_for,available
+Engineer A1,technical-design;collaboration,yes
+Engineer A2,execution;technical-design,yes
+Engineer A5,execution,no (on-call week of 2026-10-26)
+Engineer A6,ownership;execution,yes
+Manager A,collaboration;mentoring;ownership,yes

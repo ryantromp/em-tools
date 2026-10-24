@@ -722,3 +722,25 @@ export function actionAge(rows: Row[], opts: { now?: string } = {}) {
     ],
   };
 }
+
+// Hiring funnel ---------------------------------------------------------------------------
+// Counts the EM gives, in stage order. Totals and pass-through rates only: no candidates.
+export function hiringFunnel(stages: Array<{ stage: string; count: number }>) {
+  const warnings: string[] = [];
+  const out = stages.map((s, i) => {
+    const prev = i ? stages[i - 1].count : null;
+    if (!Number.isFinite(s.count) || s.count < 0) warnings.push(`${s.stage}: count must be zero or more.`);
+    if (prev !== null && s.count > prev) warnings.push(`${s.stage} has more candidates (${s.count}) than ${stages[i - 1].stage} (${prev}). Check the counts.`);
+    return {
+      stage: s.stage,
+      count: s.count,
+      pass_through_pct: prev ? round((s.count / prev) * 100, 1) : null,
+      of_first_stage_pct: stages[0]?.count ? round((s.count / stages[0].count) * 100, 1) : null,
+    };
+  });
+  return {
+    stages: out,
+    warnings,
+    method: ["Pass-through is this stage's count over the previous stage's count. Counts are what the EM gave; candidates are never listed."],
+  };
+}
