@@ -1,0 +1,66 @@
+[
+  {
+    "channel": "Team B / General",
+    "ts": "2026-10-06T09:30:00Z",
+    "user": "Engineer B1",
+    "text": "Blocker: refunds screen needs the Team A refund API v2. Team A says 2026-10-23 now.",
+    "visibility": "public",
+    "permalink": "https://teams.example.com/l/message/team-b/1791279000000"
+  },
+  {
+    "channel": "Team B / General",
+    "ts": "2026-10-07T14:00:00Z",
+    "user": "Manager B",
+    "text": "Decision: we ship checkout without refunds in 4.12 and add refunds in 4.13.",
+    "visibility": "public",
+    "permalink": "https://teams.example.com/l/message/team-b/1791381600000"
+  },
+  {
+    "channel": "Team B / General",
+    "ts": "2026-10-08T11:15:00Z",
+    "user": "Engineer B4",
+    "text": "Cold start work is paused, I am covering iOS release duties this week and next.",
+    "visibility": "public",
+    "permalink": "https://teams.example.com/l/message/team-b/1791458100000"
+  },
+  {
+    "channel": "Team B / Releases",
+    "ts": "2026-10-08T16:00:00Z",
+    "user": "Engineer B5",
+    "text": "4.11 released. Crash-free sessions 99.6 percent.",
+    "visibility": "public",
+    "permalink": "https://teams.example.com/l/message/team-b/1791475200000"
+  },
+  {
+    "channel": "Team B / Releases",
+    "ts": "2026-10-10T10:00:00Z",
+    "user": "Engineer B2",
+    "text": "Hotfix 4.11.1 for the address autocomplete crash on Android 12.",
+    "visibility": "public",
+    "permalink": "https://teams.example.com/l/message/team-b/1791626400000"
+  },
+  {
+    "channel": "Team B / General",
+    "ts": "2026-10-13T15:20:00Z",
+    "user": "Engineer B6",
+    "text": "Offline queue conflicts: need a product decision on last-write-wins vs merge. Waiting since 24 Sep.",
+    "visibility": "public",
+    "permalink": "https://teams.example.com/l/message/team-b/1791904800000"
+  },
+  {
+    "channel": "Team B / General",
+    "ts": "2026-10-14T10:05:00Z",
+    "user": "Manager B",
+    "text": "Decision: Copilot seats renewed for another quarter. Review usage and quality in January.",
+    "visibility": "public",
+    "permalink": "https://teams.example.com/l/message/team-b/1791972300000"
+  },
+  {
+    "channel": "Team B / Releases",
+    "ts": "2026-10-15T16:30:00Z",
+    "user": "Engineer B3",
+    "text": "4.12 released with the new checkout sheet.",
+    "visibility": "public",
+    "permalink": "https://teams.example.com/l/message/team-b/1792081800000"
+  }
+]
