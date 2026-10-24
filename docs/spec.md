@@ -298,7 +298,13 @@ Build plan: one `feature/<skill>` branch and PR per skill, in this order. Each a
 ### 10.2 Skill specs
 
 **1. capacity-plan**
-- **Outputs:** team capacity in hours and, when the team uses them, points: raw working days, minus PTO and public holidays, minus meeting hours, minus on-call share, times a focus factor (default 0.7, stated). A buffer for unplanned work set from the unplanned share actually seen over the last 3 to 5 sprints, not a fixed 20%. A carryover and overcommit warning when planned work exceeds the capacity range.
+- **Outputs:** team capacity for the period, in hours, worked out in one unit:
+  1. **Available hours** = (members × working days in the period, minus person-days of PTO and public holidays) × working hours per day (default 8, stated).
+  2. **Minus meetings:** the team's average meeting hours per person per week (from the meeting-load maths) × people × weeks in the period.
+  3. **Minus on-call:** on-call hours in the period from the schedule × an on-call load factor (default 0.5, stated), because time on call is not all lost.
+  4. **Times a focus factor** (default 0.7, stated) for context switching and review time.
+  5. **Buffer for unplanned work:** the unplanned share of completed work over the last 3 to 5 sprints, not a fixed 20%.
+- **Points (only if the team estimates in points):** never converted from hours. The range is the team's completed points over the last 3 to 5 sprints, scaled by this period's available hours over each past sprint's available hours, then reduced by the same buffer. A carryover and overcommit warning when planned work exceeds the range.
 - **Rules:** team totals only. PTO is shown as person-days off, never who is off or when. No per-person velocity, ever.
 - **Server:** `metrics_capacity` (pure). Reuses the meeting-load and on-call maths.
 - **Misuse it guards against:** turning capacity into per-person utilisation targets.
