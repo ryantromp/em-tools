@@ -28,7 +28,7 @@ Help the EM see whether on-call is sustainable for the team and which alerts to 
 
 1. Call `notes_status` and `notes_read_team`. If the em-tools tools are missing, switch to **paste-in mode**: ask for a pages export and a schedule export, and say once: "Paste-in mode: nothing will be saved."
 2. **Window:** default to the last 12 complete weeks, plus the 12 weeks before when data allows.
-3. **Time zone:** ask for the team's working hours and time zone if `team.md` does not say. Default to 09:00 to 17:00 UTC and say so.
+3. **Time zone:** ask for the team's working hours and time zone (a named zone such as `Europe/London`, so daylight saving is handled) if `team.md` does not say. Default to 09:00 to 17:00 UTC and say so.
 
 ## Step 2: gather
 
@@ -44,7 +44,7 @@ If "actionable" is not recorded, ask the EM whether each top alert usually leads
 
 ## Step 3: compute
 
-Call `metrics_oncall` with the pages, shifts, window, time zone and working hours. Run it for the comparison period too.
+Call `metrics_oncall` with the pages, shifts, window, `time_zone` and working hours. Run it for the comparison period too. Report every item in its `warnings` (for example rotations with pages but no schedule), and say how many top-alert pages have unknown actionability rather than treating them as noise.
 
 In **paste-in mode**, work it out by hand per rotation and show the method:
 

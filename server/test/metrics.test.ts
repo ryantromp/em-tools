@@ -134,3 +134,41 @@ test("on-call health per rotation, small rotations totals only, no people or dat
   const text = JSON.stringify(r);
   for (const m of [...members, "r1", "r2", "r3", "2026-09-14T09", "2026-09-07"]) assert.ok(!text.includes(m), `leaked ${m}`);
 });
+
+test("on-call edge cases from review", async () => {
+  const { oncallHealth } = await import("../src/metrics.ts");
+  // Overlap: a weekly shift starting before 'from' still counts, clipped to the window.
+  // Four 2-day shifts from 6 to 14 September: the first starts before 'from', the last ends after 'to'.
+  const shifts = ["a", "b", "c", "d"].map((m, w) => ({ rotation: "p", start: new Date(Date.UTC(2026, 8, 6 + w * 2, 9)).toISOString(), end: new Date(Date.UTC(2026, 8, 8 + w * 2, 9)).toISOString(), member: m }));
+  const pages = [
+    { rotation: "p", created_at: "2026-09-08T10:00:00Z", alert: "constructor", actionable: "" },
+    { rotation: "p", created_at: "2026-09-08T11:00:00Z", alert: "toString", actionable: "false" },
+    { rotation: "ghost", created_at: "2026-09-09T11:00:00Z", alert: "x" },
+  ];
+  const r = oncallHealth(pages, shifts, { from: "2026-09-07", to: "2026-09-13" }) as any;
+  const p = r.rotations.find((x: any) => x.rotation === "p");
+  assert.equal(p.small_rotation, false);
+  assert.equal(p.oncall_hours, 168);
+  assert.equal(p.pages_per_week, 2);
+  const names = p.top_alerts.map((x: any) => x.alert).sort();
+  assert.deepEqual(names, ["constructor", "toString"]);
+  const c = p.top_alerts.find((x: any) => x.alert === "constructor");
+  assert.equal(c.unactionable, 0);
+  assert.equal(c.actionability_unknown, 1);
+  // Pages with no schedule are reported, totals only.
+  const g = r.rotations.find((x: any) => x.rotation === "ghost");
+  assert.equal(g.small_rotation, true);
+  assert.equal(g.pages, 1);
+  assert.match(r.warnings.join(" "), /No schedule for: ghost/);
+  // Unknown size is totals only.
+  const anon = oncallHealth(pages, shifts.map((s) => ({ ...s, member: "" })), { from: "2026-09-07", to: "2026-09-13" }) as any;
+  assert.equal(anon.rotations.find((x: any) => x.rotation === "p").small_rotation, true);
+  // Absurd shifts are skipped quickly.
+  const t0 = Date.now();
+  const long = oncallHealth(pages, [{ rotation: "p", start: "2026-01-01T00:00:00Z", end: "9999-01-01T00:00:00Z", member: "a" }], {}) as any;
+  assert.ok(Date.now() - t0 < 500);
+  assert.match(long.warnings.join(" "), /skipped/);
+  // Named time zone with daylight saving: 08:30 UTC on 2026-07-01 is 09:30 in London (working hours).
+  const tz = oncallHealth([{ rotation: "p", created_at: "2026-07-01T08:30:00Z", alert: "y", actionable: "true" }], shifts.map((s) => ({ ...s, start: "2026-06-29T00:00:00Z", end: "2026-07-06T00:00:00Z" })), { from: "2026-06-29", to: "2026-07-05", timeZone: "Europe/London" }) as any;
+  assert.equal(tz.rotations[0].off_hours_share_pct, 0);
+});
