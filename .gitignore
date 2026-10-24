@@ -1,0 +1,5 @@
+node_modules/
+*.tmp-*
+.DS_Store
+# Example outputs are generated locally (scripts/run-examples.mjs) and never committed.
+examples/
