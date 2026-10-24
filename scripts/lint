@@ -1,0 +1,104 @@
+#!/usr/bin/env node
+// em-tools lint. Fails on:
+//   1. em-dashes anywhere in the repo,
+//   2. send, post or write calls in skills, examples and the server, and write tools on the read allowlist,
+//   3. per-person ranking or per-person numbers in team-level outputs.
+//
+// Usage: scripts/lint   (exit 0 clean, 1 on any finding)
+
+import { execFileSync } from "node:child_process";
+import { readFileSync, readdirSync, existsSync } from "node:fs";
+import { dirname, join, relative } from "node:path";
+import { fileURLToPath } from "node:url";
+import { looksReadOnly } from "../hooks/guard.mjs";
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+const findings = [];
+const report = (file, line, rule, text) => findings.push({ file, line, rule, text: text.trim().slice(0, 160) });
+
+function repoFiles() {
+  const out = execFileSync("git", ["ls-files", "--cached", "--others", "--exclude-standard"], { cwd: ROOT, encoding: "utf8" });
+  return out.split("\n").filter(Boolean).filter((f) => existsSync(join(ROOT, f)));
+}
+const isText = (f) => !/\.(png|jpe?g|gif|ico|zip|mcpb)$/i.test(f);
+const lines = (f) => readFileSync(join(ROOT, f), "utf8").split("\n");
+
+// 1. Em-dashes -----------------------------------------------------------------------
+const EM_DASH = String.fromCharCode(0x2014);
+for (const f of [...new Set([...repoFiles().filter(isText), ...walk("examples")])]) {
+  lines(f).forEach((l, i) => l.includes(EM_DASH) && report(f, i + 1, "em-dash", l));
+}
+
+// 2. Send, post and write calls --------------------------------------------------------
+const WRITE_CALLS = /\b(slack_send_\w+|slack_schedule_message|slack_create_canvas|slack_add_reaction|chat\.postMessage|send_message|send_email|create_event|update_event|delete_event|respond_to_event|save_issue|save_comment|save_status_update|create_attachment|createJiraIssue|editJiraIssue|transitionJiraIssue|addCommentToJiraIssue|addOrEditJiraIssueComment|create_pull_request|merge_pull_request|add_issue_comment|issue_write|push_files|create_or_update_file|create_entity_work_iq|update_entity_work_iq|delete_entity_work_iq|do_action_work_iq|call_function_work_iq)\b/;
+const sendScope = (f) => f.startsWith("skills/") || f.startsWith("server/src/");
+for (const f of repoFiles().filter((x) => isText(x) && sendScope(x))) {
+  lines(f).forEach((l, i) => WRITE_CALLS.test(l) && report(f, i + 1, "send-or-post-call", l));
+}
+for (const f of walk("examples")) {
+  lines(f).forEach((l, i) => WRITE_CALLS.test(l) && report(f, i + 1, "send-or-post-call", l));
+}
+// The server must make no network calls at all.
+for (const f of repoFiles().filter((x) => x.startsWith("server/src/"))) {
+  lines(f).forEach((l, i) => /\bfetch\(|from "node:(http|https|net|dgram)"|from "(http|https|net)"|XMLHttpRequest|WebSocket/.test(l) && report(f, i + 1, "network-call-in-server", l));
+}
+// Every allowlisted tool for an official server must read as read-only.
+const allow = JSON.parse(readFileSync(join(ROOT, "hooks/read-allowlist.json"), "utf8"));
+for (const [server, entry] of Object.entries(allow.servers)) {
+  if (entry.allow === "*") continue;
+  for (const tool of entry.allow) if (!looksReadOnly(tool)) report("hooks/read-allowlist.json", 0, "write-tool-on-allowlist", `${server}: ${tool}`);
+}
+
+// 3. Per-person ranking ------------------------------------------------------------------
+// People come from the fixtures, so the check knows every name, slug and login.
+const people = [];
+for (const team of ["team-a", "team-b"]) {
+  const dir = join(ROOT, "fixtures/notes", team, "people");
+  if (!existsSync(dir)) continue;
+  for (const f of readdirSync(dir).filter((x) => x.endsWith(".md"))) {
+    const text = readFileSync(join(dir, f), "utf8");
+    const name = /^name: (.+)$/m.exec(text)?.[1].trim();
+    const login = /^github: (.+)$/m.exec(text)?.[1].trim();
+    if (name) people.push({ name, first: name.split(" ").pop(), login, slug: f.slice(0, -3) });
+  }
+}
+const nameRe = (p) => new RegExp(`\\b(${[p.name, p.first, p.login, p.slug].filter(Boolean).map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})\\b`, "i");
+const RANKING = /\b(leaderboard|top (contributor|performer|user)s? (is|are|were|was|list)|bottom performers?|lowest performers?|most productive (engineer|person|developer)|least productive|ranked (list|by)|ranking of (engineers|people|the team))\b/i;
+const METRIC_WITH_NUMBER = /\b\d+(\.\d+)?\s*%?\s*(prs?|pull requests|commits|lines|tickets|points|reviews|active days|deploys?)\b/i;
+
+// Examples are generated locally and git-ignored, so read them from disk.
+function walk(dir) {
+  if (!existsSync(join(ROOT, dir))) return [];
+  return readdirSync(join(ROOT, dir), { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(`${dir}/${e.name}`) : [`${dir}/${e.name}`]));
+}
+const examples = walk("examples").filter((f) => f.endsWith(".md"));
+// Examples must never be committed: they contain synthetic people in sensitive situations.
+for (const f of repoFiles().filter((x) => x.startsWith("examples/"))) report(f, 0, "example-tracked-in-git", "examples/ is local only");
+for (const f of examples) {
+  const ls = lines(f);
+  ls.forEach((l, i) => RANKING.test(l) && !/\b(no|never|not|without|don't|doesn't|won't|refuse)\b/i.test(l) && report(f, i + 1, "per-person-ranking", l));
+  const teamLevel = /^examples\/(ai-adoption|team-delivery-health)\//.test(f);
+  const update = /^examples\/upward-update\//.test(f);
+  ls.forEach((l, i) => {
+    const named = people.filter((p) => nameRe(p).test(l));
+    if (teamLevel && named.length) report(f, i + 1, "person-named-in-team-output", l);
+    if (update && named.length && METRIC_WITH_NUMBER.test(l)) report(f, i + 1, "per-person-number-in-update", l);
+    if (!teamLevel && named.length >= 2 && METRIC_WITH_NUMBER.test(l) && /^\s*\|/.test(l)) report(f, i + 1, "people-compared-in-table", l);
+  });
+}
+
+// 4. HR and legal line on outputs that need it ------------------------------------------------
+const NEEDS_HR = /\b(underperform\w*|wellbeing|well-being|burnout|burned out|governance kit|usage policy)\b/i;
+for (const f of examples) {
+  const text = readFileSync(join(ROOT, f), "utf8");
+  const needs = f.startsWith("examples/review-packet/") || NEEDS_HR.test(text);
+  if (needs && !/check with your HR or legal team/i.test(text)) report(f, 0, "missing-hr-legal-line", "Add: check with your HR or legal team");
+}
+
+// Report ----------------------------------------------------------------------------------
+if (findings.length) {
+  for (const x of findings) console.log(`${x.file}:${x.line}  [${x.rule}]  ${x.text}`);
+  console.log(`\nscripts/lint: ${findings.length} finding(s).`);
+  process.exit(1);
+}
+console.log(`scripts/lint: clean (${repoFiles().length} files, ${examples.length} examples, ${people.length} fixture people checked).`);

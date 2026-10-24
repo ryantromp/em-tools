@@ -1,0 +1,12 @@
+month,team,tool,amount,currency,note
+2026-06,Team A,claude-code,864,USD,seats plus usage
+2026-07,Team A,claude-code,774,USD,seats plus usage
+2026-08,Team A,claude-code,854,USD,seats plus usage
+2026-09,Team A,claude-code,862,USD,seats plus usage
+2026-10,Team A,claude-code,1050,USD,seats plus usage
+2026-05,Team B,copilot,234,USD,seats
+2026-06,Team B,copilot,234,USD,seats
+2026-07,Team B,copilot,234,USD,seats
+2026-08,Team B,copilot,234,USD,seats
+2026-09,Team B,copilot,234,USD,seats
+2026-10,Team B,copilot,234,USD,seats

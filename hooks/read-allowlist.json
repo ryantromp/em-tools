@@ -1,0 +1,136 @@
+{
+  "_comment": "Read tools each official server may call through em-tools. Anything not listed is blocked. Server keys match .mcp.json.",
+  "servers": {
+    "em-tools": {
+      "integration": null,
+      "allow": "*"
+    },
+    "github": {
+      "integration": [
+        "github"
+      ],
+      "allow": [
+        "get_me",
+        "get_teams",
+        "get_team_members",
+        "get_file_contents",
+        "get_repository_tree",
+        "get_commit",
+        "list_commits",
+        "search_commits",
+        "list_branches",
+        "list_tags",
+        "get_tag",
+        "list_releases",
+        "get_latest_release",
+        "get_release_by_tag",
+        "list_pull_requests",
+        "pull_request_read",
+        "search_pull_requests",
+        "list_issues",
+        "issue_read",
+        "search_issues",
+        "list_issue_types",
+        "list_issue_fields",
+        "get_label",
+        "list_label",
+        "search_code",
+        "search_repositories",
+        "search_users",
+        "search_orgs",
+        "list_repository_collaborators",
+        "actions_list",
+        "actions_get",
+        "get_job_logs"
+      ]
+    },
+    "atlassian": {
+      "integration": [
+        "jira"
+      ],
+      "allow": [
+        "atlassianUserInfo",
+        "getAccessibleAtlassianResources",
+        "searchJiraIssuesUsingJql",
+        "getJiraIssue",
+        "getJiraIssueRemoteIssueLinks",
+        "getTransitionsForJiraIssue",
+        "lookupJiraAccountId",
+        "listJiraProjects",
+        "getVisibleJiraProjects",
+        "listJiraProjectIssueTypesMetadata",
+        "getJiraProjectIssueTypesMetadata",
+        "getJiraIssueTypeMetaWithFields",
+        "search",
+        "fetch"
+      ]
+    },
+    "linear": {
+      "integration": [
+        "linear"
+      ],
+      "allow": [
+        "list_issues",
+        "get_issue",
+        "list_comments",
+        "list_cycles",
+        "list_projects",
+        "get_project",
+        "list_teams",
+        "get_team",
+        "list_users",
+        "get_user",
+        "list_documents",
+        "get_document",
+        "list_issue_statuses",
+        "get_issue_status",
+        "list_issue_labels",
+        "list_project_labels",
+        "list_milestones",
+        "get_milestone",
+        "get_status_updates",
+        "list_custom_views",
+        "get_workspace"
+      ]
+    },
+    "google-calendar": {
+      "integration": [
+        "google_calendar"
+      ],
+      "allow": [
+        "list_calendars",
+        "list_events",
+        "get_event",
+        "search_events",
+        "suggest_time"
+      ]
+    },
+    "slack": {
+      "integration": [
+        "slack"
+      ],
+      "allow": [
+        "slack_search_public",
+        "slack_search_channels",
+        "slack_read_channel",
+        "slack_read_thread"
+      ]
+    },
+    "workiq": {
+      "integration": [
+        "outlook",
+        "teams"
+      ],
+      "allow": [
+        "ask",
+        "list_agents",
+        "ask_work_iq",
+        "fetch_work_iq",
+        "fetch_blob_work_iq",
+        "get_schema_work_iq",
+        "search_paths_work_iq"
+      ],
+      "_note": "accept_eula is blocked on purpose: the EM accepts the Work IQ licence terms themselves."
+    }
+  }
+}

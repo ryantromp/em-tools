@@ -1,0 +1,15 @@
+{
+  "name": "em-tools",
+  "description": "Local marketplace for installing em-tools from a clone of this repo.",
+  "owner": {
+    "name": "Ryan Tromp",
+    "email": "ryan.tromp@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "em-tools",
+      "source": "./",
+      "description": "Local-first help for software engineering managers: 1:1s, review evidence, upward updates, team delivery health and team AI adoption."
+    }
+  ]
+}

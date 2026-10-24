@@ -1,0 +1,49 @@
+{
+  "mcpServers": {
+    "em-tools": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/server/dist/em-tools-server.mjs"],
+      "env": {
+        "EM_TOOLS_NOTES_FOLDER": "${user_config.notes_folder}",
+        "EM_TOOLS_LOCALE": "${user_config.locale}",
+        "EM_TOOLS_PLUGIN_DATA": "${CLAUDE_PLUGIN_DATA}",
+        "EM_TOOLS_PLUGIN_ROOT": "${CLAUDE_PLUGIN_ROOT}"
+      }
+    },
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "X-MCP-Readonly": "true",
+        "X-MCP-Toolsets": "context,repos,pull_requests,issues,users"
+      }
+    },
+    "atlassian": {
+      "type": "http",
+      "url": "https://mcp.atlassian.com/v2/mcp?tools=all"
+    },
+    "linear": {
+      "type": "http",
+      "url": "https://mcp.linear.app/mcp"
+    },
+    "google-calendar": {
+      "type": "http",
+      "url": "https://calendarmcp.googleapis.com/mcp/v1",
+      "oauth": {
+        "scopes": "https://www.googleapis.com/auth/calendar.readonly"
+      }
+    },
+    "slack": {
+      "type": "http",
+      "url": "https://mcp.slack.com/mcp",
+      "oauth": {
+        "clientId": "1601185624273.8899143856786",
+        "callbackPort": 3118
+      }
+    },
+    "workiq": {
+      "command": "npx",
+      "args": ["-y", "@microsoft/workiq", "mcp"]
+    }
+  }
+}

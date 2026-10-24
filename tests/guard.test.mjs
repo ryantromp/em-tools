@@ -1,0 +1,77 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { decide, looksReadOnly, parseEnabled } from "../hooks/guard.mjs";
+
+const allowlist = JSON.parse(readFileSync(new URL("../hooks/read-allowlist.json", import.meta.url)));
+const all = ["github", "jira", "linear", "google_calendar", "outlook", "slack", "teams"];
+
+test("plugin read tools pass", () => {
+  assert.equal(decide("mcp__plugin_em-tools_github__pull_request_read", "plugin", allowlist, all), null);
+  assert.equal(decide("mcp__plugin_em-tools_linear__list_issues", "plugin", allowlist, all), null);
+  assert.equal(decide("mcp__plugin_em-tools_em-tools__notes_append_entry", "plugin", allowlist, all), null);
+});
+
+test("plugin write tools are blocked", () => {
+  for (const t of [
+    "mcp__plugin_em-tools_github__create_pull_request",
+    "mcp__plugin_em-tools_github__merge_pull_request",
+    "mcp__plugin_em-tools_linear__save_issue",
+    "mcp__plugin_em-tools_linear__save_comment",
+    "mcp__plugin_em-tools_atlassian__createJiraIssue",
+    "mcp__plugin_em-tools_atlassian__execute",
+    "mcp__plugin_em-tools_slack__slack_send_message",
+    "mcp__plugin_em-tools_slack__slack_search_public_and_private",
+    "mcp__plugin_em-tools_google-calendar__create_event",
+    "mcp__plugin_em-tools_workiq__do_action_work_iq",
+    "mcp__plugin_em-tools_unknown__anything",
+  ]) assert.match(decide(t, "plugin", allowlist, all), /blocked/, t);
+});
+
+test("disabled integration is blocked, unknown option list is not", () => {
+  assert.match(decide("mcp__plugin_em-tools_linear__list_issues", "plugin", allowlist, ["github"]), /not enabled/);
+  assert.equal(decide("mcp__plugin_em-tools_linear__list_issues", "plugin", allowlist, null), null);
+  assert.equal(decide("mcp__plugin_em-tools_workiq__ask_work_iq", "plugin", allowlist, ["teams"]), null);
+});
+
+test("session mode blocks writes on other servers only", () => {
+  assert.match(decide("mcp__github__create_pull_request", "session", allowlist, all), /blocked/);
+  assert.match(decide("mcp__Gmail__send_message", "session", allowlist, all), /blocked/);
+  assert.match(decide("mcp__claude_ai_Slack__slack_send_message", "session", allowlist, all), /blocked/);
+  assert.match(decide("mcp__Linear__save_issue", "session", allowlist, all), /blocked/);
+  assert.equal(decide("mcp__github__pull_request_read", "session", allowlist, all), null);
+  assert.equal(decide("mcp__Google_Calendar__list_events", "session", allowlist, all), null);
+  assert.equal(decide("mcp__github__create_pull_request", "plugin", allowlist, all), null);
+  assert.equal(decide("Bash", "session", allowlist, all), null);
+});
+
+test("word classification", () => {
+  assert.equal(looksReadOnly("searchJiraIssuesUsingJql"), true);
+  assert.equal(looksReadOnly("trelloWriteCard"), false);
+  assert.equal(looksReadOnly("slack_send_message_draft"), false);
+  assert.equal(looksReadOnly("frobnicate"), false);
+});
+
+test("enabled list parsing", () => {
+  assert.deepEqual(parseEnabled('["github","linear"]'), ["github", "linear"]);
+  assert.deepEqual(parseEnabled("github, linear"), ["github", "linear"]);
+  assert.deepEqual(parseEnabled(""), []);
+  assert.equal(parseEnabled(undefined), null);
+});
+
+test("CLI exits 2 with reason on a write tool", () => {
+  const r = spawnSync("node", ["hooks/guard.mjs", "plugin"], {
+    input: JSON.stringify({ tool_name: "mcp__plugin_em-tools_linear__save_issue", tool_input: {} }),
+    env: { ...process.env, CLAUDE_PLUGIN_OPTION_ENABLED_INTEGRATIONS: '["linear"]' },
+  });
+  assert.equal(r.status, 2);
+  assert.match(r.stderr.toString(), /read-only/);
+  const ok = spawnSync("node", ["hooks/guard.mjs", "plugin"], {
+    input: JSON.stringify({ tool_name: "mcp__plugin_em-tools_linear__list_issues" }),
+    env: { ...process.env, CLAUDE_PLUGIN_OPTION_ENABLED_INTEGRATIONS: '["linear"]' },
+  });
+  assert.equal(ok.status, 0);
+  const bad = spawnSync("node", ["hooks/guard.mjs"], { input: "not json" });
+  assert.equal(bad.status, 2);
+});

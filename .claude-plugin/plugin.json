@@ -1,0 +1,34 @@
+{
+  "name": "em-tools",
+  "displayName": "EM Tools",
+  "version": "0.1.0",
+  "description": "Local-first help for software engineering managers: 1:1 prep, evidence-based review packets, upward updates, team delivery health and team AI adoption. Read-only integrations; drafts only.",
+  "author": {
+    "name": "Ryan Tromp",
+    "email": "ryan.tromp@gmail.com"
+  },
+  "homepage": "https://github.com/ryantromp/em-tools",
+  "repository": "https://github.com/ryantromp/em-tools",
+  "license": "MIT",
+  "keywords": ["engineering-management", "one-on-one", "performance-review", "dora", "local-first"],
+  "userConfig": {
+    "locale": {
+      "type": "string",
+      "title": "Locale",
+      "description": "BCP 47 language tag such as en-GB or en-US. Sets spelling, date format and voice of every output.",
+      "required": true
+    },
+    "notes_folder": {
+      "type": "directory",
+      "title": "Notes folder",
+      "description": "Folder where your people notes live, one markdown file per person. Pick a folder you back up. It must not be inside the plugin's own data folder, which is deleted on uninstall. em-tools never deletes notes.",
+      "required": true
+    },
+    "enabled_integrations": {
+      "type": "string",
+      "title": "Enabled integrations",
+      "description": "Read-only data sources to use: github, jira, linear, google_calendar, outlook, slack, teams. Leave empty to work from pasted notes and CSV files only.",
+      "multiple": true
+    }
+  }
+}

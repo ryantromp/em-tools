@@ -1,0 +1,8 @@
+id,team,started_at,resolved_at,severity,title,lead,url
+INC-TEAMA-7,Team A,2026-07-14T13:05:00Z,2026-07-14T13:57:00Z,SEV2,Payout batch stuck,Engineer A1,https://incidents.example.com/team-a/7
+INC-TEAMA-1,Team A,2026-07-21T13:38:00Z,2026-07-21T13:58:00Z,SEV3,Refund webhooks delayed,,https://incidents.example.com/team-a/1
+INC-TEAMA-2,Team A,2026-08-01T01:19:00Z,2026-08-01T05:19:00Z,SEV2,Payout batch stuck,,https://incidents.example.com/team-a/2
+INC-TEAMA-6,Team A,2026-08-04T04:07:00Z,2026-08-04T05:48:00Z,SEV2,Payout batch stuck,,https://incidents.example.com/team-a/6
+INC-TEAMA-5,Team A,2026-08-15T09:45:00Z,2026-08-15T11:21:00Z,SEV2,Refund webhooks delayed,,https://incidents.example.com/team-a/5
+INC-TEAMA-4,Team A,2026-08-31T22:49:00Z,2026-09-01T01:13:00Z,SEV3,Refund webhooks delayed,,https://incidents.example.com/team-a/4
+INC-TEAMA-3,Team A,2026-09-09T15:57:00Z,2026-09-09T20:19:00Z,SEV2,Refund webhooks delayed,,https://incidents.example.com/team-a/3
