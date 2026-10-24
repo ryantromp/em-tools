@@ -227,7 +227,7 @@ Build plan: one `feature/<skill>` branch and PR per skill, in this order. Each a
 - **Server:** `metrics_dependency_age` (pure: age, blocked share). Register saved as `dependencies.md` in the notes folder after the EM confirms.
 
 **2. oncall-health**
-- **Outputs:** per rotation: pages per week, off-hours share, shifts over 2 incidents (a count, never dates), mean time to acknowledge, and the top 10 noisy or unactionable alerts by count. A narrative set against Google SRE guidance (at most 25% of time on call, about 2 incidents per shift).
+- **Outputs:** per rotation: pages per week, off-hours share, incidents per 12 on-call hours, the number of 12-hour windows with more than 2 incidents (a count, never dates), mean time to acknowledge, and the top 10 noisy or unactionable alerts by count. A narrative set against Google SRE guidance (at most 25% of time on call, at most about 2 incidents per 12-hour shift). Shifts of any length (24-hour, week-long) are split into 12-hour windows before comparing, and the output states the rotation's shift length.
 - **Rules:** never per person. No shift dates or names in the output, because a dated shift identifies who was on call. A rotation with fewer than 4 people shows rotation totals only.
 - **Server:** `metrics_oncall` (pure, team aggregates; drops responder fields on input).
 
