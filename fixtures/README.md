@@ -40,4 +40,5 @@ Window: 2026-04-20 to 2026-10-16 (26 weeks). Calendar runs to 2026-10-30 so upco
 | slack/, teams/ | Public channel messages with decisions and blockers |
 | incidents/ | Incident list per team |
 | ai/ | AI tool usage by person and day (input only; outputs never show it per person) and monthly spend |
+| pagerduty/, incident-io/ | On-call shifts and pages: Team A in PagerDuty format (one weekly rotation), Team B in incident.io format (a weekly rotation and a 3-person release-duty rotation) |
 | notes/team-a/, notes/team-b/ | Each EM's notes folder: team.md, ladder.md (Team A only), one file per person, last week's update |

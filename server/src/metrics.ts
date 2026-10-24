@@ -476,3 +476,166 @@ export function dependencyAge(rows: Row[], opts: { now?: string; agingDays?: num
     ],
   };
 }
+
+// On-call health -----------------------------------------------------------------
+
+const MAX_SHIFT_HOURS = 31 * 24;
+
+// Local weekday and hour for a time, in a named IANA time zone (handles daylight saving) or a fixed offset.
+function localParts(d: Date, timeZone?: string, offsetMinutes = 0): { dow: number; hour: number } {
+  if (timeZone) {
+    const parts = new Intl.DateTimeFormat("en-US", { timeZone, weekday: "short", hour: "numeric", minute: "numeric", hourCycle: "h23" }).formatToParts(d);
+    const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "0";
+    const dow = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(get("weekday"));
+    return { dow, hour: Number(get("hour")) + Number(get("minute")) / 60 };
+  }
+  const l = new Date(d.getTime() + offsetMinutes * 60_000);
+  return { dow: l.getUTCDay(), hour: l.getUTCHours() + l.getUTCMinutes() / 60 };
+}
+
+// Per rotation, never per person. Shift rows give coverage and rotation size; the member field is
+// only counted, never returned. Pages are compared per 12 on-call hours, the window the Google SRE
+// guidance (at most about 2 incidents per 12-hour shift) assumes, whatever the shift length.
+export function oncallHealth(
+  pages: Row[],
+  shifts: Row[],
+  opts: { from?: string; to?: string; timeZone?: string; timezoneOffsetMinutes?: number; workdayStartHour?: number; workdayEndHour?: number } = {},
+) {
+  const startH = opts.workdayStartHour ?? 9;
+  const endH = opts.workdayEndHour ?? 17;
+  if (opts.timeZone) new Intl.DateTimeFormat("en-US", { timeZone: opts.timeZone }); // throws on an unknown zone
+  const winFrom = opts.from ? new Date(opts.from).getTime() : -Infinity;
+  const winTo = opts.to ? new Date(opts.to).getTime() + DAY : Infinity;
+  const warnings: string[] = [];
+
+  // Coverage: shifts that overlap the window, clipped to it, with an upper bound on any one shift.
+  type Rot = { members: Set<string>; unnamedShifts: number; shiftHours: number[]; coverage: Array<[number, number]> };
+  const rotations = new Map<string, Rot>();
+  const rot = (name: string): Rot => {
+    if (!rotations.has(name)) rotations.set(name, { members: new Set(), unnamedShifts: 0, shiftHours: [], coverage: [] });
+    return rotations.get(name)!;
+  };
+  let skippedLong = 0;
+  for (const s of shifts) {
+    const a = toDate(s.start)?.getTime();
+    const b = toDate(s.end)?.getTime();
+    if (a === undefined || b === undefined || b <= a) continue;
+    if ((b - a) / HOUR > MAX_SHIFT_HOURS) {
+      skippedLong++;
+      continue;
+    }
+    const ca = Math.max(a, winFrom);
+    const cb = Math.min(b, winTo);
+    if (cb <= ca) continue;
+    const r = rot(String(s.rotation ?? "unknown"));
+    if (s.member !== undefined && String(s.member).trim() !== "") r.members.add(String(s.member).trim().toLowerCase());
+    else r.unnamedShifts++;
+    r.shiftHours.push((b - a) / HOUR);
+    r.coverage.push([ca, cb]);
+  }
+  if (skippedLong) warnings.push(`${skippedLong} shift(s) longer than ${MAX_SHIFT_HOURS / 24} days were skipped as likely data errors.`);
+
+  // Pages in the window, grouped by rotation. Rotations with pages but no schedule are reported, not dropped.
+  const pagesByRot = new Map<string, Array<{ t: number; row: Row }>>();
+  for (const p of pages) {
+    const t = toDate(p.created_at)?.getTime();
+    if (t === undefined || t < winFrom || t >= winTo) continue;
+    const name = String(p.rotation ?? "unknown");
+    if (!pagesByRot.has(name)) pagesByRot.set(name, []);
+    pagesByRot.get(name)!.push({ t, row: p });
+  }
+  const unscheduled = [...pagesByRot.keys()].filter((n) => !rotations.has(n));
+  if (unscheduled.length) warnings.push(`No schedule for: ${unscheduled.join(", ")}. Their pages are shown as totals only.`);
+  for (const n of unscheduled) rot(n);
+
+  const spanHours = Number.isFinite(winFrom) && Number.isFinite(winTo)
+    ? (winTo - winFrom) / HOUR
+    : (() => {
+        const all = [...rotations.values()].flatMap((r) => r.coverage);
+        return all.length ? (Math.max(...all.map(([, b]) => b)) - Math.min(...all.map(([a]) => a))) / HOUR : 0;
+      })();
+  const spanWeeks = spanHours / (24 * 7);
+
+  const results = [];
+  for (const [name, r] of rotations) {
+    const ps = (pagesByRot.get(name) ?? []).sort((x, y) => x.t - y.t);
+    const oncallHours = r.coverage.reduce((sum, [a, b]) => sum + (b - a) / HOUR, 0);
+    const offHours = ps.filter(({ t }) => {
+      const { dow, hour } = localParts(new Date(t), opts.timeZone, opts.timezoneOffsetMinutes ?? 0);
+      return dow === 0 || dow === 6 || hour < startH || hour >= endH;
+    }).length;
+    const noisy = new Map<string, { count: number; unactionable: number; unknown: number }>();
+    for (const { row } of ps) {
+      const k = String(row.alert ?? row.title ?? "untitled");
+      if (!noisy.has(k)) noisy.set(k, { count: 0, unactionable: 0, unknown: 0 });
+      const n = noisy.get(k)!;
+      n.count++;
+      const raw = row.actionable;
+      if (raw === undefined || raw === null || String(raw).trim() === "") n.unknown++;
+      else if (!toBool(raw)) n.unactionable++;
+    }
+    const size = r.members.size;
+    const sizeKnown = size > 0 && r.unnamedShifts === 0;
+    const base = {
+      rotation: name,
+      size: sizeKnown ? size : null,
+      shift_length_hours: round(quantile(r.shiftHours, 0.5)),
+      pages: ps.length,
+      pages_per_week: spanWeeks > 0 ? round(ps.length / spanWeeks, 1) : null,
+      off_hours_share_pct: ps.length ? round((offHours / ps.length) * 100, 0) : null,
+      top_alerts: [...noisy.entries()]
+        .sort((x, y) => y[1].count - x[1].count)
+        .slice(0, 10)
+        .map(([alert, v]) => ({ alert, pages: v.count, unactionable: v.unactionable, actionability_unknown: v.unknown })),
+    };
+    if (!sizeKnown || size < MIN_GROUP_SIZE) {
+      const why = !r.coverage.length ? "No schedule was supplied for this rotation."
+        : !sizeKnown ? "Rotation size is unknown because some shifts have no member."
+        : `Rotation has ${size} people.`;
+      results.push({ ...base, small_rotation: true, note: `${why} Per-window and response figures are shown only for rotations of ${MIN_GROUP_SIZE} or more people.` });
+      continue;
+    }
+    // 12-hour windows over covered time; each page is binned once, so the cost is pages plus windows.
+    let windows = 0;
+    let busyWindows = 0;
+    let i = 0;
+    for (const [a, b] of [...r.coverage].sort((x, y) => x[0] - y[0])) {
+      const n = Math.ceil((b - a) / (12 * HOUR));
+      const counts = new Array<number>(n).fill(0);
+      while (i < ps.length && ps[i].t < a) i++;
+      let j = i;
+      while (j < ps.length && ps[j].t < b) {
+        counts[Math.floor((ps[j].t - a) / (12 * HOUR))]++;
+        j++;
+      }
+      windows += n;
+      busyWindows += counts.filter((c) => c > 2).length;
+    }
+    const ack = ps
+      .map(({ t, row }) => (toDate(row.acknowledged_at) ? (toDate(row.acknowledged_at)!.getTime() - t) / 60_000 : null))
+      .filter((x): x is number => x !== null && x >= 0);
+    results.push({
+      ...base,
+      small_rotation: false,
+      oncall_hours: round(oncallHours, 0),
+      average_share_of_time_on_call_pct: spanHours > 0 ? round((oncallHours / size / spanHours) * 100, 0) : null,
+      incidents_per_12_oncall_hours: oncallHours ? round((ps.length / oncallHours) * 12, 2) : null,
+      twelve_hour_windows: windows,
+      windows_over_2_incidents: busyWindows,
+      median_minutes_to_acknowledge: round(quantile(ack, 0.5), 0),
+    });
+  }
+  return {
+    rotations: results,
+    warnings,
+    method: [
+      "Per rotation only. Shift members are counted for rotation size and never returned.",
+      "Shifts that overlap the window are clipped to it; pages are those created inside the window.",
+      "Pages are compared per 12 on-call hours, and shifts of any length are split into 12-hour windows, because the Google SRE guidance (at most about 2 incidents per 12-hour shift, at most 25% of time on call) assumes 12-hour shifts.",
+      `Off-hours: weekends or outside ${startH}:00 to ${endH}:00 in ${opts.timeZone ?? `UTC${opts.timezoneOffsetMinutes ? `${opts.timezoneOffsetMinutes > 0 ? "+" : ""}${opts.timezoneOffsetMinutes / 60}` : ""}`}.`,
+      "A blank 'actionable' value counts as unknown, never as noise.",
+      `Rotations under ${MIN_GROUP_SIZE} people, or of unknown size, show totals only.`,
+      "No shift dates are returned, because a dated shift identifies who was on call.",
+    ],
+  };
+}

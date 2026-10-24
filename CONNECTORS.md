@@ -22,6 +22,8 @@ Checked on 2026-10-23. See [docs/research.md](docs/research.md#4a-official-vendo
 | Slack | `slack` | `https://mcp.slack.com/mcp` | OAuth. A workspace admin must approve MCP access | Available | upward-update, review-packet, dependency-register |
 | Outlook calendar | `outlook` | Microsoft Work IQ (`npx -y @microsoft/workiq mcp`) | Entra ID sign-in with tenant admin consent, and a Microsoft 365 Copilot licence per user. Accept the Work IQ licence terms yourself in a terminal; em-tools blocks `accept_eula` | Public preview | one-on-one, team-delivery-health |
 | Microsoft Teams | `teams` | Microsoft Work IQ (same server as Outlook) | Same as Outlook | Public preview | upward-update, review-packet, dependency-register |
+| PagerDuty | `pagerduty` | Hosted `https://mcp.pagerduty.com/mcp` (EU: `https://mcp.eu.pagerduty.com/mcp`) | OAuth; some setups need a pre-registered OAuth client, or a user API key header. The old local server is deprecated | Available | oncall-health |
+| incident.io | `incident_io` | Hosted `https://mcp.incident.io/mcp` | OAuth sign-in | Available; tool names not yet verified, so em-tools blocks all its tools for now | oncall-health (export until verified) |
 
 ### Gaps and fallbacks
 
@@ -33,6 +35,8 @@ Every v1 source has an official MCP server, but some are hard to reach for an in
 | Slack needs workspace admin approval | Export the public channel (Slack workspace export) or copy the messages into a text file |
 | Google Calendar needs a Google Cloud project and OAuth client; sign-in fails with "does not support dynamic client registration" without one | Use your existing claude.ai Google Calendar connector (em-tools blocks its write tools while a skill runs), or export ICS from Google Calendar settings |
 | Jira sites can turn off Rovo MCP | Export issues to CSV from a Jira filter |
+| incident.io tool names are unverified, so all its tools are blocked | Export alerts and the on-call schedule as CSV. Once you see the read tool names in `/mcp`, add them to `hooks/read-allowlist.json` |
+| Opsgenie reaches end of support on 5 April 2027 and has no MCP server | Export alerts and schedules as CSV, or move to Jira Service Management |
 | No integration supplies AI tool usage or spend | Export usage from the tool's admin console (GitHub Copilot usage metrics, Cursor admin API, Claude Code analytics) and paste spend from your invoices |
 | Deployments are not in GitHub for some teams | Export a list of deploy dates, or tell the skill what counts as a deploy (for example merges to `main`) |
 
@@ -56,7 +60,9 @@ A plugin cannot ship permission deny rules (only `agent` and `subagentStatusLine
       "mcp__plugin_em-tools_atlassian__execute", "mcp__plugin_em-tools_atlassian__create*", "mcp__plugin_em-tools_atlassian__edit*",
       "mcp__plugin_em-tools_slack__slack_send_*", "mcp__plugin_em-tools_slack__slack_schedule_message", "mcp__plugin_em-tools_slack__slack_create_canvas",
       "mcp__plugin_em-tools_google-calendar__create_event", "mcp__plugin_em-tools_google-calendar__update_event", "mcp__plugin_em-tools_google-calendar__delete_event",
-      "mcp__plugin_em-tools_workiq__accept_eula", "mcp__plugin_em-tools_workiq__*_entity_work_iq", "mcp__plugin_em-tools_workiq__do_action_work_iq"
+      "mcp__plugin_em-tools_workiq__accept_eula", "mcp__plugin_em-tools_workiq__*_entity_work_iq", "mcp__plugin_em-tools_workiq__do_action_work_iq",
+      "mcp__plugin_em-tools_pagerduty__create_*", "mcp__plugin_em-tools_pagerduty__update_*", "mcp__plugin_em-tools_pagerduty__manage_*", "mcp__plugin_em-tools_pagerduty__add_*",
+      "mcp__plugin_em-tools_incident-io__*"
     ]
   }
 }
@@ -76,4 +82,6 @@ Tool names as documented or observed on 2026-10-23. Vendors add tools; the defau
 | Google Calendar | `create_event`, `update_event`, `respond_to_event`, `delete_event` | Plugin hook, read-only OAuth scope |
 | Slack | `slack_send_message`, `slack_send_message_draft`, `slack_schedule_message`, `slack_create_canvas`, `slack_add_reaction`, canvas updates | Plugin hook. `slack_search_public_and_private` is also blocked, because skills read public channels only |
 | Microsoft Work IQ (Outlook, Teams) | `create_entity_work_iq`, `update_entity_work_iq`, `delete_entity_work_iq`, `do_action_work_iq`, `call_function_work_iq`, `accept_eula` | Plugin hook |
+| PagerDuty | `create_incident`, `manage_incidents`, `add_responders`, `add_note_to_incident`, `start_incident_workflow`, `create_service`, `update_service`, `create_team`, `update_team`, `delete_team`, `add_team_member`, `remove_team_member`, `create_schedule`, `update_schedule`, `create_schedule_override`, `create_escalation_policy`, `update_escalation_policy`, `create_status_page_post`, `create_status_page_post_update`, `create_user`, alert grouping, orchestration and webhook writes. Per-person reads (`list_users`, `get_user_data`, `list_team_members`, `get_responder_metrics`, `get_responder_load_metrics`) are also left off the allowlist | Plugin hook |
+| incident.io | All tools, until read tools are verified | Plugin hook (empty allowlist) |
 | em-tools (own server) | `notes_create_person`, `notes_append_entry`, `notes_add_evidence`, `notes_update_frontmatter`, `notes_save_draft` | Not blocked: they write only inside your notes folder, never delete, and keep a `.bak`. Skills call them only after you confirm the text |

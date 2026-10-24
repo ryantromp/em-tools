@@ -660,6 +660,60 @@ for (const team of TEAMS) {
 
   readme.push(`| ${team.name} | ${team.em.name} | ${team.people.length} | ${team.tracker} | ${team.calendar} | ${team.chat} | ${team.aiTool} | ${prs.length} | ${deploys.length} |`);
 }
+// On-call: generated last, so its random draws never change the data above.
+function genOncall(team) {
+  const rotations = team.key === "team-a"
+    ? [{ name: "Payments primary", hours: 168, members: ["eng-a1", "eng-a2", "eng-a3", "eng-a5", "eng-a6", "eng-a7"], late: { slug: "eng-a4", from: "2026-10-05" } }]
+    : [
+        { name: "Mobile primary", hours: 168, members: ["eng-b1", "eng-b2", "eng-b3", "eng-b4", "eng-b5", "eng-b6"] },
+        { name: "Release duty", hours: 12, weekdaysOnly: true, members: ["eng-b4", "eng-b5", "eng-b6"] },
+      ];
+  const alerts = team.key === "team-a"
+    ? [["ledger-export-lag", false, 0.34], ["staging-disk-full", false, 0.18], ["api-5xx-rate", true, 0.2], ["payout-batch-stuck", true, 0.12], ["webhook-retry-exhausted", true, 0.16]]
+    : [["crash-rate-android", true, 0.3], ["crash-rate-ios", true, 0.2], ["push-delivery-lag", false, 0.3], ["image-cdn-latency", false, 0.2]];
+  const shifts = [];
+  const pages = [];
+  let pid = 1;
+  for (const rot of rotations) {
+    let i = 0;
+    const step = rot.hours * HOUR;
+    for (let t = at(START, 9).getTime(); t < END.getTime(); t += rot.hours === 12 ? DAY : step) {
+      const d = new Date(t);
+      if (rot.weekdaysOnly && (d.getUTCDay() === 0 || d.getUTCDay() === 6)) continue;
+      const pool = rot.late && day(d) >= rot.late.from ? [...rot.members, rot.late.slug] : rot.members;
+      const member = pool[i++ % pool.length];
+      const end = new Date(t + rot.hours * HOUR);
+      shifts.push({ rotation: rot.name, start: iso(d), end: iso(end), member });
+      // Pages per shift: more noise from August on Team A, more crash pages around releases on Team B.
+      const busy = team.key === "team-a" ? (d >= new Date("2026-08-01") ? 6 : 3.5) : rot.hours === 12 ? 0.6 : 3;
+      const n = Math.max(0, Math.round(busy + between(-2, 2.5)));
+      for (let k = 0; k < n; k++) {
+        const created = new Date(t + rand() * rot.hours * HOUR);
+        if (created > END) continue;
+        const r = rand();
+        let acc = 0;
+        let pick_ = alerts[0];
+        for (const al of alerts) { acc += al[2]; if (r <= acc) { pick_ = al; break; } }
+        const ackMin = Math.round(lognormalHours(6, 0.8) * (created.getUTCHours() < 7 ? 2 : 1));
+        pages.push({
+          id: `${team.key === "team-a" ? "PA" : "PB"}-${pid++}`, rotation: rot.name, created_at: iso(created),
+          acknowledged_at: iso(new Date(created.getTime() + ackMin * 60_000)),
+          resolved_at: iso(new Date(created.getTime() + (ackMin + Math.round(lognormalHours(35, 0.9))) * 60_000)),
+          alert: pick_[0], actionable: pick_[1], urgency: pick_[1] ? "high" : "low",
+          url: `https://${team.key === "team-a" ? "pagerduty" : "incident-io"}.example.com/${team.key}/alerts/${pid - 1}`,
+        });
+      }
+    }
+  }
+  pages.sort((x, y) => x.created_at.localeCompare(y.created_at));
+  return { shifts, pages };
+}
+for (const team of TEAMS) {
+  const { shifts, pages } = genOncall(team);
+  const dir = team.key === "team-a" ? "pagerduty" : "incident-io";
+  write(`${dir}/${team.key}-shifts.csv`, csv(shifts, ["rotation", "start", "end", "member"]));
+  write(`${dir}/${team.key}-pages.csv`, csv(pages, ["id", "rotation", "created_at", "acknowledged_at", "resolved_at", "alert", "urgency", "actionable", "url"]));
+}
 write("ai/usage.csv", csv(aiUsageAll, ["person", "team", "date", "tool", "active"]));
 write("ai/spend.csv", csv(aiSpendAll, ["month", "team", "tool", "amount", "currency", "note"]));
 write("notes/team-a/drafts/2026-10-12-upward-update.md", `# Team A weekly update, week of 2026-10-05 (exec version)
@@ -712,6 +766,7 @@ ${readme.join("\n")}
 | slack/, teams/ | Public channel messages with decisions and blockers |
 | incidents/ | Incident list per team |
 | ai/ | AI tool usage by person and day (input only; outputs never show it per person) and monthly spend |
+| pagerduty/, incident-io/ | On-call shifts and pages: Team A in PagerDuty format (one weekly rotation), Team B in incident.io format (a weekly rotation and a 3-person release-duty rotation) |
 | notes/team-a/, notes/team-b/ | Each EM's notes folder: team.md, ladder.md (Team A only), one file per person, last week's update |
 `);
 console.log("fixtures written to", ROOT);

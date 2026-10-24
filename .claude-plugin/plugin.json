@@ -10,7 +10,13 @@
   "homepage": "https://github.com/ryantromp/em-tools",
   "repository": "https://github.com/ryantromp/em-tools",
   "license": "MIT",
-  "keywords": ["engineering-management", "one-on-one", "performance-review", "dora", "local-first"],
+  "keywords": [
+    "engineering-management",
+    "one-on-one",
+    "performance-review",
+    "dora",
+    "local-first"
+  ],
   "userConfig": {
     "locale": {
       "type": "string",
@@ -27,7 +33,7 @@
     "enabled_integrations": {
       "type": "string",
       "title": "Enabled integrations",
-      "description": "Read-only data sources to use: github, jira, linear, google_calendar, outlook, slack, teams. Leave empty to work from pasted notes and CSV files only.",
+      "description": "Read-only data sources to use: github, jira, linear, google_calendar, outlook, slack, teams, pagerduty, incident_io. Leave empty to work from pasted notes and CSV files only.",
       "multiple": true
     }
   }

@@ -3,7 +3,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import { loadConfig } from "./config.ts";
 import { loadRows } from "./csv.ts";
-import { aiAdoption, dependencyAge, dora, meetingLoad, prFlow, MIN_GROUP_SIZE } from "./metrics.ts";
+import { aiAdoption, dependencyAge, dora, meetingLoad, oncallHealth, prFlow, MIN_GROUP_SIZE } from "./metrics.ts";
 import { Notes, NotesError } from "./notes.ts";
 
 const VERSION = "0.1.0";
@@ -145,6 +145,17 @@ server.registerTool("metrics_dependency_age", {
   },
 }, async (a) => guarded(() => dependencyAge(loadRows(a.rows, a.csv_path), {
   now: a.now, agingDays: a.aging_days, staleDays: a.stale_days, finished: loadRows(a.finished_rows, a.finished_csv_path),
+})));
+
+server.registerTool("metrics_oncall", {
+  description: `On-call health per rotation: pages per week, off-hours share, incidents per 12 on-call hours, 12-hour windows with more than 2 incidents, time to acknowledge, average share of time on call, top noisy alerts. Rotations under ${MIN_GROUP_SIZE} people show totals only. Page columns: rotation, created_at, acknowledged_at, alert (or title), actionable. Shift columns: rotation, start, end, member (counted only). Never returns people or shift dates.`,
+  inputSchema: {
+    page_rows: rows, page_csv_path: csvPath, shift_rows: rows, shift_csv_path: csvPath, ...window,
+    time_zone: z.string().optional().describe("IANA time zone such as Europe/London; handles daylight saving. Preferred over timezone_offset_minutes."),
+    timezone_offset_minutes: z.number().optional(), workday_start_hour: z.number().optional(), workday_end_hour: z.number().optional(),
+  },
+}, async (a) => guarded(() => oncallHealth(loadRows(a.page_rows, a.page_csv_path), loadRows(a.shift_rows, a.shift_csv_path), {
+  from: a.from, to: a.to, timeZone: a.time_zone, timezoneOffsetMinutes: a.timezone_offset_minutes, workdayStartHour: a.workday_start_hour, workdayEndHour: a.workday_end_hour,
 })));
 
 server.registerTool("metrics_ai_adoption", {

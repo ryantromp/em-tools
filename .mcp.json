@@ -2,7 +2,9 @@
   "mcpServers": {
     "em-tools": {
       "command": "node",
-      "args": ["${CLAUDE_PLUGIN_ROOT}/server/dist/em-tools-server.mjs"],
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/server/dist/em-tools-server.mjs"
+      ],
       "env": {
         "EM_TOOLS_NOTES_FOLDER": "${user_config.notes_folder}",
         "EM_TOOLS_LOCALE": "${user_config.locale}",
@@ -43,7 +45,19 @@
     },
     "workiq": {
       "command": "npx",
-      "args": ["-y", "@microsoft/workiq", "mcp"]
+      "args": [
+        "-y",
+        "@microsoft/workiq",
+        "mcp"
+      ]
+    },
+    "pagerduty": {
+      "type": "http",
+      "url": "https://mcp.pagerduty.com/mcp"
+    },
+    "incident-io": {
+      "type": "http",
+      "url": "https://mcp.incident.io/mcp"
     }
   }
 }
