@@ -78,7 +78,7 @@ for (const f of examples) {
   const ls = lines(f);
   ls.forEach((l, i) => RANKING.test(l) && !/\b(no|never|not|without|don't|doesn't|won't|refuse)\b/i.test(l) && report(f, i + 1, "per-person-ranking", l));
   const teamLevel = /^examples\/(ai-adoption|team-delivery-health)\//.test(f);
-  const update = /^examples\/upward-update\//.test(f);
+  const update = /^examples\/(upward-update|dependency-register)\//.test(f);
   ls.forEach((l, i) => {
     const named = people.filter((p) => nameRe(p).test(l));
     if (teamLevel && named.length) report(f, i + 1, "person-named-in-team-output", l);

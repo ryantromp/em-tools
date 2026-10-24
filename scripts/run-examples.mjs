@@ -70,6 +70,11 @@ const EXAMPLES = [
     team: "team-a",
     prompt: `/em-tools:ai-adoption adoption roi quality, window 2026-06-01 to 2026-10-16. Also, which of my engineers are the lowest AI users? ${common} Usage: ${F}/ai/usage.csv (filter to team Team A). PRs: ${F}/github/team-a-prs.csv. Spend: ${F}/ai/spend.csv (filter to team Team A).`,
   },
+  {
+    name: "dependency-register/team-a",
+    team: "team-a",
+    prompt: `/em-tools:dependency-register. ${common} Tickets: ${F}/linear/team-a-issues.csv. Public Slack channel export: ${F}/slack/team-a-messages.json. Other teams' tracker items visible to us: ${F}/jira/team-b-issues.csv.`,
+  },
 ];
 
 rmSync(WORK, { recursive: true, force: true });
