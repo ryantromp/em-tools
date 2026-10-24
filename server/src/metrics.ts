@@ -786,6 +786,10 @@ export function capacity(opts: {
   workdayStartHour?: number; timezoneOffsetMinutes?: number;
   plannedHours?: number; plannedPoints?: number;
 }) {
+  const realDate = (d: string) => /^\d{4}-\d{2}-\d{2}$/.test(d) && new Date(Date.parse(d + "T00:00:00Z")).toISOString().slice(0, 10) === d;
+  if (!realDate(opts.from) || !realDate(opts.to)) throw new Error(`from and to must be real YYYY-MM-DD dates (got ${opts.from} and ${opts.to}).`);
+  if (opts.from > opts.to) throw new Error(`The period starts after it ends (${opts.from} to ${opts.to}).`);
+  for (const h of opts.holidays ?? []) if (!realDate(h)) throw new Error(`Holiday ${h} is not a real YYYY-MM-DD date.`);
   const hoursPerDay = opts.hoursPerDay ?? 8;
   const focus = opts.focusFactor ?? 0.7;
   // Research puts on-call at 20 to 30% of one engineer's bandwidth (research.md, Part 2 section 2).
@@ -821,20 +825,31 @@ export function capacity(opts: {
   const afterDeductions = Math.max(0, period.hours - meetings - oncall);
   const focused = afterDeductions * focus;
 
-  // Buffer: the unplanned share of completed work over the last 3 to 5 sprints.
-  const past = (opts.sprints ?? [])
-    .filter((s) => toDate(s.start) && toDate(s.end))
-    .sort((a, b) => String(a.start).localeCompare(String(b.start)))
-    .slice(-5);
-  if (opts.sprints?.length && past.length < 3) warnings.push(`Only ${past.length} past sprints; the buffer needs 3 to 5.`);
+  // Buffer: the unplanned share of completed work over the last 3 to 5 finished sprints.
+  // A missing measurement is unknown, not zero, so a sprint without both figures is skipped.
+  const measured = (v: unknown) => v !== undefined && v !== null && String(v).trim() !== "" && Number.isFinite(Number(v)) && Number(v) >= 0;
+  const hasPoints = (s: Row) => measured(s.completed_points) && measured(s.unplanned_points);
+  const hasItems = (s: Row) => measured(s.completed_items) && measured(s.unplanned_items);
+  const periodStartMs = Date.parse(opts.from + "T00:00:00Z");
+  const finished = (opts.sprints ?? []).filter((s) => {
+    const st = toDate(s.start);
+    const en = toDate(s.end);
+    return st && en && en.getTime() < periodStartMs;
+  });
+  const skippedUnfinished = (opts.sprints ?? []).length - finished.length;
+  if (skippedUnfinished) warnings.push(`${skippedUnfinished} sprint(s) not finished before ${opts.from}, or without dates, were left out.`);
+  const candidates = finished.sort((a, b) => String(a.start).localeCompare(String(b.start))).slice(-5);
+  const usePoints = candidates.some(hasPoints);
+  const past = candidates.filter(usePoints ? hasPoints : hasItems);
+  if (past.length < candidates.length) warnings.push(`${candidates.length - past.length} sprint(s) were left out because completed or unplanned work is missing.`);
+  if (opts.sprints?.length && past.length < 3) warnings.push(`Only ${past.length} usable past sprints; the buffer needs 3 to 5.`);
   let completed = 0;
   let unplanned = 0;
-  const usePoints = past.length > 0 && past.every((s) => s.completed_points !== undefined && String(s.completed_points).trim() !== "");
   for (const s of past) {
     completed += toNum(usePoints ? s.completed_points : s.completed_items);
     unplanned += toNum(usePoints ? s.unplanned_points : s.unplanned_items);
   }
-  const bufferShare = completed > 0 ? unplanned / completed : null;
+  const bufferShare = past.length && completed > 0 ? unplanned / completed : null;
   if (bufferShare === null) warnings.push("No sprint history, so no buffer was drawn from history. Say what share to hold back.");
   const capacityHours = bufferShare === null ? focused : focused * (1 - bufferShare);
 

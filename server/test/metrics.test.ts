@@ -251,6 +251,29 @@ test("capacity: one unit, PTO as person-days, buffer and points from history", (
   assert.ok(!JSON.stringify(r).includes("x1"));
 });
 
+test("capacity ignores unfinished sprints and missing measurements, and rejects bad dates", () => {
+  const base = { members: 4, from: "2026-11-02", to: "2026-11-13" };
+  const done = (n: number, start: string, end: string) => ({ sprint: `S${n}`, start, end, completed_points: 20, unplanned_points: 4 });
+  const r = capacity({
+    ...base,
+    sprints: [
+      done(1, "2026-09-21", "2026-10-02"), done(2, "2026-10-05", "2026-10-16"), done(3, "2026-10-19", "2026-10-30"),
+      { sprint: "S4", start: "2026-11-02", end: "2026-11-13", completed_points: 3, unplanned_points: 0 },
+      { sprint: "S5", start: "2026-11-16", end: "2026-11-27", completed_points: 0, unplanned_points: 0 },
+    ],
+  });
+  assert.equal(r.past_sprints_used, 3);
+  assert.equal(r.steps.unplanned_buffer_pct, 20);
+  assert.ok(r.warnings.some((w) => /not finished/.test(w)));
+  const m = capacity({ ...base, sprints: [done(1, "2026-09-21", "2026-10-02"), { sprint: "S2", start: "2026-10-05", end: "2026-10-16", completed_points: 20 }] });
+  assert.equal(m.past_sprints_used, 1);
+  assert.ok(m.warnings.some((w) => /missing/.test(w)));
+  const none = capacity({ ...base, sprints: [{ sprint: "S2", start: "2026-10-05", end: "2026-10-16", completed_points: 20 }] });
+  assert.equal(none.steps.unplanned_buffer_pct, null);
+  assert.throws(() => capacity({ ...base, from: "2026-11-31" }), /real YYYY-MM-DD/);
+  assert.throws(() => capacity({ ...base, from: "2026-11-20" }), /starts after it ends/);
+});
+
 test("capacity without history warns and keeps no buffer", () => {
   const r = capacity({ members: 4, from: "2026-11-02", to: "2026-11-06" });
   assert.equal(r.steps.capacity_hours, Math.round(4 * 5 * 8 * 0.7));
