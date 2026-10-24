@@ -27,6 +27,7 @@ channels:
 ai_tools:
   - claude-code
 ladder: ladder.md
+expectations_storage: separate-file
 ---
 
 # Team A

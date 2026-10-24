@@ -8,6 +8,13 @@ export type Section = (typeof SECTIONS)[number];
 
 const SLUG = /^[a-z0-9][a-z0-9-]{0,63}$/;
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+// A real calendar date, so 2026-13-01 or 2026-02-30 is rejected.
+const calendarDate = () => z.string().regex(ISO_DATE).refine((d) => {
+  const t = Date.parse(d + "T00:00:00Z");
+  return !Number.isNaN(t) && new Date(t).toISOString().slice(0, 10) === d;
+}, { message: "not a real calendar date" });
+// Closing fences count only at the start of a line, so backticks inside a YAML value are safe.
+const fenced = (tag: string) => new RegExp("^```yaml " + tag + "\\n([\\s\\S]*?)^```[ \\t]*$", "gm");
 
 export const EvidenceItem = z.object({
   id: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$/),
@@ -26,11 +33,34 @@ export const EvidenceItem = z.object({
 });
 export type EvidenceItem = z.infer<typeof EvidenceItem>;
 
+export const EXPECTATION_KINDS = ["expectation", "support", "progress", "follow_up", "hr", "wellbeing_raised"] as const;
+export const STORAGE_MODES = ["person-file", "separate-file"] as const;
+export type StorageMode = (typeof STORAGE_MODES)[number];
+export const EXPECTATIONS_HEADING = "Expectations";
+
+export const ExpectationItem = z.object({
+  id: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$/),
+  person: z.string().regex(SLUG),
+  kind: z.enum(EXPECTATION_KINDS),
+  date: calendarDate(),
+  how: z.string().nullable().default(null),
+  in_writing: z.boolean().default(false),
+  text: z.string().default(""),
+  link: z.string().url().nullable().default(null),
+  captured: calendarDate(),
+}).refine((e) => e.kind === "wellbeing_raised" ? e.text.trim() === "" : e.text.trim() !== "", {
+  message: "text is required, except for wellbeing_raised, which records only the date and must have no text",
+  path: ["text"],
+});
+export type ExpectationItem = z.infer<typeof ExpectationItem>;
+
 export interface PersonDoc {
   slug: string;
   frontmatter: Record<string, unknown>;
   title: string;
   sections: Record<Section, string>;
+  // Sections em-tools does not manage (including Expectations), kept in order so writes never drop them.
+  extra: Array<{ heading: string; content: string }>;
   evidence: EvidenceItem[];
   invalidEvidence: string[];
 }
@@ -46,12 +76,75 @@ function personPath(folder: string, slug: string): string {
   return join(folder, "people", `${checkSlug(slug)}.md`);
 }
 
+function expectationsPath(folder: string, slug: string): string {
+  return join(folder, "people", `${checkSlug(slug)}.expectations.md`);
+}
+
+function parseExpectations(text: string): { items: ExpectationItem[]; invalid: string[] } {
+  const items: ExpectationItem[] = [];
+  const invalid: string[] = [];
+  for (const m of text.matchAll(fenced("expectation"))) {
+    try {
+      const parsed = ExpectationItem.safeParse(YAML.parse(m[1]));
+      if (parsed.success) items.push(parsed.data);
+      else invalid.push(m[1].trim().split("\n")[0]);
+    } catch {
+      invalid.push(m[1].trim().split("\n")[0]);
+    }
+  }
+  return { items, invalid };
+}
+
+export function expectationBlock(item: ExpectationItem): string {
+  return "```yaml expectation\n" + YAML.stringify(item) + "```";
+}
+
+export interface ExpectationGap {
+  kind: "no_written_follow_up" | "no_support_recorded" | "no_change_recorded" | "no_hr_contact_recorded";
+  expectation_id?: string;
+  since?: string;
+  detail: string;
+}
+
+function addDays(date: string, days: number): string {
+  return new Date(Date.parse(date + "T00:00:00Z") + days * 86_400_000).toISOString().slice(0, 10);
+}
+
+// Missing steps in the record. Facts only: never a risk score or a recommendation.
+export function expectationGaps(items: ExpectationItem[], now: string, followUpDays = 7, progressDays = 30): ExpectationGap[] {
+  const sorted = [...items].sort((a, b) => a.date.localeCompare(b.date));
+  const expectations = sorted.filter((e) => e.kind === "expectation");
+  if (!expectations.length) return [];
+  const gaps: ExpectationGap[] = [];
+  for (const e of expectations) {
+    if (e.in_writing) continue;
+    const deadline = addDays(e.date, followUpDays);
+    const written = sorted.some((f) => f.kind === "follow_up" && f.in_writing && f.date >= e.date && f.date <= deadline);
+    if (!written) gaps.push({ kind: "no_written_follow_up", expectation_id: e.id, since: e.date, detail: `Expectation set on ${e.date} has no written follow-up within ${followUpDays} days.` });
+  }
+  const first = expectations[0].date;
+  if (!sorted.some((x) => x.kind === "support" && x.date >= first)) {
+    gaps.push({ kind: "no_support_recorded", since: first, detail: `No support recorded since the first expectation on ${first}.` });
+  }
+  const latest = expectations[expectations.length - 1].date;
+  const progress = sorted.filter((x) => x.kind === "progress" && x.date >= latest);
+  const lastSeen = progress.length ? progress[progress.length - 1].date : latest;
+  if (addDays(lastSeen, progressDays) < now) {
+    gaps.push({ kind: "no_change_recorded", since: lastSeen, detail: `No change recorded for more than ${progressDays} days, since ${lastSeen}.` });
+  }
+  if (!sorted.some((x) => x.kind === "hr")) {
+    gaps.push({ kind: "no_hr_contact_recorded", detail: "No HR contact recorded. Check your local policy on when to involve HR." });
+  }
+  return gaps;
+}
+
 export function parsePerson(slug: string, text: string): PersonDoc {
   const fm = /^---\n([\s\S]*?)\n---\n?/.exec(text);
   const frontmatter = fm ? (YAML.parse(fm[1]) ?? {}) : {};
   const body = fm ? text.slice(fm[0].length) : text;
   const titleMatch = /^# (.+)$/m.exec(body);
   const sections = Object.fromEntries(SECTIONS.map((s) => [s, ""])) as Record<Section, string>;
+  const extra: Array<{ heading: string; content: string }> = [];
   const parts = body.split(/^## /m).slice(1);
   for (const part of parts) {
     const nl = part.indexOf("\n");
@@ -59,10 +152,11 @@ export function parsePerson(slug: string, text: string): PersonDoc {
     const content = nl === -1 ? "" : part.slice(nl + 1).trim();
     const match = SECTIONS.find((s) => s.toLowerCase() === heading.toLowerCase());
     if (match) sections[match] = content;
+    else extra.push({ heading, content });
   }
   const evidence: EvidenceItem[] = [];
   const invalidEvidence: string[] = [];
-  for (const m of sections.Evidence.matchAll(/```yaml evidence\n([\s\S]*?)```/g)) {
+  for (const m of sections.Evidence.matchAll(fenced("evidence"))) {
     try {
       const parsed = EvidenceItem.safeParse(YAML.parse(m[1]));
       if (parsed.success) evidence.push(parsed.data);
@@ -71,13 +165,14 @@ export function parsePerson(slug: string, text: string): PersonDoc {
       invalidEvidence.push(m[1].trim().split("\n")[0]);
     }
   }
-  return { slug, frontmatter, title: titleMatch?.[1] ?? String(frontmatter.name ?? slug), sections, evidence, invalidEvidence };
+  return { slug, frontmatter, title: titleMatch?.[1] ?? String(frontmatter.name ?? slug), sections, extra, evidence, invalidEvidence };
 }
 
 export function renderPerson(doc: PersonDoc): string {
   const fm = YAML.stringify(doc.frontmatter).trimEnd();
   const out = [`---\n${fm}\n---`, `# ${doc.title}`];
   for (const s of SECTIONS) out.push(`## ${s}\n\n${doc.sections[s].trim()}`.trimEnd());
+  for (const x of doc.extra) out.push(`## ${x.heading}\n\n${x.content.trim()}`.trimEnd());
   return out.join("\n\n") + "\n";
 }
 
@@ -104,7 +199,7 @@ export class Notes {
     const people: Array<Record<string, unknown>> = [];
     const dir = join(this.folder, "people");
     if (!existsSync(dir)) return [];
-    for (const f of readdirSync(dir).filter((x) => x.endsWith(".md")).sort()) {
+    for (const f of readdirSync(dir).filter((x) => x.endsWith(".md") && !x.endsWith(".expectations.md")).sort()) {
       const slug = f.slice(0, -3);
       try {
         people.push({ ...parsePerson(slug, readFileSync(join(dir, f), "utf8")).frontmatter, slug });
@@ -130,6 +225,7 @@ export class Notes {
       frontmatter: { ...frontmatter, slug },
       title: String(frontmatter.name ?? slug),
       sections: { Log: "", "Open threads": "", Actions: "", Evidence: "" },
+      extra: [],
       evidence: [],
       invalidEvidence: [],
     };
@@ -184,6 +280,68 @@ export class Notes {
     const ladderPath = join(this.folder, ladderName);
     if (!ladderPath.startsWith(this.folder)) throw new NotesError("The ladder path must be inside the notes folder.");
     return { team, teamText, ladder: existsSync(ladderPath) ? readFileSync(ladderPath, "utf8") : null };
+  }
+
+  expectationsStorage(): StorageMode | null {
+    const { team } = this.readTeam();
+    const v = team.expectations_storage;
+    return (STORAGE_MODES as readonly string[]).includes(v as string) ? (v as StorageMode) : null;
+  }
+
+  // Only changes the team.md frontmatter. Never moves or deletes existing records.
+  setExpectationsStorage(mode: StorageMode): string {
+    if (!(STORAGE_MODES as readonly string[]).includes(mode)) throw new NotesError(`Storage must be one of: ${STORAGE_MODES.join(", ")}.`);
+    const { team, teamText } = this.readTeam();
+    const fm = /^---\n([\s\S]*?)\n---\n?/.exec(teamText);
+    const body = fm ? teamText.slice(fm[0].length) : teamText;
+    const path = join(this.folder, "team.md");
+    safeWrite(path, `---\n${YAML.stringify({ ...team, expectations_storage: mode }).trimEnd()}\n---\n${body}`);
+    return path;
+  }
+
+  listExpectations(slug: string, now?: string): {
+    storage: StorageMode | null; items: ExpectationItem[]; invalid: string[];
+    found_in: { person_file: number; separate_file: number }; gaps: ExpectationGap[];
+  } {
+    const doc = this.readPerson(slug);
+    const inPerson = parseExpectations(doc.extra.find((x) => x.heading.toLowerCase() === EXPECTATIONS_HEADING.toLowerCase())?.content ?? "");
+    const sep = expectationsPath(this.folder, slug);
+    const inSeparate = existsSync(sep) ? parseExpectations(readFileSync(sep, "utf8")) : { items: [], invalid: [] };
+    const byId = new Map<string, ExpectationItem>();
+    for (const e of [...inPerson.items, ...inSeparate.items]) if (!byId.has(e.id)) byId.set(e.id, e);
+    const items = [...byId.values()].sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
+    return {
+      storage: this.expectationsStorage(),
+      items,
+      invalid: [...inPerson.invalid, ...inSeparate.invalid],
+      found_in: { person_file: inPerson.items.length, separate_file: inSeparate.items.length },
+      gaps: expectationGaps(items, now ?? new Date().toISOString().slice(0, 10)),
+    };
+  }
+
+  // Append-only. Skips duplicates by id across both storage places.
+  addExpectation(input: unknown): { path: string; added: boolean; storage: StorageMode } {
+    const item = ExpectationItem.parse(input);
+    const storage = this.expectationsStorage();
+    if (!storage) throw new NotesError("No expectations_storage in team.md. Ask the EM where records go (person-file or separate-file), then call notes_set_expectations_storage.");
+    const doc = this.readPerson(item.person);
+    const existing = this.listExpectations(item.person, item.captured).items;
+    if (storage === "person-file") {
+      const path = personPath(this.folder, item.person);
+      if (existing.some((e) => e.id === item.id)) return { path, added: false, storage };
+      let section = doc.extra.find((x) => x.heading.toLowerCase() === EXPECTATIONS_HEADING.toLowerCase());
+      if (!section) doc.extra.push((section = { heading: EXPECTATIONS_HEADING, content: "" }));
+      section.content = [section.content.trim(), expectationBlock(item)].filter(Boolean).join("\n\n");
+      safeWrite(path, renderPerson(doc));
+      return { path, added: true, storage };
+    }
+    const path = expectationsPath(this.folder, item.person);
+    if (existing.some((e) => e.id === item.id)) return { path, added: false, storage };
+    const current = existsSync(path)
+      ? readFileSync(path, "utf8").trimEnd()
+      : `---\nperson: ${item.person}\nrecord: expectations\n---\n\n# ${doc.title}: expectations record\n\nAppend-only. Facts and dates in the EM's words. Not a verdict.\n\n## ${EXPECTATIONS_HEADING}`;
+    safeWrite(path, `${current}\n\n${expectationBlock(item)}\n`);
+    return { path, added: true, storage };
   }
 
   saveDraft(skill: string, date: string, content: string): string {

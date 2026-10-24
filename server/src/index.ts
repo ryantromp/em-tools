@@ -102,6 +102,28 @@ server.registerTool("notes_read_team", {
   inputSchema: {},
 }, async () => guarded(() => notes().readTeam()));
 
+server.registerTool("notes_set_expectations_storage", {
+  description: "Save where underperformance records go, as expectations_storage in team.md: person-file (an Expectations section in people/<slug>.md) or separate-file (people/<slug>.expectations.md). Only call after the EM chooses. Never moves or deletes existing records. Keeps a .bak.",
+  inputSchema: { storage: z.enum(["person-file", "separate-file"]) },
+}, async ({ storage }) => guarded(() => ({ path: notes().setExpectationsStorage(storage) })));
+
+server.registerTool("notes_add_expectation", {
+  description: "Append one dated record to a person's expectations record, in the place set by expectations_storage. Kinds: expectation, support, progress (change seen), follow_up, hr, wellbeing_raised (date only, no text). Append-only, skips duplicate ids, keeps a .bak. Only call after the EM confirms the exact text.",
+  inputSchema: {
+    item: z.object({
+      id: z.string(), person: z.string(),
+      kind: z.enum(["expectation", "support", "progress", "follow_up", "hr", "wellbeing_raised"]),
+      date: z.string(), how: z.string().nullable().optional(), in_writing: z.boolean().optional(),
+      text: z.string().optional(), link: z.string().nullable().optional(), captured: z.string(),
+    }),
+  },
+}, async ({ item }) => guarded(() => notes().addExpectation(item)));
+
+server.registerTool("notes_list_expectations", {
+  description: "Read a person's expectations record from both storage places, oldest first, with the storage setting and a gaps list (no written follow-up within 7 days, no support recorded, no change recorded for 30 days, no HR contact recorded). Facts only; never a score.",
+  inputSchema: { slug: z.string(), now: z.string().optional() },
+}, async ({ slug, now }) => guarded(() => notes().listExpectations(slug, now)));
+
 server.registerTool("notes_save_draft", {
   description: "Save a skill's output as a dated draft in the notes folder's drafts/ folder. Never overwrites; adds a suffix instead.",
   inputSchema: { skill: z.string(), date: z.string(), content: z.string() },
