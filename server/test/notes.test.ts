@@ -150,3 +150,26 @@ test("expectation gaps are facts about missing steps", () => {
   assert.deepEqual(kinds("2026-10-10", full), []);
   assert.deepEqual(expectationGaps([], "2026-10-10"), []);
 });
+
+test("backticks in a record round-trip, and impossible dates are rejected", () => {
+  const { n } = teamFolder("separate-file");
+  const text = "Use ``` fences in PR descriptions.\n```\nand this line too.";
+  n.addExpectation(exp({ text }));
+  const r = n.listExpectations("eng-x1", "2026-08-20");
+  assert.equal(r.items[0]?.text, text);
+  assert.deepEqual(r.invalid, []);
+  assert.equal(n.addExpectation(exp({ text })).added, false);
+  assert.throws(() => n.addExpectation(exp({ id: "bad", date: "2026-13-01" })), /calendar date/);
+  assert.throws(() => n.addExpectation(exp({ id: "bad", date: "2026-02-30" })), /calendar date/);
+});
+
+test("a hand-edited impossible date is reported as invalid, not a crash", () => {
+  const { f, n } = teamFolder("separate-file");
+  n.addExpectation(exp());
+  const p = join(f, "people", "eng-x1.expectations.md");
+  writeFileSync(p, readFileSync(p, "utf8").replace('date: "2026-08-11"', 'date: "2026-13-01"').replace("date: 2026-08-11", "date: 2026-13-01"));
+  const r = n.listExpectations("eng-x1", "2026-08-20");
+  assert.equal(r.items.length, 0);
+  assert.equal(r.invalid.length, 1);
+  assert.doesNotThrow(() => n.addExpectation(exp({ id: "ex-2" })));
+});

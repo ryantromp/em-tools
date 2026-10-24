@@ -8,6 +8,13 @@ export type Section = (typeof SECTIONS)[number];
 
 const SLUG = /^[a-z0-9][a-z0-9-]{0,63}$/;
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+// A real calendar date, so 2026-13-01 or 2026-02-30 is rejected.
+const calendarDate = () => z.string().regex(ISO_DATE).refine((d) => {
+  const t = Date.parse(d + "T00:00:00Z");
+  return !Number.isNaN(t) && new Date(t).toISOString().slice(0, 10) === d;
+}, { message: "not a real calendar date" });
+// Closing fences count only at the start of a line, so backticks inside a YAML value are safe.
+const fenced = (tag: string) => new RegExp("^```yaml " + tag + "\\n([\\s\\S]*?)^```[ \\t]*$", "gm");
 
 export const EvidenceItem = z.object({
   id: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$/),
@@ -35,12 +42,12 @@ export const ExpectationItem = z.object({
   id: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$/),
   person: z.string().regex(SLUG),
   kind: z.enum(EXPECTATION_KINDS),
-  date: z.string().regex(ISO_DATE),
+  date: calendarDate(),
   how: z.string().nullable().default(null),
   in_writing: z.boolean().default(false),
   text: z.string().default(""),
   link: z.string().url().nullable().default(null),
-  captured: z.string().regex(ISO_DATE),
+  captured: calendarDate(),
 }).refine((e) => e.kind === "wellbeing_raised" ? e.text.trim() === "" : e.text.trim() !== "", {
   message: "text is required, except for wellbeing_raised, which records only the date and must have no text",
   path: ["text"],
@@ -76,7 +83,7 @@ function expectationsPath(folder: string, slug: string): string {
 function parseExpectations(text: string): { items: ExpectationItem[]; invalid: string[] } {
   const items: ExpectationItem[] = [];
   const invalid: string[] = [];
-  for (const m of text.matchAll(/```yaml expectation\n([\s\S]*?)```/g)) {
+  for (const m of text.matchAll(fenced("expectation"))) {
     try {
       const parsed = ExpectationItem.safeParse(YAML.parse(m[1]));
       if (parsed.success) items.push(parsed.data);
@@ -149,7 +156,7 @@ export function parsePerson(slug: string, text: string): PersonDoc {
   }
   const evidence: EvidenceItem[] = [];
   const invalidEvidence: string[] = [];
-  for (const m of sections.Evidence.matchAll(/```yaml evidence\n([\s\S]*?)```/g)) {
+  for (const m of sections.Evidence.matchAll(fenced("evidence"))) {
     try {
       const parsed = EvidenceItem.safeParse(YAML.parse(m[1]));
       if (parsed.success) evidence.push(parsed.data);
