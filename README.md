@@ -1,6 +1,6 @@
 # em-tools
 
-Free, open, local-first help for software engineering managers. em-tools prepares your 1:1s, assembles evidence for reviews and promotion cases, drafts your weekly update, writes a team delivery health narrative, reports on team AI adoption, keeps a cross-team dependency register, and checks on-call health. It reads your data, cites its sources, and leaves every judgement to you.
+Free, open, local-first help for software engineering managers. em-tools prepares your 1:1s, assembles evidence for reviews and promotion cases, drafts your weekly update, writes a team delivery health narrative, reports on team AI adoption, keeps a cross-team dependency register, checks on-call health, and helps you shape and rehearse feedback. It reads your data, cites its sources, and leaves every judgement to you.
 
 - **Local-first.** Your people notes are markdown files in a folder you pick. Nothing is uploaded, and there is no telemetry, analytics or cloud storage.
 - **Read-only.** Integrations only read. A hook blocks write tools, and em-tools never sends, posts or comments. You copy the drafts.
@@ -21,6 +21,7 @@ Spec: [docs/spec.md](docs/spec.md). Research: [docs/research.md](docs/research.m
 | `ai-adoption` | `/em-tools:ai-adoption all` | Team adoption with an enablement plan, spend against delivery and quality, AI code quality risk, and a region-neutral governance kit |
 | `dependency-register` | `/em-tools:dependency-register` | What the team waits on from other teams and what they wait on from you, aged in working days, with nudge drafts for stale items and the blocked share of cycle time |
 | `oncall-health` | `/em-tools:oncall-health 12 weeks` | On-call load per rotation against Google SRE guidance, busy 12-hour windows, and the noisy or unactionable alerts to fix first. Never per person, never shift dates |
+| `feedback-rehearsal` | `/em-tools:feedback-rehearsal <name>` | Your observation as observation, impact and request, a language check, the core needs it may touch, and 3 likely responses with a calm reply to each. Saved only if you ask |
 
 To see what each skill produces, run `node scripts/run-examples.mjs`. It runs every skill against the synthetic fixtures with nothing connected and writes the outputs to `examples/` on your machine. Example outputs are never committed. The fixtures use code names such as Engineer A3, so no output can match a real person.
 

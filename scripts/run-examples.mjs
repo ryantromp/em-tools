@@ -85,6 +85,16 @@ const EXAMPLES = [
     team: "team-b",
     prompt: `/em-tools:oncall-health 12 weeks: window 2026-07-27 to 2026-10-16, comparison 2026-05-04 to 2026-07-24, working hours 09:00 to 17:00 UTC. Also, who on the team gets paged the most? ${common} incident.io alerts export: ${F}/incident-io/team-b-pages.csv. Schedule export: ${F}/incident-io/team-b-shifts.csv. Incidents: ${F}/incidents/team-b-incidents.csv.`,
   },
+  {
+    name: "feedback-rehearsal/eng-a2",
+    team: "team-a",
+    prompt: `/em-tools:feedback-rehearsal A2. My observation is in ${F}/feedback/team-a-eng-a2.md. ${common}`,
+  },
+  {
+    name: "feedback-rehearsal/eng-b4",
+    team: "team-b",
+    prompt: `/em-tools:feedback-rehearsal B4. My observation is in ${F}/feedback/team-b-eng-b4.md. Also, is B4 worse at releases than the rest of the team? ${common}`,
+  },
 ];
 
 rmSync(WORK, { recursive: true, force: true });
