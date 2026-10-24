@@ -275,3 +275,94 @@ Sources are in [research.md, Part 5](research.md#part-5-phase-2-data-sources).
 | 3 | On-call rotations are small, so shift-level data identifies people | Rotation totals only; no shift dates; rotations under 4 people get totals only |
 | 4 | The hosted PagerDuty server has no read-only switch | Default-deny hook allowlist, as in v1. Document the local read-only server as an option |
 | 5 | Postmortems can drift into blame through names in the timeline | Roles, not names, plus a lint rule on drafts |
+
+## 10. Phase 3 spec (draft for approval, 2026-10-24)
+
+Eight skills, in roadmap order. About 1,500 words, readable in about 7 minutes. The v1 principles apply unchanged: each skill works from pasted notes or CSV with zero integrations, cites every fact, produces drafts only, and never ranks people. Phase 3 carries more misuse risk than Phase 2, so each spec names the misuse it guards against.
+
+### 10.1 Summary
+
+| # | Skill | Job it does | Main inputs | New data source | Est. build |
+|---|---|---|---|---|---|
+| 1 | `capacity-plan` | Team capacity for the next sprint or quarter, with explicit deductions and a buffer drawn from history | Members, PTO and holidays, meeting load, on-call shifts, last 3 to 5 sprints | Calendar out-of-office events; Linear cycles; Jira sprints (export until verified) | 60 min |
+| 2 | `onboarding-plan` | A 30/60/90 plan for a new joiner, with check-in prompts | Team template, first 1:1 answers, ladder | None | 30 min |
+| 3 | `tech-debt-register` | A debt register with business-impact phrasing, allocation against target, and a leadership case | Debt-labelled issues, code hotspots, incidents | Local `git log` (read-only) | 60 min |
+| 4 | `calibration-prep` | A one-page evidence summary per person on the EM's own team, plus a text-versus-rating self-check | review-packet evidence, the EM's draft ratings | None | 45 min |
+| 5 | `delegation-board` | Match the EM's tasks to reports' stated growth goals | The EM's task list, career goals from person files | None | 30 min |
+| 6 | `team-pulse` | Themes over time from an opt-in anonymous check-in on the six Maslach areas | A no-names survey export | None (the EM's own survey tool) | 45 min |
+| 7 | `rfc-review` | A completeness check, open questions and missing reviewers for an RFC | RFC markdown, CODEOWNERS, the team's template | None (GitHub from v1) | 30 min |
+| 8 | `headcount-case` | A one-page business case built from team-level evidence | Capacity, on-call, debt allocation, roadmap | None | 45 min |
+
+Build plan: one `feature/<skill>` branch and PR per skill, in this order. Each adds fixtures for Team A and Team B, a test for any new server maths, and lint rules where the skill adds a risk.
+
+### 10.2 Skill specs
+
+**1. capacity-plan**
+- **Outputs:** team capacity in hours and, when the team uses them, points: raw working days, minus PTO and public holidays, minus meeting hours, minus on-call share, times a focus factor (default 0.7, stated). A buffer for unplanned work set from the unplanned share actually seen over the last 3 to 5 sprints, not a fixed 20%. A carryover and overcommit warning when planned work exceeds the capacity range.
+- **Rules:** team totals only. PTO is shown as person-days off, never who is off or when. No per-person velocity, ever.
+- **Server:** `metrics_capacity` (pure). Reuses the meeting-load and on-call maths.
+- **Misuse it guards against:** turning capacity into per-person utilisation targets.
+
+**2. onboarding-plan**
+- **Outputs:** a 30/60/90 plan with milestones the new joiner agrees to (first PR, first on-call shadow, owning a small area), a buddy checklist, and dated check-in questions for the 1:1s. Built from the team template in `team.md`, the first 1:1 answers (Lara Hogan's questions) and the ladder.
+- **Rules:** milestones are outcomes the joiner agreed to, never activity counts (no PRs per week). Saved only as a person-file log entry after the EM confirms.
+- **Server:** none new.
+- **Misuse it guards against:** activity quotas dressed up as onboarding.
+
+**3. tech-debt-register**
+- **Outputs:** a register of debt items (from tracker labels, TODO and FIXME scans, and hotspots) with age, the business impact in plain words, linked incidents, and a suggested next step. Hotspots: files that change often and are large, from `git log` on the EM's local clone. Debt allocation per sprint against a target the EM sets. A one-page case for leadership.
+- **Rules:** files, services and items, never authors. `git log` is read without author fields. The skill runs only fixed, read-only git commands, or the EM pastes their output.
+- **Server:** `metrics_hotspots` and `metrics_debt_allocation` (pure).
+- **Misuse it guards against:** blaming whoever touched a hotspot.
+
+**4. calibration-prep**
+- **Outputs:** one page per person on the EM's own team: the claim the EM wants to make, the 3 strongest dated evidence items, the ladder mapping, and the known gaps. A self-check per person: does the EM's draft rating match the density and level of the evidence, and how many personality or vague words are in the text (the v1 language list).
+- **Rules:** one person per page. No cross-person table, ranking, distribution curve or suggested rating. The EM's rating is their own input and is never changed or proposed. Ends with the HR line.
+- **Server:** none new (reads `notes_list_evidence`).
+- **Misuse it guards against:** forced ranking and rating trades in the calibration room.
+
+**5. delegation-board**
+- **Outputs:** the EM's "only I can do this" list capped at 5; the rest as delegation candidates; for each, a suggested match to a report whose stated career goal it serves, with a check-in date.
+- **Rules:** matches come only from goals the person stated in their file, never from output data. Suggestions only; the EM decides and asks the person.
+- **Server:** none new.
+- **Misuse it guards against:** dumping work on whoever looks least busy.
+
+**6. team-pulse**
+- **Outputs:** themes over time on Maslach's six areas (workload, control, reward, community, fairness, values) from a check-in the team opts into; month-on-month direction; 2 or 3 discussion prompts for the retro.
+- **Rules:** the EM runs the check-in in the survey tool their organisation already uses, with no names collected. em-tools only reads the export. Any period or area with fewer than 4 responses is suppressed. No per-person burnout labels and no keystroke, commit or calendar monitoring. Ends with the HR line when it touches wellbeing or burnout.
+- **Server:** `metrics_pulse` (pure, k of 4 suppression).
+- **Misuse it guards against:** de-anonymising respondents, or a survey nobody acts on.
+
+**7. rfc-review**
+- **Outputs:** a completeness check against the team's RFC template (summary, problem, proposal, success criteria, rollout, dependencies, risks), open questions pulled from the text, suggested reviewers from CODEOWNERS for the paths it touches, and a review-by date. After launch, an optional check of whether the doc still matches what shipped.
+- **Rules:** reviews the document, never its author. Comments are drafts for the EM to post.
+- **Server:** none new.
+
+**8. headcount-case**
+- **Outputs:** a one-page case: problem, evidence (capacity shortfall, on-call load against SRE guidance, unplanned work share, debt allocation shortfall), options including "do nothing", cost, and the risk of each.
+- **Rules:** team-level data only. No individual's performance or workload is used as evidence. Costs are the EM's figures. Ends with a reminder to check budget and HR process.
+- **Server:** none new (reads the outputs of skills 1 and 3 and oncall-health).
+
+### 10.3 New data sources (checked 2026-10-24)
+
+| Source | Mechanism | Read-only control | Used by |
+|---|---|---|---|
+| Google Calendar out-of-office | `outOfOffice` event type through the existing Calendar MCP server | Hook allowlist (v1); write tools blocked | capacity-plan |
+| Outlook out-of-office | Show-as `oof` through Work IQ, or an ICS export | Hook allowlist (v1) | capacity-plan |
+| Linear cycles | `list_cycles` on the existing Linear server | Add to the allowlist | capacity-plan, tech-debt-register |
+| Jira sprints | Reported Rovo tools `listJiraBoardSprints`, `getJiraBoardSprintData`; `manageJiraSprint` writes. Unverified | Export until verified; `manageJiraSprint` stays blocked | capacity-plan |
+| Local git history | `git log --numstat` on the EM's own clone, author fields dropped | Fixed read-only command, or pasted output | tech-debt-register |
+| Survey export | CSV from the organisation's own survey tool, no names | Aggregated in memory, k of 4 | team-pulse |
+
+Sources are in [research.md, Part 6](research.md#part-6-phase-3-data-sources).
+
+### 10.4 Phase 3 risks and open questions
+
+| # | Risk or question | Proposal |
+|---|---|---|
+| 1 | Calibration prep could feed forced ranking | One page per person, no cross-person view, no suggested ratings, HR line |
+| 2 | Pulse free-text comments can identify the writer by style | Show themes only, paraphrased, never verbatim quotes; suppress below 4 responses |
+| 3 | Running `git log` is a new kind of local command | A fixed read-only command on a path the EM names, or pasted output; never `git` writes or network calls |
+| 4 | Who is off, and when, is personal | Capacity shows person-days off as a team total only |
+| 5 | Headcount cases tempt using one person's overload as evidence | Team-level data only; the lint rule from team outputs applies |
+| 6 | Jira sprint tool names are unverified | Export first; add the read tools to the allowlist once seen live in `/mcp` |
