@@ -415,6 +415,14 @@ export class Notes {
     return { candidate, items: items.sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id)), invalid };
   }
 
+  readHiringDoc(role: string, file: string): { file: string; content: string } {
+    // Only a plain file name directly in the role folder, never a path.
+    if (!/^[a-z0-9][a-z0-9-]*\.md$/.test(file)) throw new NotesError(`"${file}" is not a hiring document name.`);
+    const path = join(this.hiringDir(role), file);
+    if (!existsSync(path)) throw new NotesError(`No hiring document "${file}" for role "${role}".`);
+    return { file, content: readFileSync(path, "utf8") };
+  }
+
   // What exists for a role, without any scores: documents, and per candidate the stages
   // with a written scorecard and who has written one.
   listHiring(role: string): {
@@ -423,7 +431,9 @@ export class Notes {
   } {
     const dir = this.hiringDir(role);
     if (!existsSync(dir)) return { role, docs: [], candidates: [] };
-    const docs = readdirSync(dir).filter((f) => f.endsWith(".md")).sort();
+    // Sort without the extension so "<date>-<kind>.md" comes before its "-2" revision.
+    const stem = (f: string) => f.slice(0, -3);
+    const docs = readdirSync(dir).filter((f) => f.endsWith(".md")).sort((a, b) => stem(a).localeCompare(stem(b)));
     const cdir = join(dir, "candidates");
     const candidates = existsSync(cdir)
       ? readdirSync(cdir).filter((f) => f.endsWith(".md")).sort().map((f) => {

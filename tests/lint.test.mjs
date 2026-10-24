@@ -59,13 +59,14 @@ test("lint catches candidate verdicts in hiring outputs", () => {
   const dir = new URL("../examples/hiring-loop-kit/", import.meta.url);
   mkdirSync(dir, { recursive: true });
   const bad = new URL("zz-lint-negative.md", dir);
-  writeFileSync(bad, "cand-c1 is the stronger candidate.\nOverall score: 3.5.\nFine: I won't say which candidate to hire.\nFine: the hiring manager decides.\nFine: which candidate to hire is for the panel.\nVerdict: hire cand-c2.\n");
+  writeFileSync(bad, "cand-c1 is the stronger candidate.\nOverall score: 3.5.\nFine: I won't say which candidate to hire.\nFine: the hiring manager decides.\nFine: which candidate to hire is for the panel.\nVerdict: hire cand-c2.\nWe hire cand-c1.\nFine: should we hire is a question for the panel.\n");
   try {
     const r = spawnSync("node", [new URL("../scripts/lint", import.meta.url).pathname], { encoding: "utf8" });
     assert.equal(r.status, 1);
     assert.match(r.stdout, /zz-lint-negative\.md:1 .*\[verdict-in-hiring\]/);
     assert.match(r.stdout, /zz-lint-negative\.md:2 .*\[verdict-in-hiring\]/);
     assert.match(r.stdout, /zz-lint-negative\.md:6 .*\[verdict-in-hiring\]/);
+    assert.match(r.stdout, /zz-lint-negative\.md:7 .*\[verdict-in-hiring\]/);
     assert.doesNotMatch(r.stdout, /Fine:/);
   } finally {
     rmSync(bad);

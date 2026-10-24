@@ -214,4 +214,8 @@ test("hiring funnel: pass-through rates and count warnings", () => {
   assert.equal(r.stages[2].of_first_stage_pct, 6.7);
   assert.equal(r.stages[0].pass_through_pct, null);
   assert.equal(r.warnings.length, 1);
+  const bad = hiringFunnel([{ stage: "applied", count: 100 }, { stage: "screen", count: 30.5 }, { stage: "onsite", count: -2 }, { stage: "offer", count: 1 }]);
+  assert.deepEqual(bad.stages.map((s) => s.pass_through_pct), [null, null, null, null]);
+  assert.deepEqual(bad.stages.map((s) => s.of_first_stage_pct), [100, null, null, 1]);
+  assert.equal(bad.warnings.length, 2);
 });

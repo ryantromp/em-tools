@@ -192,8 +192,11 @@ test("hiring docs never overwrite and candidate notes are append-only with no sc
   assert.deepEqual(r.items.map((x) => x.id), ["c1-screen", "c1-design"]);
   assert.ok(!("score" in r.items[0]));
   const l = n.listHiring("senior-backend");
-  assert.deepEqual(l.docs.length, 2);
+  assert.deepEqual(l.docs, ["2026-10-19-loop-plan.md", "2026-10-19-loop-plan-2.md"]);
   assert.deepEqual(l.candidates[0].scorecards.map((s) => s.stage), ["system design", "screen"]);
   assert.ok(!JSON.stringify(l).includes("idempotency"));
   assert.deepEqual(n.listHiring("unknown-role"), { role: "unknown-role", docs: [], candidates: [] });
+  assert.equal(n.readHiringDoc("senior-backend", l.docs[0]).content, "# Plan\n");
+  assert.throws(() => n.readHiringDoc("senior-backend", "../../people/x.md"), /not a hiring document/);
+  assert.throws(() => n.readHiringDoc("senior-backend", "candidates"), /not a hiring document/);
 });

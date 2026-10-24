@@ -29,7 +29,8 @@ Help the EM run a fair, structured hiring loop. Structured interviews with fixed
 
 1. Call `notes_status` and `notes_read_team` (for the ladder). If the em-tools tools are missing, switch to **paste-in mode**: ask for the role, level and any scorecards, and say once: "Paste-in mode: nothing will be saved."
 2. Call `notes_list_hiring` for the role (a lowercase slug such as `senior-engineer-payments`) to see existing documents and scorecards.
-3. Ashby or Greenhouse: em-tools has no connector for them yet. Use an export the EM points to.
+3. **Read what is saved.** Open the latest `loop-plan` and `question-bank` with `notes_read_hiring_doc`. The plan's stages are the list a debrief checks scorecards against, and its questions stay fixed for every candidate. Change them only when the EM asks, and save the change as a new dated document. If there is no saved plan, say so; in a debrief, ask the EM for the planned stages.
+4. Ashby or Greenhouse: em-tools has no connector for them yet. Use an export the EM points to.
 
 ## Step 2: plan (the `plan` mode)
 
@@ -42,7 +43,7 @@ Help the EM run a fair, structured hiring loop. Structured interviews with fixed
 
 ## Step 3: debrief (the `debrief <candidate>` mode)
 
-1. Call `notes_read_candidate`. List which planned interviews have a written scorecard, with the interviewer and date, and which are **missing**. Missing scorecards must be written before the debrief starts; draft a short reminder for the EM to send.
+1. Call `notes_read_candidate`. Using the saved loop plan from Step 1, list which planned interviews have a written scorecard, with the interviewer and date, and which are **missing**. Missing scorecards must be written before the debrief starts; draft a short reminder for the EM to send.
 2. Check each scorecard for evidence without a competency, a competency without evidence, protected characteristics, and vague or coded words ("culture fit", "not senior enough", "polished"). Flag them to the EM; never rewrite an interviewer's scorecard.
 3. Write the agenda from [references/loop-templates.md](references/loop-templates.md): silent reading of all scorecards first; each interviewer shares evidence for their competency, most junior first; discuss gaps and disagreements against the level's criteria; the decision is made by the people named in the EM's process.
 4. Show each scorecard verbatim, grouped by competency. Do not total, average or compare them.

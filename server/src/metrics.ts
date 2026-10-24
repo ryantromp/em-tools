@@ -727,15 +727,19 @@ export function actionAge(rows: Row[], opts: { now?: string } = {}) {
 // Counts the EM gives, in stage order. Totals and pass-through rates only: no candidates.
 export function hiringFunnel(stages: Array<{ stage: string; count: number }>) {
   const warnings: string[] = [];
+  // A count must be a whole number of candidates; any other value gets no rate.
+  const valid = (n: number) => Number.isInteger(n) && n >= 0;
+  const first = stages[0];
   const out = stages.map((s, i) => {
-    const prev = i ? stages[i - 1].count : null;
-    if (!Number.isFinite(s.count) || s.count < 0) warnings.push(`${s.stage}: count must be zero or more.`);
-    if (prev !== null && s.count > prev) warnings.push(`${s.stage} has more candidates (${s.count}) than ${stages[i - 1].stage} (${prev}). Check the counts.`);
+    const prevStage = i ? stages[i - 1] : null;
+    if (!valid(s.count)) warnings.push(`${s.stage}: count must be a whole number, zero or more (got ${s.count}). No rate shown.`);
+    else if (prevStage && valid(prevStage.count) && s.count > prevStage.count) warnings.push(`${s.stage} has more candidates (${s.count}) than ${prevStage.stage} (${prevStage.count}). Check the counts.`);
+    const ok = valid(s.count);
     return {
       stage: s.stage,
       count: s.count,
-      pass_through_pct: prev ? round((s.count / prev) * 100, 1) : null,
-      of_first_stage_pct: stages[0]?.count ? round((s.count / stages[0].count) * 100, 1) : null,
+      pass_through_pct: ok && prevStage && valid(prevStage.count) && prevStage.count > 0 ? round((s.count / prevStage.count) * 100, 1) : null,
+      of_first_stage_pct: ok && first && valid(first.count) && first.count > 0 ? round((s.count / first.count) * 100, 1) : null,
     };
   });
   return {

@@ -145,6 +145,11 @@ server.registerTool("notes_read_candidate", {
   inputSchema: { role: z.string(), candidate: z.string() },
 }, async ({ role, candidate }) => guarded(() => notes().readCandidate(role, candidate)));
 
+server.registerTool("notes_read_hiring_doc", {
+  description: "Read one saved hiring document for a role, by the file name notes_list_hiring returns (for example 2026-09-28-loop-plan.md).",
+  inputSchema: { role: z.string(), file: z.string() },
+}, async ({ role, file }) => guarded(() => notes().readHiringDoc(role, file)));
+
 server.registerTool("notes_list_hiring", {
   description: "List a role's hiring documents and, per candidate, which stages have a written scorecard and from whom. Returns no scores or text.",
   inputSchema: { role: z.string() },
@@ -213,7 +218,7 @@ server.registerTool("metrics_action_age", {
 
 server.registerTool("metrics_hiring_funnel", {
   description: "Hiring funnel from stage counts the EM gives, in order (for example applied, screen, onsite, offer, accepted): pass-through rate per stage and share of the first stage. Never lists candidates.",
-  inputSchema: { stages: z.array(z.object({ stage: z.string(), count: z.number() })) },
+  inputSchema: { stages: z.array(z.object({ stage: z.string(), count: z.number().int().nonnegative() })) },
 }, async ({ stages }) => guarded(() => hiringFunnel(stages)));
 
 server.registerTool("metrics_ai_adoption", {

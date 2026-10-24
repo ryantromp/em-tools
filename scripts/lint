@@ -129,7 +129,7 @@ for (const f of examples.filter((x) => x.startsWith("examples/underperformance-r
 
 // 7. No candidate verdicts in hiring outputs --------------------------------------------------
 // "Which candidate to hire" and "whether to hire" ask the question rather than answer it.
-const HIRING_VERDICT = /\b((strong |lean )?(no[- ])?(?<!\b(to|whether|we) )hire\b(?! (manager|plan|date|process|decision|team|loop))|strong (yes|no)|best candidate|top candidate|stronger candidate|weaker candidate|recommend (hiring|rejecting|an offer)|should (hire|reject|make an offer)|ranked (first|second|higher|lower)|overall score|average score|total score)/i;
+const HIRING_VERDICT = /\b((strong |lean )?(no[- ])?(?<!\b(to|whether|should we|do we|would we|will we|can we|who do we|which to) )hire\b(?! (manager|plan|date|process|decision|team|loop))|strong (yes|no)|best candidate|top candidate|stronger candidate|weaker candidate|recommend (hiring|rejecting|an offer)|should (hire|reject|make an offer)|ranked (first|second|higher|lower)|overall score|average score|total score)/i;
 for (const f of examples.filter((x) => x.startsWith("examples/hiring-loop-kit/"))) {
   lines(f).forEach((l, i) => verdictIn(l, HIRING_VERDICT) && report(f, i + 1, "verdict-in-hiring", l));
 }
