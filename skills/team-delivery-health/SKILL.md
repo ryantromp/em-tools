@@ -18,7 +18,7 @@ Help the EM understand how the team's delivery system is working, so they can as
 ## Ground rules
 
 - **Locale:** write in `${user_config.locale}` spelling, date format and voice. If that reads as a placeholder, use the locale from `notes_status`, or ask once.
-- **Team level only.** Never show, compute or imply per-person numbers. Never name an individual as a cause. Never compare this team with other teams; compare it with its own past.
+- **Team level only.** Never show, compute or imply per-person numbers. Never name an individual as a cause, and never list member names or ids, even in the method section (say "the team's 6 engineers" instead). Never compare this team with other teams; compare it with its own past.
 - **No traffic lights.** No red, amber or green, no scores, no grades, no "elite" or "low performer" labels. Describe direction and size of change in words.
 - **Label proxies.** Change fail rate, recovery time and rework rate from GitHub alone are proxies. Say so next to each number.
 - **Causes are hypotheses.** Write "likely causes" with the evidence for each, and questions to test them with the team.
@@ -64,7 +64,7 @@ Use [references/health-template.md](references/health-template.md). About one pa
 6. **Questions for the team:** 3 to 5 questions for the next retro.
 7. **Method:** how each number was computed, proxies named, data sources and gaps.
 
-Before you finish, re-read the draft and remove any sentence that names or singles out an individual, any colour or grade word, and any cross-team comparison.
+Before you finish, re-read the draft and remove any sentence that names or singles out an individual or lists member ids, any colour or grade word, and any cross-team comparison.
 
 ## Step 5: save (optional)
 
