@@ -15,6 +15,7 @@ Compiled 2026-10-23 as the evidence base for [spec.md](spec.md). The spec carrie
 3. [Part 3: Market and AI adoption](#part-3-market-and-ai-adoption)
 4. [Part 4: Integrations and plugin platform](#part-4-integrations-and-plugin-platform)
 5. [Part 5: Phase 2 data sources](#part-5-phase-2-data-sources)
+6. [Part 6: Phase 3 data sources](#part-6-phase-3-data-sources)
 
 ---
 
@@ -969,3 +970,16 @@ Checked 2026-10-24 from search results; vendor pages were not opened directly fr
 - **Greenhouse:** an official MCP server in open beta is reported by third parties only (36 tools, admin-set scopes). UNVERIFIED. ([Hirevire](https://hirevire.com/articles/greenhouse-mcp))
 - **Lever:** no official MCP server found; community servers only. ([AI Agent Index](https://theaiagentindex.com/compare/greenhouse-vs-lever))
 - **Opsgenie:** end of support 5 April 2027; REST APIs stop and unmigrated data is deleted; features move to Jira Service Management and Compass. No MCP server found. ([Hyperping](https://hyperping.com/blog/opsgenie-end-of-life), [Atlassian Opsgenie pricing](https://www.atlassian.com/software/opsgenie/pricing))
+
+---
+
+# Part 6: Phase 3 data sources
+
+Checked 2026-10-24 from search results; vendor pages were not opened directly from the sandbox, so confirm before relying on details. The jobs themselves are researched in Part 1 (sections 3, 8, 9, 10) and Part 2 (sections 2, 8, 9, 11).
+
+- **Out-of-office in Google Calendar:** the Calendar API has an `outOfOffice` event type; `events.list` takes an `eventTypes` filter, and callers should check each returned event's `eventType`. Out-of-office events cannot be all-day events. ([Google: calendar status events](https://developers.google.com/calendar/api/guides/calendar-status))
+- **Out-of-office in Outlook:** events carry a show-as status of free, tentative, busy or out of office (`oof`); the `getSchedule` action returns free/busy per user with the least-privileged `Calendars.ReadBasic` permission. Secondary sources only. ([Microsoft Learn: free/busy](https://learn.microsoft.com/fi-fi/graph/outlook-get-free-busy-schedule), [Icewolf](https://blog.icewolf.ch/archive/2022/06/06/calendar-availability-freebusy-requests-with-microsoft-graph/))
+- **Jira sprints through Rovo MCP:** a third-party post reports new board and sprint tools, including `listJiraBoardSprints` and `getJiraBoardSprintData` (reads) and `manageJiraSprint` (creates, starts, updates and closes sprints, so a write). Not confirmed on Atlassian's supported-tools page. UNVERIFIED. ([jimiwikman.se](https://jimiwikman.se/atlassian/atlassian-resources/atlassian-app-updates/new-jira-tools-in-the-atlassian-rovo-mcp-server-r1292/), [Atlassian supported tools](https://support.atlassian.com/atlassian-rovo-mcp-server/docs/supported-tools/))
+- **Linear cycles:** Linear's MCP server exposes `list_cycles` (observed in a live tool list on 2026-10-24).
+- **Code hotspots:** Adam Tornhill's behavioural code analysis treats files that change often and are complex as the costliest debt; churn comes from version control (`git log`), complexity from a proxy such as size. Code Maat computes this from `git log` output; temporal coupling (files that change together) comes from the same data. Mostly secondary sources. ([InfoQ](https://www.infoq.com/news/2017/04/tornhill-prioritise-tech-debt), [Maintainable podcast](https://maintainable.fm/episodes/adam-tornhill-prioritizing-technical-debt-with-behavioral-code-analysis), [Boyter](https://boyter.org/posts/sloc-cloc-code-hotspots-finding-files-that-need-attention/))
+- **Team pulse surveys:** no new connector. The EM runs the check-in in the survey tool their organisation already uses and exports responses with no names; em-tools only aggregates the export.
