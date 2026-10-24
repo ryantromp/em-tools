@@ -318,10 +318,21 @@ function genTracker(team, prs) {
     dep.url = "https://linear.example.com/example-co/issue/ATL-REFUND-V2";
     dep.due = "2026-10-09";
   }
-  // Days spent blocked on finished work, for the blocked share of cycle time. Deterministic, no random draws.
+  // Days spent blocked on finished work, for the blocked share of cycle time. Deterministic, no random
+  // draws, and never more than the working days the ticket was in progress.
+  const workingDays = (a, b) => {
+    let n = 0;
+    for (let t = Date.UTC(a.getUTCFullYear(), a.getUTCMonth(), a.getUTCDate()); t < Date.UTC(b.getUTCFullYear(), b.getUTCMonth(), b.getUTCDate()); ) {
+      t += DAY;
+      const dow = new Date(t).getUTCDay();
+      if (dow !== 0 && dow !== 6) n++;
+    }
+    return n;
+  };
   for (const i of issues) {
     const num = parseInt(String(i.id).split("-")[1], 10);
-    i.blocked_days = i.state === "Done" && Number.isFinite(num) && num % 11 === 0 ? 1 + (num % 3) : 0;
+    const span = i.state === "Done" ? workingDays(new Date(i.started_at), new Date(i.completed_at)) : 0;
+    i.blocked_days = i.state === "Done" && Number.isFinite(num) && num % 11 === 0 ? Math.min(1 + (num % 3), span) : 0;
   }
   return issues;
 }

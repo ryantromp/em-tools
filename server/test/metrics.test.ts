@@ -88,12 +88,17 @@ test("dependency age in working days, items only", async () => {
     { id: "X-1", title: "Schema decision", direction: "we_wait", other_team: "Data", since: "2026-09-29", owner: "someone" },
     { id: "X-2", title: "Refund API", direction: "they_wait", other_team: "Team B", since: "2026-10-12" },
     { id: "X-3", title: "Done thing", direction: "we_wait", other_team: "Infra", since: "2026-09-01", resolved_at: "2026-09-10" },
-  ], { now: "2026-10-19", finished: [{ started_at: "2026-10-05", completed_at: "2026-10-19", blocked_days: 2 }] });
+  ], { now: "2026-10-19", finished: [
+    { started_at: "2026-10-05", completed_at: "2026-10-19", blocked_days: 2 },
+    { started_at: "2026-10-05", completed_at: "2026-10-19", blocked_days: "" },
+  ] });
   assert.equal(r.open_dependencies, 2);
   assert.equal(r.items[0].id, "X-1");
   assert.equal(r.items[0].age_working_days, 14);
   assert.equal(r.items[0].status, "stale");
   assert.equal(r.items[1].status, "aging");
   assert.equal(r.blocked_share_of_cycle_time_pct, 20);
+  assert.equal(r.finished_tickets_with_blocked_history, 1);
+  assert.equal(r.finished_tickets_without_blocked_history, 1);
   assert.ok(!JSON.stringify(r).includes("someone"));
 });

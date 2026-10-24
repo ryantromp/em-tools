@@ -42,7 +42,7 @@ BCN-40,Migrate push permissions,Done,Engineer B1,Mobile checkout,Sprint 3,2026-0
 BCN-41,Polish payment form,Done,Engineer B2,Mobile checkout,Sprint 3,2026-05-22T00:15:00Z,2026-05-31T13:29:00Z,2026-05-31T13:29:00Z,,,,0,1,https://jira.example.com/browse/BCN-41
 BCN-42,Fix cold start,Done,Engineer B4,Offline mode,Sprint 3,2026-05-25T17:05:00Z,2026-05-29T14:19:00Z,2026-05-29T14:19:00Z,,,,0,2,https://jira.example.com/browse/BCN-42
 BCN-43,Fix crash reporter,Done,Engineer B5,App performance,Sprint 3,2026-05-21T20:54:00Z,2026-05-29T19:55:00Z,2026-05-29T19:55:00Z,bug,,,0,5,https://jira.example.com/browse/BCN-43
-BCN-44,Speed up push permissions,Done,Engineer B6,Mobile checkout,Sprint 3,2026-05-21T16:39:00Z,2026-05-31T07:59:00Z,2026-05-31T07:59:00Z,,,,3,1,https://jira.example.com/browse/BCN-44
+BCN-44,Speed up push permissions,Done,Engineer B6,Mobile checkout,Sprint 3,2026-05-21T16:39:00Z,2026-05-31T07:59:00Z,2026-05-31T07:59:00Z,,,,1,1,https://jira.example.com/browse/BCN-44
 BCN-45,Refactor crash reporter,Done,Engineer B1,Offline mode,Sprint 3,2026-05-21T09:33:00Z,2026-06-01T22:38:00Z,2026-06-01T22:38:00Z,,,,0,3,https://jira.example.com/browse/BCN-45
 BCN-46,Test address autocomplete,Done,Engineer B2,Offline mode,Sprint 3,2026-05-17T22:28:00Z,2026-05-31T16:36:00Z,2026-05-31T16:36:00Z,,,,0,3,https://jira.example.com/browse/BCN-46
 BCN-47,Migrate address autocomplete,Done,Engineer B3,Mobile checkout,Sprint 3,2026-05-18T17:00:00Z,2026-05-30T13:34:00Z,2026-05-30T13:34:00Z,,,,0,1,https://jira.example.com/browse/BCN-47
@@ -108,7 +108,7 @@ BCN-106,Fix offline queue,Done,Engineer B1,Offline mode,Sprint 7,2026-07-07T22:2
 BCN-107,Fix checkout sheet,Done,Engineer B5,Mobile checkout,Sprint 7,2026-07-09T17:44:00Z,2026-07-18T10:38:00Z,2026-07-18T10:38:00Z,,,,0,3,https://jira.example.com/browse/BCN-107
 BCN-108,Test cold start,Done,Engineer B6,Mobile checkout,Sprint 7,2026-07-14T00:43:00Z,2026-07-18T18:19:00Z,2026-07-18T18:19:00Z,,,,0,3,https://jira.example.com/browse/BCN-108
 BCN-109,Fix image cache,Done,Engineer B2,Mobile checkout,Sprint 7,2026-07-07T20:47:00Z,2026-07-18T15:23:00Z,2026-07-18T15:23:00Z,,,,0,1,https://jira.example.com/browse/BCN-109
-BCN-110,Speed up sync conflicts,Done,Engineer B5,App performance,Sprint 7,2026-07-08T07:50:00Z,2026-07-18T16:46:00Z,2026-07-18T16:46:00Z,,,,3,2,https://jira.example.com/browse/BCN-110
+BCN-110,Speed up sync conflicts,Done,Engineer B5,App performance,Sprint 7,2026-07-08T07:50:00Z,2026-07-18T16:46:00Z,2026-07-18T16:46:00Z,,,,0,2,https://jira.example.com/browse/BCN-110
 BCN-111,Add offline queue,Done,Engineer B3,App performance,Sprint 7,2026-07-13T18:43:00Z,2026-07-23T03:00:00Z,2026-07-23T03:00:00Z,bug,,,0,2,https://jira.example.com/browse/BCN-111
 BCN-112,Add payment form,Done,Engineer B5,Mobile checkout,Sprint 7,2026-07-17T23:22:00Z,2026-07-23T05:50:00Z,2026-07-23T05:50:00Z,,,,0,5,https://jira.example.com/browse/BCN-112
 BCN-113,Test dark mode,Done,Engineer B1,Mobile checkout,Sprint 7,2026-07-19T23:29:00Z,2026-07-24T17:10:00Z,2026-07-24T17:10:00Z,,,,0,3,https://jira.example.com/browse/BCN-113
@@ -207,7 +207,7 @@ BCN-205,Polish offline queue,Done,Engineer B4,App performance,Sprint 13,2026-10-
 BCN-206,Speed up payment form,Done,Engineer B2,App performance,Sprint 13,2026-09-27T03:45:00Z,2026-10-07T18:49:00Z,2026-10-07T18:49:00Z,,,,0,3,https://jira.example.com/browse/BCN-206
 BCN-207,Fix image cache,Done,Engineer B4,Offline mode,Sprint 13,2026-09-30T12:35:00Z,2026-10-09T19:56:00Z,2026-10-09T19:56:00Z,,,,0,3,https://jira.example.com/browse/BCN-207
 BCN-208,Add sync conflicts,Done,Engineer B2,Mobile checkout,Sprint 13,2026-09-29T19:57:00Z,2026-10-09T11:30:00Z,2026-10-09T11:30:00Z,bug,,,0,5,https://jira.example.com/browse/BCN-208
-BCN-209,Fix crash reporter,Done,Engineer B4,App performance,Sprint 13,2026-10-02T18:27:00Z,2026-10-10T19:54:00Z,2026-10-10T19:54:00Z,,,,3,1,https://jira.example.com/browse/BCN-209
+BCN-209,Fix crash reporter,Done,Engineer B4,App performance,Sprint 13,2026-10-02T18:27:00Z,2026-10-10T19:54:00Z,2026-10-10T19:54:00Z,,,,1,1,https://jira.example.com/browse/BCN-209
 BCN-210,Test crash reporter,Done,Engineer B5,Offline mode,Sprint 13,2026-09-30T21:20:00Z,2026-10-11T18:35:00Z,2026-10-11T18:35:00Z,bug,,,0,3,https://jira.example.com/browse/BCN-210
 BCN-211,Fix image cache,Done,Engineer B4,Mobile checkout,Sprint 13,2026-10-09T11:04:00Z,2026-10-15T09:15:00Z,2026-10-15T09:15:00Z,,,,0,3,https://jira.example.com/browse/BCN-211
 BCN-212,Refactor checkout sheet,Done,Engineer B5,App performance,Sprint 13,2026-10-03T05:02:00Z,2026-10-14T15:08:00Z,2026-10-14T15:08:00Z,,,,0,2,https://jira.example.com/browse/BCN-212
@@ -218,7 +218,7 @@ BCN-216,Test deep links,In Progress,Engineer B2,Mobile checkout,Sprint 13,2026-1
 BCN-217,Polish cold start,In Progress,Engineer B3,App performance,Sprint 13,2026-10-07T09:52:00Z,,2026-10-14T14:26:00Z,,,,0,2,https://jira.example.com/browse/BCN-217
 BCN-218,Refactor deep links,Done,Engineer B4,Mobile checkout,Sprint 13,2026-10-10T10:20:00Z,2026-10-15T22:14:00Z,2026-10-15T22:14:00Z,,,,0,3,https://jira.example.com/browse/BCN-218
 BCN-219,Fix cold start,Done,Engineer B5,Mobile checkout,Sprint 13,2026-10-04T18:27:00Z,2026-10-15T07:22:00Z,2026-10-15T07:22:00Z,,,,0,1,https://jira.example.com/browse/BCN-219
-BCN-220,Test sync conflicts,Done,Engineer B6,App performance,Sprint 13,2026-10-06T17:17:00Z,2026-10-15T08:15:00Z,2026-10-15T08:15:00Z,,,,2,5,https://jira.example.com/browse/BCN-220
+BCN-220,Test sync conflicts,Done,Engineer B6,App performance,Sprint 13,2026-10-06T17:17:00Z,2026-10-15T08:15:00Z,2026-10-15T08:15:00Z,,,,1,5,https://jira.example.com/browse/BCN-220
 BCN-221,Migrate image cache,In Progress,Engineer B3,Mobile checkout,Sprint 13,2026-10-12T15:05:00Z,,2026-10-15T16:44:00Z,,,,0,1,https://jira.example.com/browse/BCN-221
 BCN-222,Test offline queue,In Progress,Engineer B4,Mobile checkout,Sprint 13,2026-10-13T01:37:00Z,,2026-10-15T16:02:00Z,,,,0,2,https://jira.example.com/browse/BCN-222
 BCN-223,Speed up sync conflicts,In Progress,Engineer B5,Offline mode,Sprint 13,2026-10-08T18:54:00Z,,2026-10-15T12:13:00Z,,,,0,5,https://jira.example.com/browse/BCN-223
