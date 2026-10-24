@@ -201,3 +201,74 @@ There are no tokens in `userConfig`. Every integration signs in through its own 
 | 8 | **Open (Ryan):** is k = 4 right? The legacy Copilot API used 5 | Proposal: 4, as briefed, set as a constant in one place |
 | 9 | **Open (Ryan):** should `locale` be free text or a fixed picker? | Proposal: free text with validation, since a picker cannot cover every locale |
 | 10 | **Open (Ryan):** live test with Linear or Jira, and which personal accounts? | Needed before Phase B step "live test" |
+
+## 9. Phase 2 spec (draft for approval, 2026-10-24)
+
+Six skills, in roadmap order. About 1,300 words, readable in about 6 minutes. The v1 principles apply unchanged. Each skill works from pasted notes or CSV with zero integrations, cites every fact, produces drafts only, and never ranks people.
+
+### 9.1 Summary
+
+| # | Skill | Job it does | Main inputs | New data source | Est. build |
+|---|---|---|---|---|---|
+| 1 | `dependency-register` | Track what the team waits on from other teams, and what others wait on from us | Tracker `blocked_by` links and labels, PR review requests to other teams, named public channels | None (GitHub, Linear, Jira, Slack, Teams from v1) | 45 min |
+| 2 | `oncall-health` | Show on-call load per rotation, and the noisy alerts behind it | Pager and alert export, rotation schedule, incidents | PagerDuty, incident.io | 60 min |
+| 3 | `feedback-rehearsal` | Turn the EM's own observation into observation, impact and request, and rehearse the conversation | The EM's text, the person's feedback preferences | None | 30 min |
+| 4 | `underperformance-record` | Keep a dated, factual record of expectations set, support offered and change seen | The EM's notes, person file | None | 45 min |
+| 5 | `postmortem-draft` | Draft a blameless postmortem and track the age of its actions | Incident channel export, alert timeline, linked PRs and deploys | incident.io, PagerDuty | 60 min |
+| 6 | `hiring-loop-kit` | Plan a structured interview loop and run a written-first debrief | Role, level rubric, interviewer pool, written scorecards | Ashby or Greenhouse (optional) | 60 min |
+
+Build plan: one `feature/<skill>` branch and PR per skill, in this order. Each adds fixtures for Team A and Team B, a test for any new server maths, and lint rules where the skill adds a risk.
+
+### 9.2 Skill specs
+
+**1. dependency-register**
+- **Outputs:** a register table with item, the team we wait on (or that waits on us), since when, age in days, next ask and source link; aging alerts at 5 and 10 working days; a nudge draft per stale item for the EM to send; a "blocked time" share of cycle time as a team figure.
+- **Rules:** items, not people. A person is named only as the owner of an ask, if the source names one. Nudges are drafts.
+- **Server:** `metrics_dependency_age` (pure: age, blocked share). Register saved as `dependencies.md` in the notes folder after the EM confirms.
+
+**2. oncall-health**
+- **Outputs:** per rotation: pages per week, off-hours share, shifts over 2 incidents (a count, never dates), mean time to acknowledge, and the top 10 noisy or unactionable alerts by count. A narrative set against Google SRE guidance (at most 25% of time on call, about 2 incidents per shift).
+- **Rules:** never per person. No shift dates or names in the output, because a dated shift identifies who was on call. A rotation with fewer than 4 people shows rotation totals only.
+- **Server:** `metrics_oncall` (pure, team aggregates; drops responder fields on input).
+
+**3. feedback-rehearsal**
+- **Outputs:** the EM's observation restructured as observation, impact and question or request (Lara Hogan's feedback equation); flags for judgement, personality and coded words (reusing the v1 language list); a note on which core need it may touch (BICEPS: belonging, improvement, choice, equality, predictability, significance); 3 likely responses with a calm reply to each.
+- **Rules:** uses only what the EM wrote. Never invents behaviour or impact. Never stored unless the EM asks, and then as a log entry in the person's file.
+- **Server:** none new.
+
+**4. underperformance-record**
+- **Outputs:** a dated record of what was expected, when and how it was communicated, the support offered, and the change seen since. A checklist covering: expectation in writing, skill gap or clarity gap, support offered, HR involved per local policy. A gaps list of missing dates or missing written follow-ups.
+- **Rules:** no risk scores, predictions, PIP recommendations or verdicts. Facts in the EM's words, with dates. Every output ends with "check with your HR or legal team". Never touches wellbeing details beyond "raised on <date>".
+- **Storage:** a new append-only `## Expectations` section in the person file, through a new `notes_add_expectation` tool.
+
+**5. postmortem-draft**
+- **Outputs:** a blameless draft with summary, impact, timeline, contributing factors (systems and conditions, never names), what went well, and actions with an owner role and due date. A monthly "open actions by age" table across incidents.
+- **Rules:** no individual named in causes or timeline (roles only, such as "on-call engineer"). Actions are drafted for the EM to copy into the tracker, never created. A lint rule checks drafts for person names.
+- **Server:** `metrics_action_age` (pure).
+
+**6. hiring-loop-kit**
+- **Outputs:** a loop plan mapping competencies to interviews; a fixed question bank per competency; scorecard templates; interviewer assignments the EM confirms; a debrief agenda that collects written scores before any discussion; a funnel tally from counts the EM gives.
+- **Rules:** never scores, ranks or recommends a candidate. Candidate notes stay local, in `hiring/<role>/` in the notes folder. The skill reminds the EM of their organisation's retention policy, and em-tools still never deletes files itself.
+- **Server:** `notes_*` support for `hiring/` files, append-only.
+
+### 9.3 New data sources (checked 2026-10-24)
+
+| Source | Official MCP server | Auth | Read-only mechanism | Used by |
+|---|---|---|---|---|
+| PagerDuty | Yes. Hosted at `mcp.pagerduty.com`, plus a local server | Hosted: OAuth. Local: user API token | The local server is read-only by default and needs `--enable-write-tools` to write. The hosted server has no tool filtering, so the hook allowlist applies | oncall-health, postmortem-draft |
+| incident.io | Yes. Hosted at `https://mcp.incident.io/mcp` | OAuth | None found. Hook allowlist; declaring, acknowledging and editing are blocked | oncall-health, postmortem-draft |
+| Ashby | Yes, open beta | OAuth with user permissions | Hook allowlist | hiring-loop-kit (optional) |
+| Greenhouse | Reported open beta, unverified | Admin-set scopes | Hook allowlist plus read-only scopes | hiring-loop-kit (optional) |
+| Opsgenie | Not supported. End of support is 5 April 2027; its features move to Jira Service Management | n/a | n/a | CSV fallback only |
+
+Sources are in [research.md, Part 5](research.md#part-5-phase-2-data-sources).
+
+### 9.4 Phase 2 risks and open questions
+
+| # | Risk or question | Proposal |
+|---|---|---|
+| 1 | Underperformance records are the most sensitive data em-tools will hold | Keep them in the person file under `## Expectations`, append-only, with the HR line on every output. **Open (Ryan):** person file, or a separate file per person? |
+| 2 | Candidate data belongs to people outside the team, and retention rules vary by organisation | Local only, under `hiring/`. Remind the EM of retention, but never auto-delete. **Open (Ryan):** include hiring in Phase 2, or move it to Phase 3? |
+| 3 | On-call rotations are small, so shift-level data identifies people | Rotation totals only; no shift dates; rotations under 4 people get totals only |
+| 4 | The hosted PagerDuty server has no read-only switch | Default-deny hook allowlist, as in v1. Document the local read-only server as an option |
+| 5 | Postmortems can drift into blame through names in the timeline | Roles, not names, plus a lint rule on drafts |
