@@ -239,7 +239,10 @@ Build plan: one `feature/<skill>` branch and PR per skill, in this order. Each a
 **4. underperformance-record**
 - **Outputs:** a dated record of what was expected, when and how it was communicated, the support offered, and the change seen since. A checklist covering: expectation in writing, skill gap or clarity gap, support offered, HR involved per local policy. A gaps list of missing dates or missing written follow-ups.
 - **Rules:** no risk scores, predictions, PIP recommendations or verdicts. Facts in the EM's words, with dates. Every output ends with "check with your HR or legal team". Never touches wellbeing details beyond "raised on <date>".
-- **Storage:** a new append-only `## Expectations` section in the person file, through a new `notes_add_expectation` tool.
+- **Storage (the EM chooses):** on first use the skill asks where records go, and saves the answer as `expectations_storage` in `team.md`. The EM can change it at any time.
+  - `person-file`: an append-only `## Expectations` section in `people/<slug>.md`.
+  - `separate-file`: an append-only `people/<slug>.expectations.md`, so the main person file can be shared or opened without it.
+  - Both go through a new `notes_add_expectation` tool. Switching never moves or deletes existing records; the skill reads both places.
 
 **5. postmortem-draft**
 - **Outputs:** a blameless draft with summary, impact, timeline, contributing factors (systems and conditions, never names), what went well, and actions with an owner role and due date. A monthly "open actions by age" table across incidents.
@@ -267,8 +270,8 @@ Sources are in [research.md, Part 5](research.md#part-5-phase-2-data-sources).
 
 | # | Risk or question | Proposal |
 |---|---|---|
-| 1 | Underperformance records are the most sensitive data em-tools will hold | Keep them in the person file under `## Expectations`, append-only, with the HR line on every output. **Open (Ryan):** person file, or a separate file per person? |
-| 2 | Candidate data belongs to people outside the team, and retention rules vary by organisation | Local only, under `hiring/`. Remind the EM of retention, but never auto-delete. **Open (Ryan):** include hiring in Phase 2, or move it to Phase 3? |
+| 1 | Underperformance records are the most sensitive data em-tools will hold | The EM chooses person file or separate file on first use (decided by Ryan, 2026-10-24). Append-only, with the HR line on every output |
+| 2 | Candidate data belongs to people outside the team, and retention rules vary by organisation | Stays in Phase 2 (decided by Ryan, 2026-10-24). Local only, under `hiring/`. Remind the EM of retention, but never auto-delete |
 | 3 | On-call rotations are small, so shift-level data identifies people | Rotation totals only; no shift dates; rotations under 4 people get totals only |
 | 4 | The hosted PagerDuty server has no read-only switch | Default-deny hook allowlist, as in v1. Document the local read-only server as an option |
 | 5 | Postmortems can drift into blame through names in the timeline | Roles, not names, plus a lint rule on drafts |
