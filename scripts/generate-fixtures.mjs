@@ -291,12 +291,13 @@ function genTracker(team, prs) {
   const quiet = team.key === "team-a"
     ? [
         ["Refund webhooks for partial refunds", "Refunds v2", "eng-a3", "2026-09-22", ""],
-        ["Ledger export to data warehouse", "Ledger reconciliation", "eng-a7", "2026-09-29", ""],
+        ["Ledger export to data warehouse", "Ledger reconciliation", "eng-a7", "2026-09-29", "DATA-88"],
         ["Refund API v2 endpoint for mobile checkout", "Refunds v2", "eng-a1", "2026-10-06", ""],
+        ["Reconciliation tests green on staging", "Ledger reconciliation", "eng-a6", "2026-10-07", "INFRA-412"],
       ]
     : [
         ["Mobile checkout: refunds screen", "Mobile checkout", "eng-b1", "2026-10-01", "ATL-REFUND-V2"],
-        ["Offline queue conflict resolution", "Offline mode", "eng-b6", "2026-09-24", ""],
+        ["Offline queue conflict resolution", "Offline mode", "eng-b6", "2026-09-24", "PROD-19"],
         ["Reduce cold start below 2s", "App performance", "eng-b4", "2026-10-08", ""],
       ];
   for (const [title, project, slug, updated, blocked] of quiet) {
@@ -304,7 +305,7 @@ function genTracker(team, prs) {
     issues.push({
       id: `${prefix}-${n++}`, title, state: "In Progress", assignee: p.name, project, cycle: cycleOf(new Date("2026-10-12")),
       created_at: "2026-09-08T09:00:00Z", started_at: iso(new Date(updated + "T10:00:00Z")), completed_at: "", updated_at: iso(new Date(updated + "T10:00:00Z")),
-      labels: blocked ? "blocked" : "", blocked_by: blocked, estimate: 5,
+      labels: blocked ? "blocked" : "", blocked_by: blocked, blocked_since: blocked ? updated : "", estimate: 5,
       url: team.tracker === "linear" ? `https://linear.example.com/example-co/issue/${prefix}-${n - 1}` : `https://jira.example.com/browse/${prefix}-${n - 1}`,
     });
   }
@@ -312,9 +313,15 @@ function genTracker(team, prs) {
   if (team.key === "team-a") {
     const dep = issues.find((i) => i.title === "Refund API v2 endpoint for mobile checkout");
     dep.id = "ATL-REFUND-V2";
-    dep.labels = "cross-team";
+    dep.labels = "cross-team;requested-by:Team B";
+    dep.requested_at = "2026-09-15";
     dep.url = "https://linear.example.com/example-co/issue/ATL-REFUND-V2";
     dep.due = "2026-10-09";
+  }
+  // Days spent blocked on finished work, for the blocked share of cycle time. Deterministic, no random draws.
+  for (const i of issues) {
+    const num = parseInt(String(i.id).split("-")[1], 10);
+    i.blocked_days = i.state === "Done" && Number.isFinite(num) && num % 11 === 0 ? 1 + (num % 3) : 0;
   }
   return issues;
 }
@@ -628,9 +635,9 @@ for (const team of TEAMS) {
   write(`github/${team.key}-prs.csv`, csv(prs, prCols));
   write(`github/${team.key}-reviews.csv`, csv(reviews, ["pr_number", "repo", "reviewer", "submitted_at", "state", "comments", "url"]));
   write(`github/${team.key}-deployments.csv`, csv(deploys, ["id", "repo", "deployed_at", "environment", "status"]));
-  const issueCols = ["id", "title", "state", "assignee", "project", "cycle", "created_at", "started_at", "completed_at", "updated_at", "labels", "blocked_by", "estimate", "url", "due"];
+  const issueCols = ["id", "title", "state", "assignee", "project", "cycle", "created_at", "started_at", "completed_at", "updated_at", "labels", "blocked_by", "blocked_since", "blocked_days", "requested_at", "estimate", "url", "due"];
   if (team.tracker === "linear") write(`linear/${team.key}-issues.csv`, csv(issues, issueCols));
-  else write(`jira/${team.key}-issues.csv`, csv(issues.map((i) => ({ key: i.id, summary: i.title, status: i.state, assignee: i.assignee, epic: i.project, sprint: i.cycle, created: i.created_at, resolved: i.completed_at, updated: i.updated_at, labels: i.labels, blocked_by: i.blocked_by, story_points: i.estimate, url: i.url })), ["key", "summary", "status", "assignee", "epic", "sprint", "created", "resolved", "updated", "labels", "blocked_by", "story_points", "url"]));
+  else write(`jira/${team.key}-issues.csv`, csv(issues.map((i) => ({ key: i.id, summary: i.title, status: i.state, assignee: i.assignee, epic: i.project, sprint: i.cycle, created: i.created_at, resolved: i.completed_at, updated: i.updated_at, labels: i.labels, blocked_by: i.blocked_by, blocked_since: i.blocked_since, blocked_days: i.blocked_days, story_points: i.estimate, url: i.url })), ["key", "summary", "status", "assignee", "epic", "sprint", "created", "resolved", "updated", "labels", "blocked_by", "blocked_since", "blocked_days", "story_points", "url"]));
   write(`calendar/${team.key}-${team.calendar}.csv`, csv(calendar, ["id", "start", "end", "title", "organizer", "attendees", "recurring", "status"]));
   write(`${team.chat}/${team.key}-messages.json`, JSON.stringify(chat, null, 2));
   write(`incidents/${team.key}-incidents.csv`, csv(incidents, ["id", "team", "started_at", "resolved_at", "severity", "title", "lead", "url"]));
