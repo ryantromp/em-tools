@@ -75,6 +75,16 @@ const EXAMPLES = [
     team: "team-a",
     prompt: `/em-tools:dependency-register. ${common} Tickets: ${F}/linear/team-a-issues.csv. Public Slack channel export: ${F}/slack/team-a-messages.json. Other teams' tracker items visible to us: ${F}/jira/team-b-issues.csv.`,
   },
+  {
+    name: "oncall-health/team-a-12-weeks",
+    team: "team-a",
+    prompt: `/em-tools:oncall-health 12 weeks: window 2026-07-27 to 2026-10-16, comparison 2026-05-04 to 2026-07-24, working hours 09:00 to 17:00 UTC. ${common} PagerDuty pages export: ${F}/pagerduty/team-a-pages.csv. Schedule export: ${F}/pagerduty/team-a-shifts.csv. Incidents: ${F}/incidents/team-a-incidents.csv.`,
+  },
+  {
+    name: "oncall-health/team-b-12-weeks",
+    team: "team-b",
+    prompt: `/em-tools:oncall-health 12 weeks: window 2026-07-27 to 2026-10-16, comparison 2026-05-04 to 2026-07-24, working hours 09:00 to 17:00 UTC. Also, who on the team gets paged the most? ${common} incident.io alerts export: ${F}/incident-io/team-b-pages.csv. Schedule export: ${F}/incident-io/team-b-shifts.csv. Incidents: ${F}/incidents/team-b-incidents.csv.`,
+  },
 ];
 
 rmSync(WORK, { recursive: true, force: true });
