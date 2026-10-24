@@ -3,7 +3,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import { loadConfig } from "./config.ts";
 import { loadRows } from "./csv.ts";
-import { aiAdoption, dependencyAge, dora, meetingLoad, oncallHealth, prFlow, MIN_GROUP_SIZE } from "./metrics.ts";
+import { actionAge, aiAdoption, dependencyAge, dora, meetingLoad, oncallHealth, prFlow, MIN_GROUP_SIZE } from "./metrics.ts";
 import { Notes, NotesError } from "./notes.ts";
 
 const VERSION = "0.1.0";
@@ -179,6 +179,11 @@ server.registerTool("metrics_oncall", {
 }, async (a) => guarded(() => oncallHealth(loadRows(a.page_rows, a.page_csv_path), loadRows(a.shift_rows, a.shift_csv_path), {
   from: a.from, to: a.to, timeZone: a.time_zone, timezoneOffsetMinutes: a.timezone_offset_minutes, workdayStartHour: a.workday_start_hour, workdayEndHour: a.workday_end_hour,
 })));
+
+server.registerTool("metrics_action_age", {
+  description: "Postmortem action ages across incidents: open and closed counts, open actions by age band, overdue, no due date, median days to close, counts by month created and by incident, and the open list. Columns: id, incident, title, owner_role, created_at, due, completed_at, link. Owner name columns are ignored; only owner_role is returned.",
+  inputSchema: { rows, csv_path: csvPath, now: z.string().optional() },
+}, async (a) => guarded(() => actionAge(loadRows(a.rows, a.csv_path), { now: a.now })));
 
 server.registerTool("metrics_ai_adoption", {
   description: `Team AI adoption, ROI and quality aggregates. Groups under ${MIN_GROUP_SIZE} people (or whose complement is under ${MIN_GROUP_SIZE}) are suppressed. Usage columns: person, date, tool, active. PR columns: number, author, created_at, merged_at, additions, deletions, review_comments, ai_assisted, reverted, defect_linked, churn_lines_21d. Spend columns: month, tool, amount, currency. Never returns per-person rows.`,

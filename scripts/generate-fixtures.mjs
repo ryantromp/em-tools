@@ -725,6 +725,55 @@ write("notes/team-a/drafts/2026-10-12-upward-update.md", `# Team A weekly update
 - **Next:** refunds v2 launch readiness review.
 `);
 
+// Postmortem inputs: one incident channel per team and each team's postmortem actions.
+// Written last with no random draws, so other fixtures are unchanged. The channels name
+// people and one message blames a person on purpose: postmortem-draft must use roles.
+const msg = (channel, ts, user, text, link) => ({ channel, ts, user, text, visibility: "public", permalink: link });
+const slackLink = (ts) => `https://slack.example.com/archives/C0TEAMAINC7/p${Date.parse(ts) / 1000}000000`.slice(0, 66);
+const teamsLink = (ts) => `https://teams.example.com/l/message/team-b-inc-1/${Date.parse(ts)}`;
+const incA = "inc-2026-07-14-payouts";
+write("postmortem/team-a-inc-7-channel.json", JSON.stringify([
+  ["2026-07-14T13:05:00Z", "PagerDuty", "Triggered: payout-batch-age above 30 minutes (Payments primary)."],
+  ["2026-07-14T13:07:00Z", "Engineer A1", "Acking. I'll take incident lead. Opening this channel."],
+  ["2026-07-14T13:10:00Z", "Engineer A1", "Status: the 13:00 payout batch has not left the queue. About 1,900 merchant payouts waiting. No data loss seen so far."],
+  ["2026-07-14T13:14:00Z", "Engineer A6", "The payout worker is crash-looping with out-of-memory errors since 12:52."],
+  ["2026-07-14T13:18:00Z", "Engineer A2", "The batch size config went from 500 to 5000 in the 12:06 production deploy (atl-148). The new batch size first applied to the 12:45 run. Each worker loads the whole batch into memory."],
+  ["2026-07-14T13:20:00Z", "Manager A", "Engineer A5 merged that without load testing it. They should have known better."],
+  ["2026-07-14T13:22:00Z", "Engineer A1", "Let's keep to the system for now. Decision: roll back the batch size config, not the whole deploy."],
+  ["2026-07-14T13:31:00Z", "Engineer A6", "Config rolled back to 500. Workers are stable."],
+  ["2026-07-14T13:40:00Z", "Engineer A1", "Status: the batch is draining. About 600 payouts left."],
+  ["2026-07-14T13:52:00Z", "Engineer A1", "All payouts sent. Latest one went out 52 minutes late. Finance told about the delay."],
+  ["2026-07-14T13:57:00Z", "Engineer A1", "Resolved. The config change passed review and CI; nothing in CI exercises a full-size batch. Postmortem actions in the tracker."],
+].map(([ts, u, t]) => msg(incA, ts, u, t, slackLink(ts))), null, 2) + "\n");
+const incB = "Team B / inc-2026-09-03-android-checkout";
+write("postmortem/team-b-inc-1-channel.json", JSON.stringify([
+  ["2026-09-03T06:13:00Z", "incident.io", "Alert: checkout crash rate above 2% on Android (Release duty)."],
+  ["2026-09-03T06:21:00Z", "Engineer B5", "On it. Crashes are all Android 12, app version 4.9.0, on the payment sheet."],
+  ["2026-09-03T06:35:00Z", "Engineer B5", "Started at the 4.9.0 staged rollout to 20% last night. Stack trace points at the new card scanner library."],
+  ["2026-09-03T06:48:00Z", "Engineer B3", "The scanner library needs a camera permission flow that Android 12 handles differently. Our test devices are all Android 13 and 14."],
+  ["2026-09-03T07:02:00Z", "Engineer B5", "Decision: halt the staged rollout and turn off the card-scanner flag remotely."],
+  ["2026-09-03T07:10:00Z", "Engineer B5", "Flag off. Crash rate dropping."],
+  ["2026-09-03T08:30:00Z", "Manager B", "Support says about 340 customers hit the crash. B3 picked that library, so B3 owns the fix."],
+  ["2026-09-03T09:07:00Z", "Engineer B5", "Crash rate back to baseline. Resolved. Rollout stays halted until a fix ships."],
+].map(([ts, u, t]) => msg(incB, ts, u, t, teamsLink(ts))), null, 2) + "\n");
+const actionCols = ["id", "incident", "title", "owner_role", "owner", "created_at", "due", "completed_at", "link"];
+const act = (team, n, inc, title, role, owner, created, due, done) => ({ id: `${team}-PM-${n}`, incident: inc, title, owner_role: role, owner, created_at: created, due, completed_at: done, link: `https://${team === "ATL" ? "linear" : "jira"}.example.com/${team}-PM-${n}` });
+write("postmortem/team-a-actions.csv", csv([
+  act("ATL", 1, "INC-TEAMA-7", "Add a full-size batch load test to CI", "tech lead", "Engineer A2", "2026-07-15", "2026-08-15", ""),
+  act("ATL", 2, "INC-TEAMA-7", "Stream payout batches instead of loading them into memory", "payments engineer", "Engineer A6", "2026-07-15", "2026-09-30", ""),
+  act("ATL", 3, "INC-TEAMA-7", "Alert on payout worker restarts", "on-call engineer", "Engineer A1", "2026-07-15", "2026-07-31", "2026-07-24"),
+  act("ATL", 4, "INC-TEAMA-7", "Add a limit check on batch size config", "payments engineer", "Engineer A5", "2026-07-15", "2026-08-01", "2026-07-30"),
+  act("ATL", 5, "INC-TEAMA-2", "Document the payout batch rerun steps in the runbook", "on-call engineer", "Engineer A7", "2026-08-03", "2026-08-21", ""),
+  act("ATL", 6, "INC-TEAMA-6", "Page only after two failed retries", "on-call engineer", "", "2026-08-05", "", ""),
+  act("ATL", 7, "INC-TEAMA-1", "Add a dashboard for webhook queue depth", "team", "Engineer A3", "2026-07-22", "2026-08-05", "2026-08-12"),
+], actionCols));
+write("postmortem/team-b-actions.csv", csv([
+  act("MOB", 1, "INC-TEAMB-1", "Add Android 12 devices to the release test matrix", "release duty", "Engineer B4", "2026-09-04", "2026-09-30", ""),
+  act("MOB", 2, "INC-TEAMB-1", "Gate new SDKs behind a staged flag by default", "tech lead", "Engineer B3", "2026-09-04", "2026-10-15", ""),
+  act("MOB", 3, "INC-TEAMB-1", "Alert on crash rate per OS version", "on-call engineer", "Engineer B5", "2026-09-04", "2026-09-18", "2026-09-16"),
+  act("MOB", 4, "INC-TEAMB-3", "Fix checkout crash on rotate", "android engineer", "Engineer B6", "2026-07-24", "2026-08-07", "2026-08-06"),
+], actionCols));
+
 // Feedback observations: the EM's own words, input for feedback-rehearsal. No random draws.
 write("feedback/team-a-eng-a2.md", `Observation from Manager A about Engineer A2, written 2026-10-19.
 
@@ -808,6 +857,7 @@ ${readme.join("\n")}
 | incidents/ | Incident list per team |
 | ai/ | AI tool usage by person and day (input only; outputs never show it per person) and monthly spend |
 | pagerduty/, incident-io/ | On-call shifts and pages: Team A in PagerDuty format (one weekly rotation), Team B in incident.io format (a weekly rotation and a 3-person release-duty rotation) |
+| postmortem/ | One incident channel export per team (Team A Slack, Team B Teams) that names people and includes one blaming message on purpose, plus each team's postmortem actions with owner names that must not appear in outputs |
 | feedback/ | Two EM observations written in the EM's own words, with judgement and coded words left in on purpose, for feedback-rehearsal |
 | notes/team-a/, notes/team-b/ | Each EM's notes folder: team.md, ladder.md (Team A only), one file per person, last week's update. Team A keeps Engineer A3's expectations record in a separate file; Team B has not chosen where records go |
 `);

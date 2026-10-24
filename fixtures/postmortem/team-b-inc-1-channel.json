@@ -1,0 +1,66 @@
+[
+  {
+    "channel": "Team B / inc-2026-09-03-android-checkout",
+    "ts": "2026-09-03T06:13:00Z",
+    "user": "incident.io",
+    "text": "Alert: checkout crash rate above 2% on Android (Release duty).",
+    "visibility": "public",
+    "permalink": "https://teams.example.com/l/message/team-b-inc-1/1788415980000"
+  },
+  {
+    "channel": "Team B / inc-2026-09-03-android-checkout",
+    "ts": "2026-09-03T06:21:00Z",
+    "user": "Engineer B5",
+    "text": "On it. Crashes are all Android 12, app version 4.9.0, on the payment sheet.",
+    "visibility": "public",
+    "permalink": "https://teams.example.com/l/message/team-b-inc-1/1788416460000"
+  },
+  {
+    "channel": "Team B / inc-2026-09-03-android-checkout",
+    "ts": "2026-09-03T06:35:00Z",
+    "user": "Engineer B5",
+    "text": "Started at the 4.9.0 staged rollout to 20% last night. Stack trace points at the new card scanner library.",
+    "visibility": "public",
+    "permalink": "https://teams.example.com/l/message/team-b-inc-1/1788417300000"
+  },
+  {
+    "channel": "Team B / inc-2026-09-03-android-checkout",
+    "ts": "2026-09-03T06:48:00Z",
+    "user": "Engineer B3",
+    "text": "The scanner library needs a camera permission flow that Android 12 handles differently. Our test devices are all Android 13 and 14.",
+    "visibility": "public",
+    "permalink": "https://teams.example.com/l/message/team-b-inc-1/1788418080000"
+  },
+  {
+    "channel": "Team B / inc-2026-09-03-android-checkout",
+    "ts": "2026-09-03T07:02:00Z",
+    "user": "Engineer B5",
+    "text": "Decision: halt the staged rollout and turn off the card-scanner flag remotely.",
+    "visibility": "public",
+    "permalink": "https://teams.example.com/l/message/team-b-inc-1/1788418920000"
+  },
+  {
+    "channel": "Team B / inc-2026-09-03-android-checkout",
+    "ts": "2026-09-03T07:10:00Z",
+    "user": "Engineer B5",
+    "text": "Flag off. Crash rate dropping.",
+    "visibility": "public",
+    "permalink": "https://teams.example.com/l/message/team-b-inc-1/1788419400000"
+  },
+  {
+    "channel": "Team B / inc-2026-09-03-android-checkout",
+    "ts": "2026-09-03T08:30:00Z",
+    "user": "Manager B",
+    "text": "Support says about 340 customers hit the crash. B3 picked that library, so B3 owns the fix.",
+    "visibility": "public",
+    "permalink": "https://teams.example.com/l/message/team-b-inc-1/1788424200000"
+  },
+  {
+    "channel": "Team B / inc-2026-09-03-android-checkout",
+    "ts": "2026-09-03T09:07:00Z",
+    "user": "Engineer B5",
+    "text": "Crash rate back to baseline. Resolved. Rollout stays halted until a fix ships.",
+    "visibility": "public",
+    "permalink": "https://teams.example.com/l/message/team-b-inc-1/1788426420000"
+  }
+]

@@ -38,3 +38,18 @@ test("lint catches verdicts and a missing HR line in underperformance records", 
     rmSync(bad);
   }
 });
+
+test("lint catches names and blame in postmortem drafts", () => {
+  const dir = new URL("../examples/postmortem-draft/", import.meta.url);
+  mkdirSync(dir, { recursive: true });
+  const bad = new URL("zz-lint-negative.md", dir);
+  writeFileSync(bad, "| 13:20 | Manager A said the config was wrong | link |\n| 13:22 | A5 should have load tested it | link |\nFine: nothing in CI ran a full-size batch.\n");
+  try {
+    const r = spawnSync("node", [new URL("../scripts/lint", import.meta.url).pathname], { encoding: "utf8" });
+    assert.equal(r.status, 1);
+    for (const rule of ["person-named-in-team-output", "blame-in-postmortem"]) assert.match(r.stdout, new RegExp(`\\[${rule}\\]`));
+    assert.doesNotMatch(r.stdout, /Fine:/);
+  } finally {
+    rmSync(bad);
+  }
+});

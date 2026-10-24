@@ -1,0 +1,5 @@
+id,incident,title,owner_role,owner,created_at,due,completed_at,link
+MOB-PM-1,INC-TEAMB-1,Add Android 12 devices to the release test matrix,release duty,Engineer B4,2026-09-04,2026-09-30,,https://jira.example.com/MOB-PM-1
+MOB-PM-2,INC-TEAMB-1,Gate new SDKs behind a staged flag by default,tech lead,Engineer B3,2026-09-04,2026-10-15,,https://jira.example.com/MOB-PM-2
+MOB-PM-3,INC-TEAMB-1,Alert on crash rate per OS version,on-call engineer,Engineer B5,2026-09-04,2026-09-18,2026-09-16,https://jira.example.com/MOB-PM-3
+MOB-PM-4,INC-TEAMB-3,Fix checkout crash on rotate,android engineer,Engineer B6,2026-07-24,2026-08-07,2026-08-06,https://jira.example.com/MOB-PM-4

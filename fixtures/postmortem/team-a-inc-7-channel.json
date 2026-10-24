@@ -1,0 +1,90 @@
+[
+  {
+    "channel": "inc-2026-07-14-payouts",
+    "ts": "2026-07-14T13:05:00Z",
+    "user": "PagerDuty",
+    "text": "Triggered: payout-batch-age above 30 minutes (Payments primary).",
+    "visibility": "public",
+    "permalink": "https://slack.example.com/archives/C0TEAMAINC7/p1784034300000000"
+  },
+  {
+    "channel": "inc-2026-07-14-payouts",
+    "ts": "2026-07-14T13:07:00Z",
+    "user": "Engineer A1",
+    "text": "Acking. I'll take incident lead. Opening this channel.",
+    "visibility": "public",
+    "permalink": "https://slack.example.com/archives/C0TEAMAINC7/p1784034420000000"
+  },
+  {
+    "channel": "inc-2026-07-14-payouts",
+    "ts": "2026-07-14T13:10:00Z",
+    "user": "Engineer A1",
+    "text": "Status: the 13:00 payout batch has not left the queue. About 1,900 merchant payouts waiting. No data loss seen so far.",
+    "visibility": "public",
+    "permalink": "https://slack.example.com/archives/C0TEAMAINC7/p1784034600000000"
+  },
+  {
+    "channel": "inc-2026-07-14-payouts",
+    "ts": "2026-07-14T13:14:00Z",
+    "user": "Engineer A6",
+    "text": "The payout worker is crash-looping with out-of-memory errors since 12:52.",
+    "visibility": "public",
+    "permalink": "https://slack.example.com/archives/C0TEAMAINC7/p1784034840000000"
+  },
+  {
+    "channel": "inc-2026-07-14-payouts",
+    "ts": "2026-07-14T13:18:00Z",
+    "user": "Engineer A2",
+    "text": "The batch size config went from 500 to 5000 in the 12:06 production deploy (atl-148). The new batch size first applied to the 12:45 run. Each worker loads the whole batch into memory.",
+    "visibility": "public",
+    "permalink": "https://slack.example.com/archives/C0TEAMAINC7/p1784035080000000"
+  },
+  {
+    "channel": "inc-2026-07-14-payouts",
+    "ts": "2026-07-14T13:20:00Z",
+    "user": "Manager A",
+    "text": "Engineer A5 merged that without load testing it. They should have known better.",
+    "visibility": "public",
+    "permalink": "https://slack.example.com/archives/C0TEAMAINC7/p1784035200000000"
+  },
+  {
+    "channel": "inc-2026-07-14-payouts",
+    "ts": "2026-07-14T13:22:00Z",
+    "user": "Engineer A1",
+    "text": "Let's keep to the system for now. Decision: roll back the batch size config, not the whole deploy.",
+    "visibility": "public",
+    "permalink": "https://slack.example.com/archives/C0TEAMAINC7/p1784035320000000"
+  },
+  {
+    "channel": "inc-2026-07-14-payouts",
+    "ts": "2026-07-14T13:31:00Z",
+    "user": "Engineer A6",
+    "text": "Config rolled back to 500. Workers are stable.",
+    "visibility": "public",
+    "permalink": "https://slack.example.com/archives/C0TEAMAINC7/p1784035860000000"
+  },
+  {
+    "channel": "inc-2026-07-14-payouts",
+    "ts": "2026-07-14T13:40:00Z",
+    "user": "Engineer A1",
+    "text": "Status: the batch is draining. About 600 payouts left.",
+    "visibility": "public",
+    "permalink": "https://slack.example.com/archives/C0TEAMAINC7/p1784036400000000"
+  },
+  {
+    "channel": "inc-2026-07-14-payouts",
+    "ts": "2026-07-14T13:52:00Z",
+    "user": "Engineer A1",
+    "text": "All payouts sent. Latest one went out 52 minutes late. Finance told about the delay.",
+    "visibility": "public",
+    "permalink": "https://slack.example.com/archives/C0TEAMAINC7/p1784037120000000"
+  },
+  {
+    "channel": "inc-2026-07-14-payouts",
+    "ts": "2026-07-14T13:57:00Z",
+    "user": "Engineer A1",
+    "text": "Resolved. The config change passed review and CI; nothing in CI exercises a full-size batch. Postmortem actions in the tracker.",
+    "visibility": "public",
+    "permalink": "https://slack.example.com/archives/C0TEAMAINC7/p1784037420000000"
+  }
+]

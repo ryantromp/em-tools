@@ -3,7 +3,8 @@
 //   1. em-dashes anywhere in the repo,
 //   2. send, post or write calls in skills, examples and the server, and write tools on the read allowlist,
 //   3. per-person ranking or per-person numbers in team-level outputs,
-//   4. a missing HR and legal line, and verdict language in underperformance records.
+//   4. a missing HR and legal line, verdict language in underperformance records, and names or
+//      blame wording in postmortems.
 //
 // Usage: scripts/lint   (exit 0 clean, 1 on any finding)
 
@@ -78,7 +79,7 @@ for (const f of repoFiles().filter((x) => x.startsWith("examples/"))) report(f, 
 for (const f of examples) {
   const ls = lines(f);
   ls.forEach((l, i) => RANKING.test(l) && !/\b(no|never|not|without|don't|doesn't|won't|refuse)\b/i.test(l) && report(f, i + 1, "per-person-ranking", l));
-  const teamLevel = /^examples\/(ai-adoption|team-delivery-health|oncall-health)\//.test(f);
+  const teamLevel = /^examples\/(ai-adoption|team-delivery-health|oncall-health|postmortem-draft)\//.test(f);
   const update = /^examples\/(upward-update|dependency-register)\//.test(f);
   ls.forEach((l, i) => {
     const named = people.filter((p) => nameRe(p).test(l));
@@ -94,6 +95,17 @@ for (const f of examples) {
   const text = readFileSync(join(ROOT, f), "utf8");
   const needs = f.startsWith("examples/review-packet/") || f.startsWith("examples/underperformance-record/") || NEEDS_HR.test(text);
   if (needs && !/check with your HR or legal team/i.test(text)) report(f, 0, "missing-hr-legal-line", "Add: check with your HR or legal team");
+}
+
+// 6. Blameless postmortems: no managers named and no blame wording ----------------------------
+// Engineers are caught by person-named-in-team-output above; managers have no person file.
+const MANAGER = /\bManager [A-Z]\b/;
+const BLAME = /\b(should have|failed to|careless(ly)?|human error|(his|her|their) (mistake|fault)|mistake by|fault of|to blame)\b/i;
+for (const f of examples.filter((x) => x.startsWith("examples/postmortem-draft/"))) {
+  lines(f).forEach((l, i) => {
+    if (MANAGER.test(l)) report(f, i + 1, "person-named-in-team-output", l);
+    if (BLAME.test(l) && !/^\s*\|?\s*(Flag|A person's name|Should have)/.test(l)) report(f, i + 1, "blame-in-postmortem", l);
+  });
 }
 
 // 5. No verdicts in underperformance records --------------------------------------------------
