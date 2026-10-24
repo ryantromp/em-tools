@@ -725,6 +725,16 @@ write("notes/team-a/drafts/2026-10-12-upward-update.md", `# Team A weekly update
 - **Next:** refunds v2 launch readiness review.
 `);
 
+// Feedback observations: the EM's own words, input for feedback-rehearsal. No random draws.
+write("feedback/team-a-eng-a2.md", `Observation from Manager A about Engineer A2, written 2026-10-19.
+
+A2's code review comments on a teammate's ledger PRs have been really harsh lately. On 2026-10-08 they left 14 comments on one PR, and several just said "no" or "wrong" with no reason. The teammate told me in their 1:1 on 2026-10-15 that they now wait for someone else to review their work, which slowed the refunds change by two days. A2 is a bit abrasive and always thinks they know best. I want A2 to explain the why in reviews, because they want to be a tech lead.
+`);
+write("feedback/team-b-eng-b4.md", `Observation from Manager B about Engineer B4, written 2026-10-19.
+
+B4 skipped the "flags off" step of the release checklist on 2026-10-14, so build 4.12 went out with the new checkout flag on, and we rolled it back two hours later. B4 seems distracted lately and is not really a team player. I need them to follow the checklist every release.
+`);
+
 write("README.md", `# em-tools fixtures
 
 Synthetic data for two invented teams at an invented company, ExampleCo. Nothing here describes real people or real systems. Regenerate with \`node scripts/generate-fixtures.mjs\` (deterministic).
@@ -767,6 +777,7 @@ ${readme.join("\n")}
 | incidents/ | Incident list per team |
 | ai/ | AI tool usage by person and day (input only; outputs never show it per person) and monthly spend |
 | pagerduty/, incident-io/ | On-call shifts and pages: Team A in PagerDuty format (one weekly rotation), Team B in incident.io format (a weekly rotation and a 3-person release-duty rotation) |
+| feedback/ | Two EM observations written in the EM's own words, with judgement and coded words left in on purpose, for feedback-rehearsal |
 | notes/team-a/, notes/team-b/ | Each EM's notes folder: team.md, ladder.md (Team A only), one file per person, last week's update |
 `);
 console.log("fixtures written to", ROOT);
