@@ -392,3 +392,87 @@ export function aiAdoption(input: {
     ],
   };
 }
+
+// Dependencies ----------------------------------------------------------------
+
+export function workingDaysBetween(a: Date, b: Date): number {
+  if (b <= a) return 0;
+  let days = 0;
+  const d = new Date(Date.UTC(a.getUTCFullYear(), a.getUTCMonth(), a.getUTCDate()));
+  const end = new Date(Date.UTC(b.getUTCFullYear(), b.getUTCMonth(), b.getUTCDate()));
+  while (d < end) {
+    d.setUTCDate(d.getUTCDate() + 1);
+    if (d.getUTCDay() !== 0 && d.getUTCDay() !== 6) days++;
+  }
+  return days;
+}
+
+// Items, not people. Each row is one dependency: direction "we_wait" (we are blocked by another
+// team) or "they_wait" (another team is blocked by us). Aging is in working days.
+export function dependencyAge(rows: Row[], opts: { now?: string; agingDays?: number; staleDays?: number; finished?: Row[] } = {}) {
+  const now = toDate(opts.now) ?? new Date();
+  const aging = opts.agingDays ?? 5;
+  const stale = opts.staleDays ?? 10;
+  const open = rows.filter((r) => !toDate(r.resolved_at));
+  const items = open
+    .map((r) => {
+      const since = toDate(r.since);
+      const age = since ? workingDaysBetween(since, now) : null;
+      return {
+        id: r.id ?? null,
+        title: r.title ?? null,
+        direction: String(r.direction ?? "we_wait") === "they_wait" ? "they_wait" : "we_wait",
+        other_team: r.other_team ?? null,
+        since: since ? since.toISOString().slice(0, 10) : null,
+        age_working_days: age,
+        status: age === null ? "unknown" : age >= stale ? "stale" : age >= aging ? "aging" : "ok",
+        link: r.link ?? null,
+      };
+    })
+    .sort((a, b) => (b.age_working_days ?? -1) - (a.age_working_days ?? -1));
+  const byTeam: Record<string, { we_wait: number; they_wait: number }> = {};
+  for (const i of items) {
+    const t = String(i.other_team ?? "unknown");
+    byTeam[t] ??= { we_wait: 0, they_wait: 0 };
+    byTeam[t][i.direction as "we_wait" | "they_wait"]++;
+  }
+  // Blocked share: working days blocked over working days in progress, for finished work.
+  // Tickets with no blocked_days value are unknown, not zero, so they are left out of the share.
+  let blocked = 0;
+  let inProgress = 0;
+  let withHistory = 0;
+  let withoutHistory = 0;
+  for (const f of opts.finished ?? []) {
+    const s = toDate(f.started_at);
+    const c = toDate(f.completed_at);
+    if (!s || !c) continue;
+    const raw = f.blocked_days;
+    const value = raw === undefined || raw === null || String(raw).trim() === "" ? NaN : Number(raw);
+    if (!Number.isFinite(value)) {
+      withoutHistory++;
+      continue;
+    }
+    withHistory++;
+    inProgress += workingDaysBetween(s, c);
+    blocked += value;
+  }
+  const ages = items.map((i) => i.age_working_days).filter((x): x is number => x !== null);
+  return {
+    open_dependencies: items.length,
+    we_wait: items.filter((i) => i.direction === "we_wait").length,
+    they_wait: items.filter((i) => i.direction === "they_wait").length,
+    stale: items.filter((i) => i.status === "stale").length,
+    aging: items.filter((i) => i.status === "aging").length,
+    median_age_working_days: quantile(ages, 0.5),
+    by_other_team: byTeam,
+    items,
+    blocked_share_of_cycle_time_pct: inProgress ? round((blocked / inProgress) * 100, 1) : null,
+    finished_tickets_with_blocked_history: withHistory,
+    finished_tickets_without_blocked_history: withoutHistory,
+    method: [
+      `Age is in working days from 'since' to now. Aging at ${aging} working days, stale at ${stale}.`,
+      "Blocked share: days marked blocked on finished work over working days that work was in progress. Tickets with no blocked_days value are left out and counted separately, never treated as zero.",
+      "Items only; owners are not reported.",
+    ],
+  };
+}
