@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { actionAge, hiringFunnel, aiAdoption, dora, meetingLoad, prFlow, quantile, suppression } from "../src/metrics.ts";
+import { actionAge, capacity, hiringFunnel, aiAdoption, dora, meetingLoad, prFlow, quantile, suppression } from "../src/metrics.ts";
 import { parseCsv } from "../src/csv.ts";
 
 test("quantile", () => {
@@ -218,4 +218,47 @@ test("hiring funnel: pass-through rates and count warnings", () => {
   assert.deepEqual(bad.stages.map((s) => s.pass_through_pct), [null, null, null, null]);
   assert.deepEqual(bad.stages.map((s) => s.of_first_stage_pct), [100, null, null, 1]);
   assert.equal(bad.warnings.length, 2);
+});
+
+test("capacity: one unit, PTO as person-days, buffer and points from history", () => {
+  // 2026-11-02 (Mon) to 2026-11-13 (Fri): 10 working days, one holiday on 11-11.
+  const r = capacity({
+    members: 5, from: "2026-11-02", to: "2026-11-13", holidays: ["2026-11-11"],
+    pto: [
+      { person: "x1", start: "2026-11-02", end: "2026-11-04" },
+      { person: "x1", start: "2026-11-04", end: "2026-11-04" },
+      { person: "x2", start: "2026-11-11", end: "2026-11-11" },
+      { person: "x3", start: "2026-11-07", end: "2026-11-08" },
+    ],
+    meetingHoursPerPersonPerWeek: 5, oncallHours: 80, oncallLoadFactor: 0.5,
+    sprints: [
+      { sprint: "S1", start: "2026-09-21", end: "2026-10-02", completed_points: 40, unplanned_points: 8 },
+      { sprint: "S2", start: "2026-10-05", end: "2026-10-16", completed_points: 30, unplanned_points: 6 },
+      { sprint: "S3", start: "2026-10-19", end: "2026-10-30", completed_points: 50, unplanned_points: 10 },
+    ],
+    plannedHours: 1000,
+  });
+  assert.equal(r.steps.raw_hours, 400);
+  assert.equal(r.steps.minus_holidays_hours, 40);
+  assert.equal(r.pto_person_days, 3);
+  assert.equal(r.steps.available_hours, (5 * 9 - 3) * 8);
+  assert.equal(r.steps.minus_meeting_hours, 50);
+  assert.equal(r.steps.minus_oncall_hours, 40);
+  assert.equal(r.steps.unplanned_buffer_pct, 20);
+  assert.equal(r.steps.capacity_hours, Math.round((336 - 50 - 40) * 0.7 * 0.8));
+  assert.equal(r.points!.median, Math.round(40 * (336 / 400) * 0.8));
+  assert.ok(r.warnings.some((w) => /more than capacity/.test(w)));
+  assert.ok(!JSON.stringify(r).includes("x1"));
+});
+
+test("capacity without history warns and keeps no buffer", () => {
+  const r = capacity({ members: 4, from: "2026-11-02", to: "2026-11-06" });
+  assert.equal(r.steps.capacity_hours, Math.round(4 * 5 * 8 * 0.7));
+  assert.equal(r.points, null);
+  assert.ok(r.warnings.some((w) => /No sprint history/.test(w)));
+  // A week-long shift from Friday 09:00 to Friday 09:00 covers Mon to Thu working hours: 4 x 8.
+  const s = capacity({ members: 4, from: "2026-11-02", to: "2026-11-06", oncallShifts: [{ start: "2026-10-30T09:00:00Z", end: "2026-11-06T09:00:00Z" }] });
+  assert.equal(s.steps.oncall_hours_in_period, 32);
+  assert.equal(s.steps.minus_oncall_hours, Math.round(32 * 0.3));
+  assert.equal(s.past_sprints.length, 0);
 });

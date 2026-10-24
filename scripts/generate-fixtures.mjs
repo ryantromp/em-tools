@@ -826,6 +826,47 @@ Saved 2026-09-28. Draft for review.
 Debrief: written scorecards before discussion. Debrief for cand-c2 booked for 2026-10-20.
 `);
 
+// Capacity inputs: past sprint totals, PTO and the published on-call schedule for the next
+// sprint (2026-10-19 to 2026-10-30). Written last with no random draws.
+const sprintCols = ["sprint", "start", "end", "planned_points", "completed_points", "unplanned_points", "completed_items", "unplanned_items"];
+const sprintRows = (label, rows) => rows.map(([n, start, end, planned, done, unplanned, items, unplannedItems]) => ({ sprint: `${label} ${n}`, start, end, planned_points: planned, completed_points: done, unplanned_points: unplanned, completed_items: items, unplanned_items: unplannedItems }));
+// Same 14-day cadence as the tracker fixtures: cycle n starts 2026-04-20 + 14 x (n - 1) days.
+const pastSprints = [9, 10, 11, 12, 13].map((n) => {
+  const start = new Date(START.getTime() + 14 * (n - 1) * DAY);
+  return [n, day(start), day(new Date(start.getTime() + 11 * DAY))];
+});
+write("capacity/team-a-sprints.csv", csv(sprintRows("Cycle", [
+  [...pastSprints[0], 34, 30, 6, 14, 3], [...pastSprints[1], 34, 27, 7, 13, 4], [...pastSprints[2], 32, 31, 5, 15, 2],
+  [...pastSprints[3], 36, 29, 8, 14, 4], [...pastSprints[4], 35, 28, 6, 13, 3],
+]), sprintCols));
+write("capacity/team-b-sprints.csv", csv(sprintRows("Sprint", [
+  [...pastSprints[0], 26, 24, 3, 11, 2], [...pastSprints[1], 28, 22, 5, 10, 3], [...pastSprints[2], 25, 25, 2, 12, 1],
+  [...pastSprints[3], 27, 21, 6, 9, 3], [...pastSprints[4], 26, 23, 4, 11, 2],
+]), sprintCols));
+const ptoCols = ["person", "start", "end", "type"];
+write("capacity/team-a-pto.csv", csv([
+  { person: "eng-a2", start: "2026-08-24", end: "2026-08-28", type: "pto" },
+  { person: "eng-a5", start: "2026-09-21", end: "2026-09-22", type: "pto" },
+  { person: "eng-a7", start: "2026-10-22", end: "2026-10-22", type: "pto" },
+  { person: "eng-a2", start: "2026-10-26", end: "2026-10-30", type: "pto" },
+  { person: "eng-a4", start: "2026-10-19", end: "2026-10-20", type: "training" },
+], ptoCols));
+write("capacity/team-b-pto.csv", csv([
+  { person: "eng-b3", start: "2026-09-01", end: "2026-09-04", type: "pto" },
+  { person: "eng-b6", start: "2026-10-12", end: "2026-10-13", type: "pto" },
+  { person: "eng-b1", start: "2026-10-26", end: "2026-10-28", type: "pto" },
+], ptoCols));
+write("capacity/team-a-oncall-next.csv", csv([
+  { rotation: "Payments primary", start: "2026-10-19T09:00:00Z", end: "2026-10-26T09:00:00Z", member: "eng-a7" },
+  { rotation: "Payments primary", start: "2026-10-26T09:00:00Z", end: "2026-11-02T09:00:00Z", member: "eng-a1" },
+], ["rotation", "start", "end", "member"]));
+write("capacity/team-b-oncall-next.csv", csv([
+  { rotation: "Mobile primary", start: "2026-10-19T09:00:00Z", end: "2026-10-26T09:00:00Z", member: "eng-b2" },
+  { rotation: "Mobile primary", start: "2026-10-26T09:00:00Z", end: "2026-11-02T09:00:00Z", member: "eng-b3" },
+  { rotation: "Release duty", start: "2026-10-22T09:00:00Z", end: "2026-10-22T21:00:00Z", member: "eng-b5" },
+  { rotation: "Release duty", start: "2026-10-29T09:00:00Z", end: "2026-10-29T21:00:00Z", member: "eng-b6" },
+], ["rotation", "start", "end", "member"]));
+
 // Feedback observations: the EM's own words, input for feedback-rehearsal. No random draws.
 write("feedback/team-a-eng-a2.md", `Observation from Manager A about Engineer A2, written 2026-10-19.
 
@@ -911,6 +952,7 @@ ${readme.join("\n")}
 | pagerduty/, incident-io/ | On-call shifts and pages: Team A in PagerDuty format (one weekly rotation), Team B in incident.io format (a weekly rotation and a 3-person release-duty rotation) |
 | postmortem/ | One incident channel export per team (Team A Slack, Team B Teams) that names people and includes one blaming message on purpose, plus each team's postmortem actions with owner names that must not appear in outputs |
 | hiring/ | Team A's interviewer pool for a Senior Engineer role. The role's loop plan and two candidates' written scorecards (codes only, no score fields; cand-c2 is missing its collaboration scorecard) are in notes/team-a/hiring/ |
+| capacity/ | Past sprint totals (planned, completed and unplanned work), PTO by person and date (input only; outputs count person-days), and the published on-call schedule for the next sprint, 2026-10-19 to 2026-10-30 |
 | feedback/ | Two EM observations written in the EM's own words, with judgement and coded words left in on purpose, for feedback-rehearsal |
 | notes/team-a/, notes/team-b/ | Each EM's notes folder: team.md, ladder.md (Team A only), one file per person, last week's update. Team A keeps Engineer A3's expectations record in a separate file; Team B has not chosen where records go |
 `);

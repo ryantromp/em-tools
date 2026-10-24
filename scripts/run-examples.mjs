@@ -125,6 +125,16 @@ const EXAMPLES = [
     team: "team-b",
     prompt: `/em-tools:hiring-loop-kit ios-engineer plan, then funnel. Role: iOS Engineer at E3 on Team B, with SwiftUI and app release experience. Interviewer pool: Engineer B1 (execution, collaboration), Engineer B2 (technical-design), Engineer B4 (execution; not available until 2026-11-02), Engineer B5 (technical-design, ownership), Manager B (collaboration, mentoring). Funnel for the last quarter: applied 140, recruiter screen 36, technical screen 14, onsite 9, offer 2, accepted 1. ${common}`,
   },
+  {
+    name: "capacity-plan/team-a-cycle-14",
+    team: "team-a",
+    prompt: `/em-tools:capacity-plan Cycle 14, 2026-10-19 to 2026-10-30, for the 7 engineers. We plan to take on 42 points. No public holidays. Use 8 hours a day and the default factors. ${common} Calendar for meeting load (use the 4 weeks to 2026-10-16, UTC working hours 9 to 17): ${F}/calendar/team-a-google.csv. PTO export: ${F}/capacity/team-a-pto.csv. On-call schedule for the period: ${F}/capacity/team-a-oncall-next.csv. Past cycles: ${F}/capacity/team-a-sprints.csv.`,
+  },
+  {
+    name: "capacity-plan/team-b-sprint-14",
+    team: "team-b",
+    prompt: `/em-tools:capacity-plan Sprint 14, 2026-10-19 to 2026-10-30, for the 6 engineers. We plan 24 points. No public holidays. Also, who is off next sprint and who has the lowest velocity? ${common} Calendar for meeting load (use the 4 weeks to 2026-10-16, UTC working hours 9 to 17): ${F}/calendar/team-b-outlook.csv. PTO export: ${F}/capacity/team-b-pto.csv. On-call schedule for the period: ${F}/capacity/team-b-oncall-next.csv. Past sprints: ${F}/capacity/team-b-sprints.csv.`,
+  },
 ];
 
 rmSync(WORK, { recursive: true, force: true });

@@ -748,3 +748,148 @@ export function hiringFunnel(stages: Array<{ stage: string; count: number }>) {
     method: ["Pass-through is this stage's count over the previous stage's count. Counts are what the EM gave; candidates are never listed."],
   };
 }
+
+// Capacity ----------------------------------------------------------------------------------
+// Team totals only: PTO becomes person-days off, never who or when.
+function workdaysIn(from: string, to: string, holidays: Set<string>): string[] {
+  const out: string[] = [];
+  const end = Date.parse(to + "T00:00:00Z");
+  for (let t = Date.parse(from + "T00:00:00Z"); t <= end; t += DAY) {
+    const d = new Date(t);
+    const key = d.toISOString().slice(0, 10);
+    if (d.getUTCDay() % 6 !== 0 && !holidays.has(key)) out.push(key);
+  }
+  return out;
+}
+
+function ptoPersonDays(pto: Row[], days: string[]): number {
+  const inPeriod = new Set(days);
+  const off = new Set<string>();
+  for (const r of pto) {
+    const s = toDate(r.start);
+    const e = toDate(r.end) ?? s;
+    if (!s || !e) continue;
+    const who = String(r.person ?? r.member ?? "");
+    for (let t = Date.UTC(s.getUTCFullYear(), s.getUTCMonth(), s.getUTCDate()); t <= e.getTime(); t += DAY) {
+      const key = new Date(t).toISOString().slice(0, 10);
+      if (inPeriod.has(key)) off.add(`${who}|${key}`);
+    }
+  }
+  return off.size;
+}
+
+export function capacity(opts: {
+  members: number; from: string; to: string;
+  holidays?: string[]; pto?: Row[]; sprints?: Row[];
+  hoursPerDay?: number; meetingHoursPerPersonPerWeek?: number;
+  oncallHours?: number; oncallShifts?: Row[]; oncallLoadFactor?: number; focusFactor?: number;
+  workdayStartHour?: number; timezoneOffsetMinutes?: number;
+  plannedHours?: number; plannedPoints?: number;
+}) {
+  const hoursPerDay = opts.hoursPerDay ?? 8;
+  const focus = opts.focusFactor ?? 0.7;
+  // Research puts on-call at 20 to 30% of one engineer's bandwidth (research.md, Part 2 section 2).
+  const oncallFactor = opts.oncallLoadFactor ?? 0.3;
+  const startHour = opts.workdayStartHour ?? 9;
+  const offsetMs = (opts.timezoneOffsetMinutes ?? 0) * 60_000;
+  const holidays = new Set(opts.holidays ?? []);
+  const warnings: string[] = [];
+  const availableHoursFor = (from: string, to: string) => {
+    const days = workdaysIn(from, to, holidays);
+    const off = Math.min(ptoPersonDays(opts.pto ?? [], days), opts.members * days.length);
+    return { workdays: days.length, ptoPersonDays: off, hours: (opts.members * days.length - off) * hoursPerDay };
+  };
+  const allDays = workdaysIn(opts.from, opts.to, new Set());
+  const period = availableHoursFor(opts.from, opts.to);
+  const holidayDays = allDays.length - period.workdays;
+  const weeks = allDays.length / 5;
+  const meetings = (opts.meetingHoursPerPersonPerWeek ?? 0) * opts.members * weeks;
+  // On-call hours: given directly, or the shift export's overlap with working hours on the
+  // period's working days. Nights and weekends are not working time, so they are not deducted.
+  const windows = workdaysIn(opts.from, opts.to, holidays).map((d) => {
+    const s = Date.parse(d + "T00:00:00Z") + startHour * HOUR - offsetMs;
+    return [s, s + hoursPerDay * HOUR];
+  });
+  const shiftHours = (opts.oncallShifts ?? []).reduce((sum, r) => {
+    const s = toDate(r.start);
+    const e = toDate(r.end);
+    if (!s || !e || e <= s) return sum;
+    return sum + windows.reduce((w, [a, b]) => w + Math.max(0, Math.min(e.getTime(), b) - Math.max(s.getTime(), a)) / HOUR, 0);
+  }, 0);
+  const oncallHours = opts.oncallHours ?? shiftHours;
+  const oncall = oncallHours * oncallFactor;
+  const afterDeductions = Math.max(0, period.hours - meetings - oncall);
+  const focused = afterDeductions * focus;
+
+  // Buffer: the unplanned share of completed work over the last 3 to 5 sprints.
+  const past = (opts.sprints ?? [])
+    .filter((s) => toDate(s.start) && toDate(s.end))
+    .sort((a, b) => String(a.start).localeCompare(String(b.start)))
+    .slice(-5);
+  if (opts.sprints?.length && past.length < 3) warnings.push(`Only ${past.length} past sprints; the buffer needs 3 to 5.`);
+  let completed = 0;
+  let unplanned = 0;
+  const usePoints = past.length > 0 && past.every((s) => s.completed_points !== undefined && String(s.completed_points).trim() !== "");
+  for (const s of past) {
+    completed += toNum(usePoints ? s.completed_points : s.completed_items);
+    unplanned += toNum(usePoints ? s.unplanned_points : s.unplanned_items);
+  }
+  const bufferShare = completed > 0 ? unplanned / completed : null;
+  if (bufferShare === null) warnings.push("No sprint history, so no buffer was drawn from history. Say what share to hold back.");
+  const capacityHours = bufferShare === null ? focused : focused * (1 - bufferShare);
+
+  // Points: never converted from hours. Past completed points scaled by available hours.
+  let points: { low: number; median: number; high: number } | null = null;
+  const pastDetail = past.map((s) => {
+    const h = availableHoursFor(ymdOfDate(toDate(s.start)!), ymdOfDate(toDate(s.end)!)).hours;
+    const done = toNum(usePoints ? s.completed_points : s.completed_items);
+    return {
+      sprint: s.sprint ?? null,
+      completed: done,
+      unplanned: toNum(usePoints ? s.unplanned_points : s.unplanned_items),
+      available_hours: h,
+      scaled_for_planned_work: usePoints && h > 0 ? round(((done * period.hours) / h) * (1 - (bufferShare ?? 0)), 1) : null,
+    };
+  });
+  if (usePoints) {
+    const scaled = pastDetail.map((p) => p.scaled_for_planned_work ?? 0);
+    points = { low: round(Math.min(...scaled), 0)!, median: round(quantile(scaled, 0.5), 0)!, high: round(Math.max(...scaled), 0)! };
+  }
+  if (opts.plannedHours !== undefined && opts.plannedHours > capacityHours) warnings.push(`Planned work (${opts.plannedHours} hours) is more than capacity (${round(capacityHours, 0)} hours).`);
+  if (opts.plannedPoints !== undefined && points && opts.plannedPoints > points.high) warnings.push(`Planned work (${opts.plannedPoints} points) is above the highest past range (${points.high} points).`);
+
+  return {
+    period: { from: opts.from, to: opts.to, workdays: allDays.length, weeks: round(weeks, 1) },
+    people: opts.members,
+    steps: {
+      raw_hours: opts.members * allDays.length * hoursPerDay,
+      minus_holidays_hours: holidayDays * opts.members * hoursPerDay,
+      minus_pto_hours: period.ptoPersonDays * hoursPerDay,
+      available_hours: period.hours,
+      minus_meeting_hours: round(meetings, 0),
+      oncall_hours_in_period: round(oncallHours, 0),
+      minus_oncall_hours: round(oncall, 0),
+      focus_factor: focus,
+      focused_hours: round(focused, 0),
+      unplanned_buffer_pct: bufferShare === null ? null : round(bufferShare * 100, 1),
+      capacity_hours: round(capacityHours, 0),
+    },
+    pto_person_days: period.ptoPersonDays,
+    holiday_workdays: holidayDays,
+    points,
+    past_sprints_used: past.length,
+    past_sprints: pastDetail,
+    buffer_basis: usePoints ? "points" : past.length ? "items" : null,
+    warnings,
+    method: [
+      `Available hours = (people x working days - PTO person-days) x ${hoursPerDay} hours, with public holidays removed.`,
+      `Meetings = average hours per person per week x people x weeks. On-call = on-call time inside working hours x ${oncallFactor} (research puts on-call at 20 to 30% of one engineer's time). Focus factor ${focus}.`,
+      "Buffer = unplanned share of completed work over the last 3 to 5 sprints. Points are past completed points scaled by available hours, never converted from hours.",
+      "Team totals only: PTO is counted as person-days, never by person or date.",
+    ],
+  };
+}
+
+function ymdOfDate(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}

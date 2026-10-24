@@ -3,7 +3,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import { loadConfig } from "./config.ts";
 import { loadRows } from "./csv.ts";
-import { actionAge, aiAdoption, dependencyAge, hiringFunnel, dora, meetingLoad, oncallHealth, prFlow, MIN_GROUP_SIZE } from "./metrics.ts";
+import { actionAge, aiAdoption, capacity, dependencyAge, hiringFunnel, dora, meetingLoad, oncallHealth, prFlow, MIN_GROUP_SIZE } from "./metrics.ts";
 import { Notes, NotesError } from "./notes.ts";
 
 const VERSION = "0.1.0";
@@ -220,6 +220,27 @@ server.registerTool("metrics_hiring_funnel", {
   description: "Hiring funnel from stage counts the EM gives, in order (for example applied, screen, onsite, offer, accepted): pass-through rate per stage and share of the first stage. Never lists candidates.",
   inputSchema: { stages: z.array(z.object({ stage: z.string(), count: z.number().int().nonnegative() })) },
 }, async ({ stages }) => guarded(() => hiringFunnel(stages)));
+
+server.registerTool("metrics_capacity", {
+  description: "Team capacity for a period, in hours: available hours (people x working days minus PTO person-days and holidays, x hours per day), minus meetings (hours per person per week from metrics_meeting_load), minus on-call time inside working hours (given, or from shift rows: rotation, start, end) x a load factor (default 0.3), x a focus factor, minus a buffer from the unplanned share of the last 3 to 5 sprints. Points, if the team uses them, come from past completed points scaled by available hours. PTO columns: person, start, end (counted as person-days only). Sprint columns: sprint, start, end, completed_points, unplanned_points (or completed_items, unplanned_items). Never returns who is off or per-person figures.",
+  inputSchema: {
+    members: z.number().int().positive(), from: z.string(), to: z.string(),
+    holidays: z.array(z.string()).optional(),
+    pto_rows: rows, pto_csv_path: csvPath, sprint_rows: rows, sprint_csv_path: csvPath,
+    hours_per_day: z.number().positive().optional(), meeting_hours_per_person_per_week: z.number().nonnegative().optional(),
+    oncall_hours: z.number().nonnegative().optional(), shift_rows: rows, shift_csv_path: csvPath, oncall_load_factor: z.number().min(0).max(1).optional(),
+    focus_factor: z.number().min(0).max(1).optional(),
+    workday_start_hour: z.number().min(0).max(23).optional(), timezone_offset_minutes: z.number().optional(),
+    planned_hours: z.number().nonnegative().optional(), planned_points: z.number().nonnegative().optional(),
+  },
+}, async (a) => guarded(() => capacity({
+  members: a.members, from: a.from, to: a.to, holidays: a.holidays,
+  pto: loadRows(a.pto_rows, a.pto_csv_path), sprints: loadRows(a.sprint_rows, a.sprint_csv_path),
+  hoursPerDay: a.hours_per_day, meetingHoursPerPersonPerWeek: a.meeting_hours_per_person_per_week,
+  oncallHours: a.oncall_hours, oncallShifts: loadRows(a.shift_rows, a.shift_csv_path), oncallLoadFactor: a.oncall_load_factor, focusFactor: a.focus_factor,
+  plannedHours: a.planned_hours, plannedPoints: a.planned_points,
+  workdayStartHour: a.workday_start_hour, timezoneOffsetMinutes: a.timezone_offset_minutes,
+})));
 
 server.registerTool("metrics_ai_adoption", {
   description: `Team AI adoption, ROI and quality aggregates. Groups under ${MIN_GROUP_SIZE} people (or whose complement is under ${MIN_GROUP_SIZE}) are suppressed. Usage columns: person, date, tool, active. PR columns: number, author, created_at, merged_at, additions, deletions, review_comments, ai_assisted, reverted, defect_linked, churn_lines_21d. Spend columns: month, tool, amount, currency. Never returns per-person rows.`,
