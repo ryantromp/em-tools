@@ -14,6 +14,7 @@ Compiled 2026-10-23 as the evidence base for [spec.md](spec.md). The spec carrie
 2. [Part 2: Delivery work](#part-2-delivery-work)
 3. [Part 3: Market and AI adoption](#part-3-market-and-ai-adoption)
 4. [Part 4: Integrations and plugin platform](#part-4-integrations-and-plugin-platform)
+5. [Part 5: Phase 2 data sources](#part-5-phase-2-data-sources)
 
 ---
 
@@ -955,3 +956,16 @@ Notes:
 - Example row: "Chat | `~~chat` | Slack | Microsoft Teams".
 
 **Skill frontmatter style:** `name`, `description`, `argument-hint` only.
+
+---
+
+# Part 5: Phase 2 data sources
+
+Checked 2026-10-24 from search results; vendor pages were not opened directly from the sandbox, so confirm before relying on details.
+
+- **PagerDuty:** official MCP server, hosted at mcp.pagerduty.com (EU variant exists) and as a local server. The local server exposes read-only tools by default and needs `--enable-write-tools` for writes; one source says the hosted server has no tool filtering. Tool counts differ between sources (roughly 50 to 55 read tools, 22 to 28 write tools). ([PagerDuty MCP docs: read vs write](https://www.mintlify.com/PagerDuty/pagerduty-mcp-server/tools/read-vs-write), [tools overview](https://www.mintlify.com/PagerDuty/pagerduty-mcp-server/tools/overview), [Scalekit comparison](https://www.scalekit.com/blog/pagerduty-mcp-vs-api))
+- **incident.io:** official hosted MCP server at `https://mcp.incident.io/mcp`, Streamable HTTP, OAuth; the older open-source server is superseded. Capabilities include declaring and triaging incidents, acknowledging pages, on-call schedules and follow-ups, so write tools exist. ([incident.io blog](https://incident.io/blog/we-built-an-mcp-server-so-claude-can-access-your-incidents), [mcpservers.org listing](https://mcpservers.org/remote-mcp-servers/incident-io))
+- **Ashby:** official MCP server in open beta on all plans, respecting the user's Ashby permissions. ([Ashby product update](https://www.ashbyhq.com/product-updates/mcp))
+- **Greenhouse:** an official MCP server in open beta is reported by third parties only (36 tools, admin-set scopes). UNVERIFIED. ([Hirevire](https://hirevire.com/articles/greenhouse-mcp))
+- **Lever:** no official MCP server found; community servers only. ([AI Agent Index](https://theaiagentindex.com/compare/greenhouse-vs-lever))
+- **Opsgenie:** end of support 5 April 2027; REST APIs stop and unmigrated data is deleted; features move to Jira Service Management and Compass. No MCP server found. ([Hyperping](https://hyperping.com/blog/opsgenie-end-of-life), [Atlassian Opsgenie pricing](https://www.atlassian.com/software/opsgenie/pricing))
