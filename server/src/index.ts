@@ -3,7 +3,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import { loadConfig } from "./config.ts";
 import { loadRows } from "./csv.ts";
-import { aiAdoption, dora, meetingLoad, prFlow, MIN_GROUP_SIZE } from "./metrics.ts";
+import { aiAdoption, dependencyAge, dora, meetingLoad, prFlow, MIN_GROUP_SIZE } from "./metrics.ts";
 import { Notes, NotesError } from "./notes.ts";
 
 const VERSION = "0.1.0";
@@ -135,6 +135,16 @@ server.registerTool("metrics_meeting_load", {
   },
 }, async (a) => guarded(() => meetingLoad(loadRows(a.rows, a.csv_path), a.members, {
   from: a.from, to: a.to, workdayStartHour: a.workday_start_hour, workdayEndHour: a.workday_end_hour, timezoneOffsetMinutes: a.timezone_offset_minutes,
+})));
+
+server.registerTool("metrics_dependency_age", {
+  description: "Cross-team dependency register maths: age in working days, aging and stale counts, counts by other team, and the blocked share of cycle time for finished work. Dependency columns: id, title, direction (we_wait or they_wait), other_team, since, resolved_at, link. Finished-work columns: started_at, completed_at, blocked_days. Owners are never reported.",
+  inputSchema: {
+    rows, csv_path: csvPath, finished_rows: rows, finished_csv_path: csvPath,
+    now: z.string().optional(), aging_days: z.number().optional(), stale_days: z.number().optional(),
+  },
+}, async (a) => guarded(() => dependencyAge(loadRows(a.rows, a.csv_path), {
+  now: a.now, agingDays: a.aging_days, staleDays: a.stale_days, finished: loadRows(a.finished_rows, a.finished_csv_path),
 })));
 
 server.registerTool("metrics_ai_adoption", {
