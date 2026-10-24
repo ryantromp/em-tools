@@ -774,6 +774,58 @@ write("postmortem/team-b-actions.csv", csv([
   act("MOB", 4, "INC-TEAMB-3", "Fix checkout crash on rotate", "android engineer", "Engineer B6", "2026-07-24", "2026-08-07", "2026-08-06"),
 ], actionCols));
 
+// Hiring: Team A is hiring a Senior Engineer (E4). Candidates use codes. Scorecards are
+// written in the interviewer's words with no score field. Candidate C2 is missing one
+// scorecard before the debrief. Written last with no random draws.
+const role = "senior-engineer-payments";
+write(`hiring/team-a-interviewers.csv`, csv([
+  { interviewer: "Engineer A1", trained_for: "technical-design;collaboration", available: "yes" },
+  { interviewer: "Engineer A2", trained_for: "execution;technical-design", available: "yes" },
+  { interviewer: "Engineer A5", trained_for: "execution", available: "no (on-call week of 2026-10-26)" },
+  { interviewer: "Engineer A6", trained_for: "ownership;execution", available: "yes" },
+  { interviewer: "Manager A", trained_for: "collaboration;mentoring;ownership", available: "yes" },
+], ["interviewer", "trained_for", "available"]));
+const HFENCE = "`".repeat(3);
+const candNote = (n) => `${HFENCE}yaml candidate-note\n${Object.entries(n).map(([k, v]) => `${k}: ${JSON.stringify(v)}`).join("\n")}\n${HFENCE}`;
+const candFile = (cand, notes) => `---
+candidate: ${cand}
+role: ${role}
+---
+
+# ${cand}: ${role}
+
+Append-only. Written scorecards and notes in the writer's own words. Follow your organisation's retention policy for candidate data; em-tools never deletes files.
+
+## Notes
+
+${notes.map(candNote).join("\n\n")}
+`;
+const sc = (cand, id, stage, interviewer, date, text) => ({ id, candidate: cand, kind: "scorecard", stage, interviewer, date, text, captured: date });
+write(`notes/team-a/hiring/${role}/candidates/cand-c1.md`, candFile("cand-c1", [
+  sc("cand-c1", "c1-screen", "recruiter screen", "Recruiter", "2026-10-02", "Five years on payments backends. Wants a team with on-call that is shared fairly."),
+  sc("cand-c1", "c1-execution", "execution: past project deep dive", "Engineer A2", "2026-10-09", "Walked through a ledger migration end to end, including the rollback plan. Gave clear numbers on scope and slippage."),
+  sc("cand-c1", "c1-design", "technical design: refunds service", "Engineer A1", "2026-10-09", "Started with idempotency and retries. Did not get to data retention in the time."),
+  sc("cand-c1", "c1-collab", "collaboration and ownership", "Manager A", "2026-10-10", "Gave two examples of aligning with a finance team. Said they would push back on a launch date with data."),
+]));
+write(`notes/team-a/hiring/${role}/candidates/cand-c2.md`, candFile("cand-c2", [
+  sc("cand-c2", "c2-screen", "recruiter screen", "Recruiter", "2026-10-06", "Seven years backend, two in payments. Currently a tech lead for three engineers."),
+  sc("cand-c2", "c2-execution", "execution: past project deep dive", "Engineer A6", "2026-10-15", "Described splitting a large migration into weekly releases. Vague on how they measured success."),
+  sc("cand-c2", "c2-design", "technical design: refunds service", "Engineer A1", "2026-10-15", "Drew the queue and the retry path quickly. Asked good questions about partial refunds."),
+]));
+write(`notes/team-a/hiring/${role}/2026-09-28-loop-plan.md`, `# Loop plan: Senior Engineer, Payments (E4)
+
+Saved 2026-09-28. Draft for review.
+
+| Stage | Competencies | Length | Interviewers |
+|---|---|---|---|
+| Recruiter screen | motivation, logistics | 30 min | Recruiter |
+| Execution: past project deep dive | execution, ownership | 60 min | Engineer A2 or Engineer A6 |
+| Technical design: refunds service | technical-design | 60 min | Engineer A1 |
+| Collaboration and ownership | collaboration, mentoring, ownership | 45 min | Manager A |
+
+Debrief: written scorecards before discussion. Debrief for cand-c2 booked for 2026-10-20.
+`);
+
 // Feedback observations: the EM's own words, input for feedback-rehearsal. No random draws.
 write("feedback/team-a-eng-a2.md", `Observation from Manager A about Engineer A2, written 2026-10-19.
 
@@ -858,6 +910,7 @@ ${readme.join("\n")}
 | ai/ | AI tool usage by person and day (input only; outputs never show it per person) and monthly spend |
 | pagerduty/, incident-io/ | On-call shifts and pages: Team A in PagerDuty format (one weekly rotation), Team B in incident.io format (a weekly rotation and a 3-person release-duty rotation) |
 | postmortem/ | One incident channel export per team (Team A Slack, Team B Teams) that names people and includes one blaming message on purpose, plus each team's postmortem actions with owner names that must not appear in outputs |
+| hiring/ | Team A's interviewer pool for a Senior Engineer role. The role's loop plan and two candidates' written scorecards (codes only, no score fields; cand-c2 is missing its collaboration scorecard) are in notes/team-a/hiring/ |
 | feedback/ | Two EM observations written in the EM's own words, with judgement and coded words left in on purpose, for feedback-rehearsal |
 | notes/team-a/, notes/team-b/ | Each EM's notes folder: team.md, ladder.md (Team A only), one file per person, last week's update. Team A keeps Engineer A3's expectations record in a separate file; Team B has not chosen where records go |
 `);

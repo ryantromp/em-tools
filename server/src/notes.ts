@@ -54,6 +54,23 @@ export const ExpectationItem = z.object({
 });
 export type ExpectationItem = z.infer<typeof ExpectationItem>;
 
+export const HIRING_DOC_KINDS = ["loop-plan", "question-bank", "scorecard-template", "debrief-agenda", "funnel"] as const;
+export type HiringDocKind = (typeof HIRING_DOC_KINDS)[number];
+
+// One written scorecard or note about a candidate, in the interviewer's or EM's words.
+// There is no score or decision field on purpose: em-tools never scores or ranks candidates.
+export const CandidateNote = z.object({
+  id: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$/),
+  candidate: z.string().regex(SLUG),
+  kind: z.enum(["scorecard", "note"]),
+  stage: z.string().min(1),
+  interviewer: z.string().nullable().default(null),
+  date: calendarDate(),
+  text: z.string().min(1),
+  captured: calendarDate(),
+}).strict();
+export type CandidateNote = z.infer<typeof CandidateNote>;
+
 export interface PersonDoc {
   slug: string;
   frontmatter: Record<string, unknown>;
@@ -86,6 +103,21 @@ function parseExpectations(text: string): { items: ExpectationItem[]; invalid: s
   for (const m of text.matchAll(fenced("expectation"))) {
     try {
       const parsed = ExpectationItem.safeParse(YAML.parse(m[1]));
+      if (parsed.success) items.push(parsed.data);
+      else invalid.push(m[1].trim().split("\n")[0]);
+    } catch {
+      invalid.push(m[1].trim().split("\n")[0]);
+    }
+  }
+  return { items, invalid };
+}
+
+function parseCandidateNotes(text: string): { items: CandidateNote[]; invalid: string[] } {
+  const items: CandidateNote[] = [];
+  const invalid: string[] = [];
+  for (const m of text.matchAll(fenced("candidate-note"))) {
+    try {
+      const parsed = CandidateNote.safeParse(YAML.parse(m[1]));
       if (parsed.success) items.push(parsed.data);
       else invalid.push(m[1].trim().split("\n")[0]);
     } catch {
@@ -342,6 +374,78 @@ export class Notes {
       : `---\nperson: ${item.person}\nrecord: expectations\n---\n\n# ${doc.title}: expectations record\n\nAppend-only. Facts and dates in the EM's words. Not a verdict.\n\n## ${EXPECTATIONS_HEADING}`;
     safeWrite(path, `${current}\n\n${expectationBlock(item)}\n`);
     return { path, added: true, storage };
+  }
+
+  private hiringDir(role: string): string {
+    if (!SLUG.test(role)) throw new NotesError(`"${role}" is not a valid role slug (lowercase letters, digits and hyphens).`);
+    return join(this.folder, "hiring", role);
+  }
+
+  // Never overwrites: a second save of the same kind and date gets a suffix.
+  saveHiringDoc(role: string, kind: HiringDocKind, date: string, content: string): string {
+    if (!(HIRING_DOC_KINDS as readonly string[]).includes(kind)) throw new NotesError(`Kind must be one of: ${HIRING_DOC_KINDS.join(", ")}.`);
+    if (!calendarDate().safeParse(date).success) throw new NotesError("Date must be a real YYYY-MM-DD date.");
+    if (!content.trim()) throw new NotesError("Content is empty.");
+    const dir = this.hiringDir(role);
+    mkdirSync(dir, { recursive: true });
+    let path = join(dir, `${date}-${kind}.md`);
+    for (let n = 2; existsSync(path); n++) path = join(dir, `${date}-${kind}-${n}.md`);
+    writeFileSync(path, content.endsWith("\n") ? content : content + "\n", "utf8");
+    return path;
+  }
+
+  // Append-only, one file per candidate. Skips duplicate ids. Keeps a .bak.
+  addCandidateNote(role: string, input: unknown): { path: string; added: boolean } {
+    const item = CandidateNote.parse(input);
+    const dir = join(this.hiringDir(role), "candidates");
+    const path = join(dir, `${item.candidate}.md`);
+    const current = existsSync(path) ? readFileSync(path, "utf8") : null;
+    if (current && parseCandidateNotes(current).items.some((x) => x.id === item.id)) return { path, added: false };
+    mkdirSync(dir, { recursive: true });
+    const head = current?.trimEnd() ?? `---\ncandidate: ${item.candidate}\nrole: ${role}\n---\n\n# ${item.candidate}: ${role}\n\nAppend-only. Written scorecards and notes in the writer's own words. Follow your organisation's retention policy for candidate data; em-tools never deletes files.\n\n## Notes`;
+    safeWrite(path, `${head}\n\n\`\`\`yaml candidate-note\n${YAML.stringify(item)}\`\`\`\n`);
+    return { path, added: true };
+  }
+
+  readCandidate(role: string, candidate: string): { candidate: string; items: CandidateNote[]; invalid: string[] } {
+    if (!SLUG.test(candidate)) throw new NotesError(`"${candidate}" is not a valid candidate slug.`);
+    const path = join(this.hiringDir(role), "candidates", `${candidate}.md`);
+    if (!existsSync(path)) throw new NotesError(`No notes for candidate "${candidate}" in role "${role}".`);
+    const { items, invalid } = parseCandidateNotes(readFileSync(path, "utf8"));
+    return { candidate, items: items.sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id)), invalid };
+  }
+
+  readHiringDoc(role: string, file: string): { file: string; content: string } {
+    // Only a plain file name directly in the role folder, never a path.
+    if (!/^[a-z0-9][a-z0-9-]*\.md$/.test(file)) throw new NotesError(`"${file}" is not a hiring document name.`);
+    const path = join(this.hiringDir(role), file);
+    if (!existsSync(path)) throw new NotesError(`No hiring document "${file}" for role "${role}".`);
+    return { file, content: readFileSync(path, "utf8") };
+  }
+
+  // What exists for a role, without any scores: documents, and per candidate the stages
+  // with a written scorecard and who has written one.
+  listHiring(role: string): {
+    role: string; docs: string[];
+    candidates: Array<{ candidate: string; notes: number; scorecards: Array<{ stage: string; interviewer: string | null; date: string }> }>;
+  } {
+    const dir = this.hiringDir(role);
+    if (!existsSync(dir)) return { role, docs: [], candidates: [] };
+    // Sort without the extension so "<date>-<kind>.md" comes before its "-2" revision.
+    const stem = (f: string) => f.slice(0, -3);
+    const docs = readdirSync(dir).filter((f) => f.endsWith(".md")).sort((a, b) => stem(a).localeCompare(stem(b)));
+    const cdir = join(dir, "candidates");
+    const candidates = existsSync(cdir)
+      ? readdirSync(cdir).filter((f) => f.endsWith(".md")).sort().map((f) => {
+          const { items } = parseCandidateNotes(readFileSync(join(cdir, f), "utf8"));
+          return {
+            candidate: f.slice(0, -3),
+            notes: items.length,
+            scorecards: items.filter((x) => x.kind === "scorecard").map((x) => ({ stage: x.stage, interviewer: x.interviewer, date: x.date })),
+          };
+        })
+      : [];
+    return { role, docs, candidates };
   }
 
   saveDraft(skill: string, date: string, content: string): string {

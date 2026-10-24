@@ -114,8 +114,8 @@ const VERDICT = /\b(risk score|risk of (failing|leaving)|likely to (fail|leave|i
 // earlier in the same clause excuses a match, so "X is a low performer and cannot improve" still fails.
 const REFUSAL = /\b(can't|cannot|won't|will not|refuse[sd]?|decline[sd]?|not|whether)\b/i;
 const CLAUSE_BREAK = /[.;:!?]|\b(and|but|so)\b/gi;
-function verdictIn(line) {
-  for (const m of line.matchAll(new RegExp(VERDICT.source, "gi"))) {
+function verdictIn(line, re = VERDICT) {
+  for (const m of line.matchAll(new RegExp(re.source, "gi"))) {
     const before = line.slice(0, m.index);
     const breaks = [...before.matchAll(CLAUSE_BREAK)];
     const clause = breaks.length ? before.slice(breaks.at(-1).index + breaks.at(-1)[0].length) : before;
@@ -125,6 +125,13 @@ function verdictIn(line) {
 }
 for (const f of examples.filter((x) => x.startsWith("examples/underperformance-record/"))) {
   lines(f).forEach((l, i) => verdictIn(l) && report(f, i + 1, "verdict-in-record", l));
+}
+
+// 7. No candidate verdicts in hiring outputs --------------------------------------------------
+// "Which candidate to hire" and "whether to hire" ask the question rather than answer it.
+const HIRING_VERDICT = /\b((strong |lean )?(no[- ])?(?<!\b(to|whether|should we|do we|would we|will we|can we|who do we|which to) )hire\b(?! (manager|plan|date|process|decision|team|loop))|strong (yes|no)|best candidate|top candidate|stronger candidate|weaker candidate|recommend (hiring|rejecting|an offer)|should (hire|reject|make an offer)|ranked (first|second|higher|lower)|overall score|average score|total score)/i;
+for (const f of examples.filter((x) => x.startsWith("examples/hiring-loop-kit/"))) {
+  lines(f).forEach((l, i) => verdictIn(l, HIRING_VERDICT) && report(f, i + 1, "verdict-in-hiring", l));
 }
 
 // Report ----------------------------------------------------------------------------------

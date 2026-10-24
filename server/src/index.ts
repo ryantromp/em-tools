@@ -3,7 +3,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import { loadConfig } from "./config.ts";
 import { loadRows } from "./csv.ts";
-import { actionAge, aiAdoption, dependencyAge, dora, meetingLoad, oncallHealth, prFlow, MIN_GROUP_SIZE } from "./metrics.ts";
+import { actionAge, aiAdoption, dependencyAge, hiringFunnel, dora, meetingLoad, oncallHealth, prFlow, MIN_GROUP_SIZE } from "./metrics.ts";
 import { Notes, NotesError } from "./notes.ts";
 
 const VERSION = "0.1.0";
@@ -124,6 +124,37 @@ server.registerTool("notes_list_expectations", {
   inputSchema: { slug: z.string(), now: z.string().optional() },
 }, async ({ slug, now }) => guarded(() => notes().listExpectations(slug, now)));
 
+server.registerTool("notes_save_hiring_doc", {
+  description: "Save a hiring document for a role (loop-plan, question-bank, scorecard-template, debrief-agenda, funnel) as hiring/<role>/<date>-<kind>.md. Never overwrites; adds a suffix instead. Only call after the EM confirms.",
+  inputSchema: { role: z.string(), kind: z.enum(["loop-plan", "question-bank", "scorecard-template", "debrief-agenda", "funnel"]), date: z.string(), content: z.string() },
+}, async ({ role, kind, date, content }) => guarded(() => ({ path: notes().saveHiringDoc(role, kind, date, content) })));
+
+server.registerTool("notes_add_candidate_note", {
+  description: "Append one written scorecard or note to hiring/<role>/candidates/<candidate>.md, in the writer's own words. There is no score or decision field. Append-only, skips duplicate ids, keeps a .bak. Only call after the EM confirms the exact text.",
+  inputSchema: {
+    role: z.string(),
+    item: z.object({
+      id: z.string(), candidate: z.string(), kind: z.enum(["scorecard", "note"]), stage: z.string(),
+      interviewer: z.string().nullable().optional(), date: z.string(), text: z.string(), captured: z.string(),
+    }),
+  },
+}, async ({ role, item }) => guarded(() => notes().addCandidateNote(role, item)));
+
+server.registerTool("notes_read_candidate", {
+  description: "Read one candidate's written scorecards and notes for a role, oldest first.",
+  inputSchema: { role: z.string(), candidate: z.string() },
+}, async ({ role, candidate }) => guarded(() => notes().readCandidate(role, candidate)));
+
+server.registerTool("notes_read_hiring_doc", {
+  description: "Read one saved hiring document for a role, by the file name notes_list_hiring returns (for example 2026-09-28-loop-plan.md).",
+  inputSchema: { role: z.string(), file: z.string() },
+}, async ({ role, file }) => guarded(() => notes().readHiringDoc(role, file)));
+
+server.registerTool("notes_list_hiring", {
+  description: "List a role's hiring documents and, per candidate, which stages have a written scorecard and from whom. Returns no scores or text.",
+  inputSchema: { role: z.string() },
+}, async ({ role }) => guarded(() => notes().listHiring(role)));
+
 server.registerTool("notes_save_draft", {
   description: "Save a skill's output as a dated draft in the notes folder's drafts/ folder. Never overwrites; adds a suffix instead.",
   inputSchema: { skill: z.string(), date: z.string(), content: z.string() },
@@ -184,6 +215,11 @@ server.registerTool("metrics_action_age", {
   description: "Postmortem action ages across incidents: open and closed counts, open actions by age band, overdue, no due date, median days to close, counts by month created and by incident, and the open list. Columns: id, incident, title, owner_role, created_at, due, completed_at, link. Owner name columns are ignored; only owner_role is returned.",
   inputSchema: { rows, csv_path: csvPath, now: z.string().optional() },
 }, async (a) => guarded(() => actionAge(loadRows(a.rows, a.csv_path), { now: a.now })));
+
+server.registerTool("metrics_hiring_funnel", {
+  description: "Hiring funnel from stage counts the EM gives, in order (for example applied, screen, onsite, offer, accepted): pass-through rate per stage and share of the first stage. Never lists candidates.",
+  inputSchema: { stages: z.array(z.object({ stage: z.string(), count: z.number().int().nonnegative() })) },
+}, async ({ stages }) => guarded(() => hiringFunnel(stages)));
 
 server.registerTool("metrics_ai_adoption", {
   description: `Team AI adoption, ROI and quality aggregates. Groups under ${MIN_GROUP_SIZE} people (or whose complement is under ${MIN_GROUP_SIZE}) are suppressed. Usage columns: person, date, tool, active. PR columns: number, author, created_at, merged_at, additions, deletions, review_comments, ai_assisted, reverted, defect_linked, churn_lines_21d. Spend columns: month, tool, amount, currency. Never returns per-person rows.`,

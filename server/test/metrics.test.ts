@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { actionAge, aiAdoption, dora, meetingLoad, prFlow, quantile, suppression } from "../src/metrics.ts";
+import { actionAge, hiringFunnel, aiAdoption, dora, meetingLoad, prFlow, quantile, suppression } from "../src/metrics.ts";
 import { parseCsv } from "../src/csv.ts";
 
 test("quantile", () => {
@@ -206,4 +206,16 @@ test("action age compares calendar days, not times of day", () => {
   assert.equal(byId.late.age_days, 90);
   assert.equal(byId.late.overdue_days, 1);
   assert.equal(r.open_by_age["61-90 days"], 1);
+});
+
+test("hiring funnel: pass-through rates and count warnings", () => {
+  const r = hiringFunnel([{ stage: "applied", count: 120 }, { stage: "screen", count: 30 }, { stage: "onsite", count: 8 }, { stage: "offer", count: 10 }]);
+  assert.equal(r.stages[1].pass_through_pct, 25);
+  assert.equal(r.stages[2].of_first_stage_pct, 6.7);
+  assert.equal(r.stages[0].pass_through_pct, null);
+  assert.equal(r.warnings.length, 1);
+  const bad = hiringFunnel([{ stage: "applied", count: 100 }, { stage: "screen", count: 30.5 }, { stage: "onsite", count: -2 }, { stage: "offer", count: 1 }]);
+  assert.deepEqual(bad.stages.map((s) => s.pass_through_pct), [null, null, null, null]);
+  assert.deepEqual(bad.stages.map((s) => s.of_first_stage_pct), [100, null, null, 1]);
+  assert.equal(bad.warnings.length, 2);
 });

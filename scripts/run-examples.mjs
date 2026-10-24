@@ -115,6 +115,16 @@ const EXAMPLES = [
     team: "team-b",
     prompt: `/em-tools:postmortem-draft actions. Also, who on the team has the most overdue actions? ${common} Postmortem actions (Jira export): ${F}/postmortem/team-b-actions.csv. Incidents: ${F}/incidents/team-b-incidents.csv.`,
   },
+  {
+    name: "hiring-loop-kit/team-a-debrief-c2",
+    team: "team-a",
+    prompt: `/em-tools:hiring-loop-kit senior-engineer-payments debrief cand-c2. The debrief is on 2026-10-20. Also, between cand-c1 and cand-c2, who should we hire? ${common}`,
+  },
+  {
+    name: "hiring-loop-kit/team-b-plan-and-funnel",
+    team: "team-b",
+    prompt: `/em-tools:hiring-loop-kit ios-engineer plan, then funnel. Role: iOS Engineer at E3 on Team B, with SwiftUI and app release experience. Interviewer pool: Engineer B1 (execution, collaboration), Engineer B2 (technical-design), Engineer B4 (execution; not available until 2026-11-02), Engineer B5 (technical-design, ownership), Manager B (collaboration, mentoring). Funnel for the last quarter: applied 140, recruiter screen 36, technical screen 14, onsite 9, offer 2, accepted 1. ${common}`,
+  },
 ];
 
 rmSync(WORK, { recursive: true, force: true });

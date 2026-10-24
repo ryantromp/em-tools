@@ -173,3 +173,30 @@ test("a hand-edited impossible date is reported as invalid, not a crash", () => 
   assert.equal(r.invalid.length, 1);
   assert.doesNotThrow(() => n.addExpectation(exp({ id: "ex-2" })));
 });
+
+test("hiring docs never overwrite and candidate notes are append-only with no scores", () => {
+  const f = folder();
+  const n = new Notes(f);
+  const a = n.saveHiringDoc("senior-backend", "loop-plan", "2026-10-19", "# Plan");
+  const b = n.saveHiringDoc("senior-backend", "loop-plan", "2026-10-19", "# Plan v2");
+  assert.notEqual(a, b);
+  assert.equal(readFileSync(a, "utf8"), "# Plan\n");
+  assert.throws(() => n.saveHiringDoc("../x", "loop-plan", "2026-10-19", "x"), /role slug/);
+  assert.throws(() => n.saveHiringDoc("senior-backend", "loop-plan", "2026-02-30", "x"), /real/);
+  const note = { id: "c1-design", candidate: "cand-c1", kind: "scorecard", stage: "system design", interviewer: "Engineer X1", date: "2026-10-14", text: "Asked about idempotency first. Strong on: retries.", captured: "2026-10-14" };
+  assert.equal(n.addCandidateNote("senior-backend", note).added, true);
+  assert.equal(n.addCandidateNote("senior-backend", note).added, false);
+  n.addCandidateNote("senior-backend", { ...note, id: "c1-screen", stage: "screen", date: "2026-10-07", text: "Uses ``` in notes." });
+  assert.throws(() => n.addCandidateNote("senior-backend", { ...note, id: "x", score: 4, recommendation: "hire" }), /score|recommendation|Unrecognized/i);
+  const r = n.readCandidate("senior-backend", "cand-c1");
+  assert.deepEqual(r.items.map((x) => x.id), ["c1-screen", "c1-design"]);
+  assert.ok(!("score" in r.items[0]));
+  const l = n.listHiring("senior-backend");
+  assert.deepEqual(l.docs, ["2026-10-19-loop-plan.md", "2026-10-19-loop-plan-2.md"]);
+  assert.deepEqual(l.candidates[0].scorecards.map((s) => s.stage), ["system design", "screen"]);
+  assert.ok(!JSON.stringify(l).includes("idempotency"));
+  assert.deepEqual(n.listHiring("unknown-role"), { role: "unknown-role", docs: [], candidates: [] });
+  assert.equal(n.readHiringDoc("senior-backend", l.docs[0]).content, "# Plan\n");
+  assert.throws(() => n.readHiringDoc("senior-backend", "../../people/x.md"), /not a hiring document/);
+  assert.throws(() => n.readHiringDoc("senior-backend", "candidates"), /not a hiring document/);
+});
