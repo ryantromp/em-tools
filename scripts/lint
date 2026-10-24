@@ -104,7 +104,7 @@ const BLAME = /\b(should have|failed to|careless(ly)?|human error|(his|her|their
 for (const f of examples.filter((x) => x.startsWith("examples/postmortem-draft/"))) {
   lines(f).forEach((l, i) => {
     if (MANAGER.test(l)) report(f, i + 1, "person-named-in-team-output", l);
-    if (BLAME.test(l) && !/^\s*\|?\s*(Flag|A person's name|Should have)/.test(l)) report(f, i + 1, "blame-in-postmortem", l);
+    if (BLAME.test(l)) report(f, i + 1, "blame-in-postmortem", l);
   });
 }
 

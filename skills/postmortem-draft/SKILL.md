@@ -63,7 +63,11 @@ Offer to save with `notes_save_draft` (skill `postmortem-draft`) after the EM co
 
 ## Step 5: action age (actions mode, or at the end of a draft)
 
-Call `metrics_action_age` with the tracker's postmortem actions (columns in the tool description; the tool ignores owner names). Show:
+Call `metrics_action_age` with the tracker's postmortem actions (columns in the tool description; the tool ignores owner names).
+
+In **paste-in mode**, ask for the actions (action, incident, owner role, created, due, completed) and work it out by hand, showing the method. Age is calendar days from created to today; an action is open if it has no completed date; overdue means the due date is before today. Ignore any owner names in the paste. If there are no actions to paste, skip this section and say so.
+
+Show:
 
 - open, overdue and no-due-date counts, and the median days to close;
 - open actions by age band (0 to 30, 31 to 60, 61 to 90, over 90 days);

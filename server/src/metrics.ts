@@ -650,37 +650,39 @@ const ACTION_BANDS = [
 ];
 
 export function actionAge(rows: Row[], opts: { now?: string } = {}) {
-  const now = toDate(opts.now) ?? new Date();
-  const days = (a: Date, b: Date) => Math.floor((b.getTime() - a.getTime()) / DAY);
-  const ymd = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : null);
+  // Everything is compared as UTC calendar days, so times of day never shift an age or make
+  // an action due today look overdue.
+  const dayOf = (d: Date | null) => (d ? Math.floor(d.getTime() / DAY) : null);
+  const ymdOf = (n: number | null) => (n === null ? null : new Date(n * DAY).toISOString().slice(0, 10));
+  const now = dayOf(toDate(opts.now) ?? new Date())!;
   let undated = 0;
   const open: Array<Record<string, unknown>> = [];
   const closeDays: number[] = [];
   const byMonth: Record<string, { created: number; closed: number; still_open: number }> = {};
   const byIncident: Record<string, { open: number; closed: number; oldest_open_age_days: number | null }> = {};
   for (const r of rows) {
-    const created = toDate(r.created_at);
-    if (!created || created > now) {
+    const created = dayOf(toDate(r.created_at));
+    if (created === null || created > now) {
       undated++;
       continue;
     }
     // An action completed after "now" was still open at "now".
-    const completed = toDate(r.completed_at);
+    const completed = dayOf(toDate(r.completed_at));
     const done = completed !== null && completed <= now;
     const incident = String(r.incident ?? "unknown");
-    const month = created.toISOString().slice(0, 7);
+    const month = ymdOf(created)!.slice(0, 7);
     byMonth[month] ??= { created: 0, closed: 0, still_open: 0 };
     byIncident[incident] ??= { open: 0, closed: 0, oldest_open_age_days: null };
     byMonth[month].created++;
     if (done) {
       byMonth[month].closed++;
       byIncident[incident].closed++;
-      closeDays.push(days(created, completed!));
+      closeDays.push(completed! - created);
       continue;
     }
     byMonth[month].still_open++;
-    const age = days(created, now);
-    const due = toDate(r.due);
+    const age = now - created;
+    const due = dayOf(toDate(r.due));
     byIncident[incident].open++;
     byIncident[incident].oldest_open_age_days = Math.max(byIncident[incident].oldest_open_age_days ?? 0, age);
     open.push({
@@ -688,10 +690,10 @@ export function actionAge(rows: Row[], opts: { now?: string } = {}) {
       incident,
       title: r.title ?? null,
       owner_role: r.owner_role ?? null,
-      created: ymd(created),
+      created: ymdOf(created),
       age_days: age,
-      due: ymd(due),
-      overdue_days: due && due < now ? days(due, now) : null,
+      due: ymdOf(due),
+      overdue_days: due !== null && due < now ? now - due : null,
       link: r.link ?? null,
     });
   }
@@ -702,7 +704,7 @@ export function actionAge(rows: Row[], opts: { now?: string } = {}) {
     bands[ACTION_BANDS.find((b) => age <= b.max)!.label]++;
   }
   return {
-    as_of: ymd(now),
+    as_of: ymdOf(now),
     open_actions: open.length,
     closed_actions: closeDays.length,
     overdue_actions: open.filter((a) => a.overdue_days !== null).length,
@@ -714,7 +716,7 @@ export function actionAge(rows: Row[], opts: { now?: string } = {}) {
     open,
     undated_rows: undated,
     method: [
-      "Age is calendar days from created_at to the as-of date. An action completed after the as-of date counts as open.",
+      "Age is UTC calendar days from created_at to the as-of date; times of day are ignored. An action completed after the as-of date counts as open.",
       "Overdue means the due date is before the as-of date. Rows with no created_at, or created after the as-of date, are counted as undated and left out.",
       "Owner columns are ignored; only owner_role is reported.",
     ],

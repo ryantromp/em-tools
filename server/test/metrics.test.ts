@@ -193,3 +193,17 @@ test("action age: open, overdue, bands, close time, no owners", () => {
   assert.equal(r.by_incident["INC-1"].oldest_open_age_days, 96);
   assert.ok(!JSON.stringify(r).includes("Engineer X1"));
 });
+
+test("action age compares calendar days, not times of day", () => {
+  const rows = [
+    { id: "today", incident: "I", created_at: "2026-10-01T23:30:00Z", due: "2026-10-19" },
+    { id: "late", incident: "I", created_at: "2026-07-21T22:00:00Z", due: "2026-10-18T09:00:00Z" },
+  ];
+  const r = actionAge(rows, { now: "2026-10-19T12:00:00Z" });
+  const byId = Object.fromEntries(r.open.map((a) => [a.id, a]));
+  assert.equal(byId.today.overdue_days, null);
+  assert.equal(byId.today.age_days, 18);
+  assert.equal(byId.late.age_days, 90);
+  assert.equal(byId.late.overdue_days, 1);
+  assert.equal(r.open_by_age["61-90 days"], 1);
+});
