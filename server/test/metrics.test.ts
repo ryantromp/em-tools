@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { actionAge, capacity, hiringFunnel, aiAdoption, dora, meetingLoad, prFlow, quantile, suppression } from "../src/metrics.ts";
+import { actionAge, capacity, debtAllocation, hiringFunnel, hotspots, aiAdoption, dora, meetingLoad, prFlow, quantile, suppression } from "../src/metrics.ts";
 import { parseCsv } from "../src/csv.ts";
 
 test("quantile", () => {
@@ -192,6 +192,19 @@ test("action age: open, overdue, bands, close time, no owners", () => {
   assert.equal(r.open[0].age_days, 96);
   assert.equal(r.by_incident["INC-1"].oldest_open_age_days, 96);
   assert.ok(!JSON.stringify(r).includes("Engineer X1"));
+  const odd = debtAllocation({
+    debtIssues: [
+      { id: "U", created_at: "2026-09-01", completed_at: "2026-09-10", cycle: "C1", estimate: "Unestimated" },
+      { id: "F", created_at: "2026-10-25", completed_at: "", estimate: 5 },
+      { id: "O", created_at: "2026-09-01", completed_at: "", estimate: "n/a" },
+    ],
+    sprintTotals: [{ sprint: "C1", completed_points: 20 }],
+    now: "2026-10-19",
+  });
+  assert.deepEqual(odd.register.map((x) => x.id), ["O"]);
+  assert.equal(odd.open_debt_points, 0);
+  assert.equal(odd.allocation[0].debt_share_pct, 0);
+  assert.equal(odd.allocation[0].debt_items_without_points, 1);
 });
 
 test("action age compares calendar days, not times of day", () => {
@@ -284,4 +297,45 @@ test("capacity without history warns and keeps no buffer", () => {
   assert.equal(s.steps.oncall_hours_in_period, 32);
   assert.equal(s.steps.minus_oncall_hours, Math.round(32 * 0.3));
   assert.equal(s.past_sprints.length, 0);
+});
+
+test("hotspots: files from a no-author git log, scored by commits x lines", () => {
+  const log = ["--2026-10-01", "10\t2\tsrc/payouts/worker.ts", "1\t1\tREADME.md", "", "--2026-10-05", "30\t5\tsrc/payouts/worker.ts", "-\t-\tassets/logo.png", "", "--2026-10-09", "4\t0\tsrc/refunds/handler.ts"].join("\n");
+  const r = hotspots({
+    logText: log,
+    sizes: [{ path: "src/payouts/worker.ts", lines: 900 }, { path: "src/refunds/handler.ts", lines: 400 }, { path: "README.md", lines: 50 }],
+    todos: [{ path: "src/payouts/worker.ts", count: 3 }],
+    incidentPaths: [{ incident: "INC-7", path: "src/payouts/worker.ts" }],
+  });
+  assert.equal(r.commits_read, 3);
+  assert.equal(r.hotspots[0].path, "src/payouts/worker.ts");
+  assert.equal(r.hotspots[0].commits, 2);
+  assert.equal(r.hotspots[0].churn_lines, 47);
+  assert.equal(r.hotspots[0].score, 1800);
+  assert.deepEqual(r.hotspots[0].incidents, ["INC-7"]);
+  assert.equal(r.hotspots[0].todo_fixme, 3);
+  assert.equal(r.hotspots.find((h) => h.path === "assets/logo.png")!.churn_lines, 0);
+  const noSize = hotspots({ logText: log, from: "2026-10-05" });
+  assert.equal(noSize.score_basis, "commits x churn (no file sizes given)");
+  assert.equal(noSize.commits_read, 2);
+  const newestFirst = ["--2026-10-09", "4\t0\ta.ts", "--2026-10-01", "1\t1\ta.ts"].join("\n");
+  assert.deepEqual(hotspots({ logText: newestFirst }).window, { from: "2026-10-01", to: "2026-10-09" });
+});
+
+test("debt allocation: register oldest first, share per sprint, unknown points kept apart", () => {
+  const debt = [
+    { id: "D1", title: "Old", created_at: "2026-06-01", completed_at: "", estimate: 3, assignee: "Engineer X1" },
+    { id: "D2", title: "Newer", created_at: "2026-09-01", completed_at: "", estimate: "" },
+    { id: "D3", title: "Done", created_at: "2026-08-01", completed_at: "2026-09-10", cycle: "C1", estimate: 5 },
+    { id: "D4", title: "Done no points", created_at: "2026-08-01", completed_at: "2026-09-11", cycle: "C1", estimate: "" },
+  ];
+  const r = debtAllocation({ debtIssues: debt, sprintTotals: [{ sprint: "C1", completed_points: 25 }, { sprint: "C2", completed_points: 0 }], targetPct: 15, now: "2026-10-19" });
+  assert.deepEqual(r.register.map((x) => x.id), ["D1", "D2"]);
+  assert.equal(r.register[0].age_days, 140);
+  assert.equal(r.register[1].points, null);
+  assert.equal(r.allocation[0].debt_share_pct, 20);
+  assert.equal(r.allocation[0].vs_target_pct, 5);
+  assert.equal(r.allocation[0].debt_items_without_points, 1);
+  assert.equal(r.allocation[1].debt_share_pct, null);
+  assert.ok(!JSON.stringify(r).includes("Engineer X1"));
 });

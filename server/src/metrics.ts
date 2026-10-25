@@ -908,3 +908,144 @@ export function capacity(opts: {
 function ymdOfDate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
+
+// Tech debt -----------------------------------------------------------------------------------
+// git history comes from one fixed command with no author field:
+//   git log --since=<date> --no-merges --numstat --format=--%cs -- <path>
+// so the parser never sees who made a change. Files, never people.
+export const GIT_LOG_COMMAND = "git log --since=<YYYY-MM-DD> --no-merges --numstat --format=--%cs";
+
+export function parseNumstat(text: string): Array<{ date: string; files: Array<{ path: string; churn: number }> }> {
+  const commits: Array<{ date: string; files: Array<{ path: string; churn: number }> }> = [];
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trimEnd();
+    const head = /^--(\d{4}-\d{2}-\d{2})$/.exec(line);
+    if (head) {
+      commits.push({ date: head[1], files: [] });
+      continue;
+    }
+    const m = /^(\d+|-)\t(\d+|-)\t(.+)$/.exec(line);
+    if (m && commits.length) {
+      const add = m[1] === "-" ? 0 : Number(m[1]);
+      const del = m[2] === "-" ? 0 : Number(m[2]);
+      commits[commits.length - 1].files.push({ path: m[3], churn: add + del });
+    }
+  }
+  return commits;
+}
+
+export function hotspots(opts: {
+  logText: string; sizes?: Row[]; todos?: Row[]; incidentPaths?: Row[]; from?: string; to?: string; top?: number;
+}) {
+  const commits = parseNumstat(opts.logText).filter((c) => (!opts.from || c.date >= opts.from) && (!opts.to || c.date <= opts.to));
+  const byPath = new Map<string, { commits: number; churn: number }>();
+  for (const c of commits) {
+    for (const f of c.files) {
+      const e = byPath.get(f.path) ?? { commits: 0, churn: 0 };
+      e.commits++;
+      e.churn += f.churn;
+      byPath.set(f.path, e);
+    }
+  }
+  const sizeOf = new Map((opts.sizes ?? []).map((r) => [String(r.path), toNum(r.lines)]));
+  const todoOf = new Map((opts.todos ?? []).map((r) => [String(r.path), toNum(r.count ?? r.todo_count)]));
+  const incidentsOf = new Map<string, Set<string>>();
+  for (const r of opts.incidentPaths ?? []) {
+    const p = String(r.path);
+    if (!incidentsOf.has(p)) incidentsOf.set(p, new Set());
+    incidentsOf.get(p)!.add(String(r.incident));
+  }
+  const useSize = sizeOf.size > 0;
+  const files = [...byPath.entries()].map(([path, e]) => {
+    const lines = sizeOf.get(path) ?? null;
+    return {
+      path,
+      commits: e.commits,
+      churn_lines: e.churn,
+      lines,
+      todo_fixme: todoOf.get(path) ?? 0,
+      incidents: [...(incidentsOf.get(path) ?? [])].sort(),
+      score: e.commits * (useSize ? (lines ?? 0) : e.churn),
+    };
+  }).sort((a, b) => b.score - a.score || a.path.localeCompare(b.path));
+  const top = files.slice(0, opts.top ?? 10);
+  return {
+    // git log lists newest first, so take the earliest and latest dates, not input order.
+    window: {
+      from: opts.from ?? (commits.length ? commits.reduce((m, c) => (c.date < m ? c.date : m), commits[0].date) : null),
+      to: opts.to ?? (commits.length ? commits.reduce((m, c) => (c.date > m ? c.date : m), commits[0].date) : null),
+    },
+    commits_read: commits.length,
+    files_changed: files.length,
+    hotspots: top,
+    score_basis: useSize ? "commits x lines" : "commits x churn (no file sizes given)",
+    method: [
+      `History from: ${GIT_LOG_COMMAND}. The format has no author field, so changes are never tied to people.`,
+      "A hotspot is a file that changes often and is large: score = commits in the window x lines (or x churned lines when sizes are not given).",
+      "TODO and FIXME counts and linked incidents are context, not part of the score.",
+    ],
+  };
+}
+
+export function debtAllocation(opts: { debtIssues: Row[]; sprintTotals?: Row[]; targetPct?: number; now?: string }) {
+  const now = toDate(opts.now) ?? new Date();
+  // A blank or non-numeric estimate ("Unestimated") is missing, never NaN or zero.
+  const pointsOf = (r: Row) => {
+    const v = r.estimate ?? r.story_points ?? r.points;
+    if (v === undefined || v === null || String(v).trim() === "") return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  };
+  const doneAt = (r: Row) => toDate(r.completed_at ?? r.resolved);
+  const createdAt = (r: Row) => toDate(r.created_at ?? r.created);
+  const open = opts.debtIssues
+    .filter((r) => {
+      const created = createdAt(r);
+      const completed = doneAt(r);
+      return (!created || created <= now) && (!completed || completed > now);
+    })
+    .map((r) => {
+      const c = createdAt(r);
+      return {
+        id: r.id ?? r.key ?? null,
+        title: r.title ?? r.summary ?? null,
+        area: r.area ?? r.component ?? null,
+        age_days: c ? Math.floor((now.getTime() - c.getTime()) / DAY) : null,
+        points: pointsOf(r),
+        incidents: list(r.incidents),
+        link: r.url ?? null,
+      };
+    })
+    .sort((a, b) => (b.age_days ?? -1) - (a.age_days ?? -1));
+  const sprints = (opts.sprintTotals ?? []).map((s) => {
+    const name = String(s.sprint);
+    const done = opts.debtIssues.filter((r) => String(r.cycle ?? r.sprint ?? "") === name && doneAt(r) && doneAt(r)! <= now);
+    const debtPoints = done.reduce((sum, r) => sum + (pointsOf(r) ?? 0), 0);
+    const unknown = done.filter((r) => pointsOf(r) === null).length;
+    const total = toNum(s.completed_points);
+    const share = total > 0 ? (debtPoints / total) * 100 : null;
+    return {
+      sprint: name,
+      debt_points: debtPoints,
+      completed_points: total,
+      debt_share_pct: share === null ? null : round(share, 1),
+      vs_target_pct: share === null || opts.targetPct === undefined ? null : round(share - opts.targetPct, 1),
+      debt_items_without_points: unknown,
+    };
+  });
+  const shares = sprints.map((s) => s.debt_share_pct).filter((x): x is number => x !== null);
+  return {
+    as_of: now.toISOString().slice(0, 10),
+    open_debt_items: open.length,
+    open_debt_points: open.reduce((s, r) => s + (r.points ?? 0), 0),
+    oldest_age_days: open[0]?.age_days ?? null,
+    register: open,
+    allocation: sprints,
+    target_pct: opts.targetPct ?? null,
+    average_debt_share_pct: shares.length ? round(shares.reduce((a, b) => a + b, 0) / shares.length, 1) : null,
+    method: [
+      "Register: debt items not completed as of the date, oldest first. Assignees are never read.",
+      "Allocation: completed debt points in a sprint over the sprint's completed points. Debt items with no points are counted separately, not as zero.",
+    ],
+  };
+}

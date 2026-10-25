@@ -911,6 +911,58 @@ Role: Engineer (E3), iOS. Came from a web team; first native mobile role.
 - Goals for the first quarter: ship a visible feature in the app; understand the release process.
 `);
 
+// Tech debt inputs: Team A git history in the fixed no-author format, file sizes, TODO counts,
+// incident-to-file links and debt tickets; Team B debt tickets only (no git). Written last
+// with no random draws: commits follow a fixed pattern.
+const gitFiles = [
+  ["src/payouts/worker.ts", 1240, 7, 5], ["src/payouts/batch_config.ts", 180, 4, 0], ["src/refunds/handler.ts", 860, 6, 2],
+  ["src/refunds/webhooks.ts", 640, 5, 4], ["src/ledger/model.ts", 1500, 3, 1], ["src/ledger/export.ts", 520, 2, 3],
+  ["src/api/pagination.ts", 210, 2, 0], ["src/api/errors.ts", 300, 3, 0], ["test/payouts/worker.test.ts", 700, 5, 0],
+  ["docs/runbook.md", 400, 2, 0], ["src/currency/rounding.ts", 260, 3, 1], ["package.json", 90, 1, 0],
+];
+const gitLines = [];
+for (let i = 0; i < 90; i++) {
+  const d = new Date(Date.parse("2026-07-20T00:00:00Z") + Math.floor(i * 0.98) * DAY);
+  if (d.getUTCDay() % 6 === 0) continue;
+  const touched = gitFiles.filter(([, , weight], idx) => (i * 7 + idx * 3) % 10 < weight);
+  if (!touched.length) continue;
+  gitLines.push(`--${day(d)}`);
+  for (const [path, size, weight] of touched) gitLines.push(`${(i * 13 + size) % 60 + weight}\t${(i * 5 + size) % 25}\t${path}`);
+  gitLines.push("");
+}
+write("git/team-a-numstat.txt", gitLines.join("\n"));
+write("git/team-a-sizes.csv", csv(gitFiles.map(([path, lines]) => ({ path, lines })), ["path", "lines"]));
+write("git/team-a-todos.csv", csv(gitFiles.filter((f) => f[3] > 0).map(([path, , , count]) => ({ path, count })), ["path", "count"]));
+write("git/team-a-incident-paths.csv", csv([
+  { incident: "INC-TEAMA-7", path: "src/payouts/worker.ts" }, { incident: "INC-TEAMA-7", path: "src/payouts/batch_config.ts" },
+  { incident: "INC-TEAMA-2", path: "src/payouts/worker.ts" }, { incident: "INC-TEAMA-6", path: "src/payouts/worker.ts" },
+  { incident: "INC-TEAMA-1", path: "src/refunds/webhooks.ts" },
+], ["incident", "path"]));
+const debtCols = ["id", "title", "area", "state", "assignee", "cycle", "created_at", "completed_at", "estimate", "labels", "incidents", "url"];
+const debtRow = (id, title, area, cycle, created, done, est, incidents) => ({
+  id, title, area, state: done ? "Done" : "Backlog", assignee: done ? "Engineer A6" : "", cycle, created_at: created, completed_at: done,
+  estimate: est, labels: "tech-debt", incidents, url: `https://linear.example.com/example-co/issue/${id}`,
+});
+write("debt/team-a-debt-issues.csv", csv([
+  debtRow("ATL-D1", "Stream payout batches instead of loading them into memory", "payouts", "", "2026-07-15", "", 8, "INC-TEAMA-7;INC-TEAMA-2"),
+  debtRow("ATL-D2", "Split the payout worker into fetch, build and send steps", "payouts", "", "2026-05-12", "", 13, "INC-TEAMA-6"),
+  debtRow("ATL-D3", "Retire the v1 refunds webhook signer", "refunds", "", "2026-06-02", "", 5, "INC-TEAMA-1"),
+  debtRow("ATL-D4", "Remove the legacy ledger export CSV path", "ledger", "", "2026-04-28", "", 3, ""),
+  debtRow("ATL-D5", "Replace hand-rolled currency rounding with the shared library", "currency", "", "2026-09-30", "", "", ""),
+  debtRow("ATL-D6", "Add limit check on batch size config", "payouts", "Cycle 9", "2026-07-15", "2026-08-14", 2, "INC-TEAMA-7"),
+  debtRow("ATL-D7", "Delete dead pagination code paths", "api", "Cycle 10", "2026-08-03", "2026-08-28", 3, ""),
+  debtRow("ATL-D8", "Upgrade the HTTP client and drop the retry shim", "api", "Cycle 11", "2026-08-20", "2026-09-16", 5, ""),
+  debtRow("ATL-D9", "Flaky reconciliation tests: fix ordering", "ledger", "Cycle 12", "2026-09-01", "2026-09-30", 2, ""),
+  debtRow("ATL-D10", "Move error codes into one table", "api", "Cycle 13", "2026-09-22", "2026-10-14", "", ""),
+], debtCols));
+write("debt/team-b-debt-issues.csv", csv([
+  { key: "MOB-D1", summary: "Remove the old image cache", component: "images", status: "To Do", assignee: "", sprint: "", created: "2026-05-20", resolved: "", story_points: 5, labels: "tech-debt", incidents: "INC-TEAMB-2", url: "https://jira.example.com/browse/MOB-D1" },
+  { key: "MOB-D2", summary: "Migrate the checkout sheet to the new payment SDK", component: "checkout", status: "To Do", assignee: "", sprint: "", created: "2026-07-25", resolved: "", story_points: 8, labels: "tech-debt", incidents: "INC-TEAMB-1;INC-TEAMB-3", url: "https://jira.example.com/browse/MOB-D2" },
+  { key: "MOB-D3", summary: "Drop iOS 15 support code", component: "platform", status: "To Do", assignee: "", sprint: "", created: "2026-09-08", resolved: "", story_points: 3, labels: "tech-debt", incidents: "", url: "https://jira.example.com/browse/MOB-D3" },
+  { key: "MOB-D4", summary: "Fix flaky UI tests on the login flow", component: "login", status: "Done", assignee: "Engineer B5", sprint: "Sprint 11", created: "2026-08-25", resolved: "2026-09-17", story_points: 3, labels: "tech-debt", incidents: "", url: "https://jira.example.com/browse/MOB-D4" },
+  { key: "MOB-D5", summary: "Remove unused analytics events", component: "platform", status: "Done", assignee: "Engineer B1", sprint: "Sprint 13", created: "2026-09-29", resolved: "2026-10-15", story_points: 2, labels: "tech-debt", incidents: "", url: "https://jira.example.com/browse/MOB-D5" },
+], ["key", "summary", "component", "status", "assignee", "sprint", "created", "resolved", "story_points", "labels", "incidents", "url"]));
+
 // Feedback observations: the EM's own words, input for feedback-rehearsal. No random draws.
 write("feedback/team-a-eng-a2.md", `Observation from Manager A about Engineer A2, written 2026-10-19.
 
@@ -998,6 +1050,8 @@ ${readme.join("\n")}
 | hiring/ | Team A's interviewer pool for a Senior Engineer role. The role's loop plan and two candidates' written scorecards (codes only, no score fields; cand-c2 is missing its collaboration scorecard) are in notes/team-a/hiring/ |
 | capacity/ | Past sprint totals (planned, completed and unplanned work), PTO by person and date (input only; outputs count person-days), and the published on-call schedule for the next sprint, 2026-10-19 to 2026-10-30 |
 | onboarding/ | The EM's notes from a pre-start call (first 1:1 questions) with a Team B joiner who has no person file yet. Team A's onboarding template is in notes/team-a/onboarding.md |
+| git/ | Team A's payments-api history in the fixed no-author \`git log --numstat --format=--%cs\` format, file sizes, TODO and FIXME counts, and incident-to-file links |
+| debt/ | Debt-labelled tickets for both teams (assignees present on purpose; outputs must not use them) |
 | feedback/ | Two EM observations written in the EM's own words, with judgement and coded words left in on purpose, for feedback-rehearsal |
 | notes/team-a/, notes/team-b/ | Each EM's notes folder: team.md, ladder.md (Team A only), one file per person, last week's update. Team A keeps Engineer A3's expectations record in a separate file; Team B has not chosen where records go |
 `);

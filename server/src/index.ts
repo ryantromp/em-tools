@@ -1,9 +1,10 @@
+import { readFileSync } from "node:fs";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { loadConfig } from "./config.ts";
 import { loadRows } from "./csv.ts";
-import { actionAge, aiAdoption, capacity, dependencyAge, hiringFunnel, dora, meetingLoad, oncallHealth, prFlow, MIN_GROUP_SIZE } from "./metrics.ts";
+import { actionAge, aiAdoption, capacity, debtAllocation, dependencyAge, GIT_LOG_COMMAND, hiringFunnel, hotspots, dora, meetingLoad, oncallHealth, prFlow, MIN_GROUP_SIZE } from "./metrics.ts";
 import { Notes, NotesError } from "./notes.ts";
 
 const VERSION = "0.1.0";
@@ -240,6 +241,33 @@ server.registerTool("metrics_capacity", {
   oncallHours: a.oncall_hours, oncallShifts: loadRows(a.shift_rows, a.shift_csv_path), oncallLoadFactor: a.oncall_load_factor, focusFactor: a.focus_factor,
   plannedHours: a.planned_hours, plannedPoints: a.planned_points,
   workdayStartHour: a.workday_start_hour, timezoneOffsetMinutes: a.timezone_offset_minutes,
+})));
+
+server.registerTool("metrics_hotspots", {
+  description: `Code hotspots from git history: files that change often and are large (commits x lines, or x churn without sizes), with TODO/FIXME counts and linked incidents as context. History must come from: ${GIT_LOG_COMMAND} (no author field, so changes are never tied to people). Pass the output as log_text or a file path as log_path. Size columns: path, lines. TODO columns: path, count. Incident columns: incident, path.`,
+  inputSchema: {
+    log_text: z.string().optional(), log_path: z.string().optional(),
+    size_rows: rows, size_csv_path: csvPath, todo_rows: rows, todo_csv_path: csvPath, incident_rows: rows, incident_csv_path: csvPath,
+    ...window, top: z.number().int().positive().max(50).optional(),
+  },
+}, async (a) => guarded(() => {
+  if (!a.log_text && !a.log_path) throw new Error("Pass the git log output as log_text or log_path.");
+  const logText = a.log_text ?? readFileSync(a.log_path!, "utf8");
+  return hotspots({
+    logText, sizes: loadRows(a.size_rows, a.size_csv_path), todos: loadRows(a.todo_rows, a.todo_csv_path),
+    incidentPaths: loadRows(a.incident_rows, a.incident_csv_path), from: a.from, to: a.to, top: a.top,
+  });
+}));
+
+server.registerTool("metrics_debt_allocation", {
+  description: "Tech debt register and allocation. Register: debt issues not yet completed, oldest first, with age, points, area and linked incidents. Allocation: completed debt points per sprint over the sprint's completed points, against a target share. Debt issue columns: id (or key), title (or summary), area, created_at (or created), completed_at (or resolved), cycle (or sprint), estimate (or story_points), incidents, url. Sprint columns: sprint, completed_points. Assignees are never read.",
+  inputSchema: {
+    debt_rows: rows, debt_csv_path: csvPath, sprint_rows: rows, sprint_csv_path: csvPath,
+    target_pct: z.number().min(0).max(100).optional(), now: z.string().optional(),
+  },
+}, async (a) => guarded(() => debtAllocation({
+  debtIssues: loadRows(a.debt_rows, a.debt_csv_path), sprintTotals: loadRows(a.sprint_rows, a.sprint_csv_path),
+  targetPct: a.target_pct, now: a.now,
 })));
 
 server.registerTool("metrics_ai_adoption", {

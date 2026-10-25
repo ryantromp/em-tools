@@ -1,6 +1,6 @@
 # em-tools
 
-Free, open, local-first help for software engineering managers. em-tools prepares your 1:1s, assembles evidence for reviews and promotion cases, drafts your weekly update, writes a team delivery health narrative, reports on team AI adoption, keeps a cross-team dependency register, checks on-call health, helps you shape and rehearse feedback, keeps a factual record when someone is not meeting expectations, drafts blameless postmortems, plans structured hiring loops, works out team capacity, and builds 30/60/90 onboarding plans. It reads your data, cites its sources, and leaves every judgement to you.
+Free, open, local-first help for software engineering managers. em-tools prepares your 1:1s, assembles evidence for reviews and promotion cases, drafts your weekly update, writes a team delivery health narrative, reports on team AI adoption, keeps a cross-team dependency register, checks on-call health, helps you shape and rehearse feedback, keeps a factual record when someone is not meeting expectations, drafts blameless postmortems, plans structured hiring loops, works out team capacity, builds 30/60/90 onboarding plans, and keeps a tech debt register. It reads your data, cites its sources, and leaves every judgement to you.
 
 - **Local-first.** Your people notes are markdown files in a folder you pick. Nothing is uploaded, and there is no telemetry, analytics or cloud storage.
 - **Read-only.** Integrations only read. A hook blocks write tools, and em-tools never sends, posts or comments. You copy the drafts.
@@ -27,6 +27,7 @@ Spec: [docs/spec.md](docs/spec.md). Research: [docs/research.md](docs/research.m
 | `hiring-loop-kit` | `/em-tools:hiring-loop-kit <role> plan` | A loop that maps each competency to one interview, a fixed question bank, scorecard templates, proposed interviewers, a written-first debrief agenda, and a funnel tally. Never scores, ranks or recommends a candidate |
 | `capacity-plan` | `/em-tools:capacity-plan next sprint` | Team capacity in hours with every deduction shown, a buffer from your own sprint history, a points range scaled from past sprints, and an overcommit warning. PTO shows as team person-days only |
 | `onboarding-plan` | `/em-tools:onboarding-plan <name> plan` | A 30/60/90 plan from your team template and the first 1:1, with a buddy checklist and dated check-ins, then day-30, 60 and 90 check-in prep. Milestones are agreed outcomes, never activity counts |
+| `tech-debt-register` | `/em-tools:tech-debt-register` | A debt register from tickets, TODOs and code hotspots (git history with no authors) with linked incidents and plain-words impact, debt allocation against your target, and a one-page leadership case |
 
 To see what each skill produces, run `node scripts/run-examples.mjs`. It runs every skill against the synthetic fixtures with nothing connected and writes the outputs to `examples/` on your machine. Example outputs are never committed. The fixtures use code names such as Engineer A3, so no output can match a real person.
 
