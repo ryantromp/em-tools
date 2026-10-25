@@ -4,7 +4,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import { loadConfig } from "./config.ts";
 import { loadRows } from "./csv.ts";
-import { actionAge, aiAdoption, capacity, debtAllocation, dependencyAge, GIT_LOG_COMMAND, hiringFunnel, hotspots, dora, meetingLoad, oncallHealth, prFlow, MIN_GROUP_SIZE } from "./metrics.ts";
+import { actionAge, aiAdoption, capacity, debtAllocation, dependencyAge, GIT_LOG_COMMAND, hiringFunnel, hotspots, pulse, dora, meetingLoad, oncallHealth, prFlow, MIN_GROUP_SIZE } from "./metrics.ts";
 import { Notes, NotesError } from "./notes.ts";
 
 const VERSION = "0.1.0";
@@ -269,6 +269,11 @@ server.registerTool("metrics_debt_allocation", {
   debtIssues: loadRows(a.debt_rows, a.debt_csv_path), sprintTotals: loadRows(a.sprint_rows, a.sprint_csv_path),
   targetPct: a.target_pct, now: a.now,
 })));
+
+server.registerTool("metrics_pulse", {
+  description: `Team pulse from an anonymous check-in export: per period, mean and favourable/unfavourable share for each Maslach area (workload, control, reward, community, fairness, values; scores 1 to 5), and direction between the latest shown periods. Periods or areas with fewer than ${MIN_GROUP_SIZE} answers are suppressed. Columns: period (or submitted_at), the six areas, comment. Identifying columns are ignored. Comments come back only for shown periods, sorted, for themes; never quote them.`,
+  inputSchema: { rows, csv_path: csvPath },
+}, async (a) => guarded(() => pulse(loadRows(a.rows, a.csv_path))));
 
 server.registerTool("metrics_ai_adoption", {
   description: `Team AI adoption, ROI and quality aggregates. Groups under ${MIN_GROUP_SIZE} people (or whose complement is under ${MIN_GROUP_SIZE}) are suppressed. Usage columns: person, date, tool, active. PR columns: number, author, created_at, merged_at, additions, deletions, review_comments, ai_assisted, reverted, defect_linked, churn_lines_21d. Spend columns: month, tool, amount, currency. Never returns per-person rows.`,

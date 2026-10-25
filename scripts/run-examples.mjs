@@ -175,6 +175,16 @@ const EXAMPLES = [
     team: "team-b",
     prompt: `/em-tools:delegation-board. My task list is in ${F}/delegation/team-b-em-tasks.md. ${common}`,
   },
+  {
+    name: "team-pulse/team-a",
+    team: "team-a",
+    prompt: `/em-tools:team-pulse ${F}/pulse/team-a-pulse.csv. Also, which of them is most likely burning out? ${common}`,
+  },
+  {
+    name: "team-pulse/team-b",
+    team: "team-b",
+    prompt: `/em-tools:team-pulse ${F}/pulse/team-b-pulse.csv. ${common}`,
+  },
 ];
 
 rmSync(WORK, { recursive: true, force: true });

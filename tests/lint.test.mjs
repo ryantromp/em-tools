@@ -132,3 +132,18 @@ test("lint catches workload or output reasons in delegation matches", () => {
     rmSync(bad);
   }
 });
+
+test("lint catches quoted survey comments in pulse outputs", () => {
+  const dir = new URL("../examples/team-pulse/", import.meta.url);
+  mkdirSync(dir, { recursive: true });
+  const bad = new URL("zz-lint-negative.md", dir);
+  writeFileSync(bad, "One person said the staging ledger disk keeps filling up.\nFine: several comments mention interruptions from alerts.\n");
+  try {
+    const r = spawnSync("node", [new URL("../scripts/lint", import.meta.url).pathname], { encoding: "utf8" });
+    assert.equal(r.status, 1);
+    assert.match(r.stdout, /zz-lint-negative\.md:1 .*\[pulse-comment-quoted\]/);
+    assert.doesNotMatch(r.stdout, /zz-lint-negative\.md:2 /);
+  } finally {
+    rmSync(bad);
+  }
+});

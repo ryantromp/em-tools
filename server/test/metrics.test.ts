@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { actionAge, capacity, debtAllocation, hiringFunnel, hotspots, aiAdoption, dora, meetingLoad, prFlow, quantile, suppression } from "../src/metrics.ts";
+import { actionAge, capacity, debtAllocation, hiringFunnel, hotspots, pulse, aiAdoption, dora, meetingLoad, prFlow, quantile, suppression } from "../src/metrics.ts";
 import { parseCsv } from "../src/csv.ts";
 
 test("quantile", () => {
@@ -338,4 +338,24 @@ test("debt allocation: register oldest first, share per sprint, unknown points k
   assert.equal(r.allocation[0].debt_items_without_points, 1);
   assert.equal(r.allocation[1].debt_share_pct, null);
   assert.ok(!JSON.stringify(r).includes("Engineer X1"));
+});
+
+test("pulse: k of 4 per period and area, no identities, comments only for shown periods", () => {
+  const r = (period: string, w: number | string, extra: Record<string, unknown> = {}) => ({ period, workload: w, control: 4, reward: 3, community: 5, fairness: "", values: 4, email: "x1@example.com", ...extra });
+  const rows = [
+    r("2026-08", 4), r("2026-08", 4), r("2026-08", 3), r("2026-08", 5, { comment: "Planning ran long again" }),
+    r("2026-09", 2), r("2026-09", 2), r("2026-09", 3), r("2026-09", 1, { comment: "Too many interrupts" }), r("2026-09", 2),
+    r("2026-10", 1), r("2026-10", 2, { comment: "Secret small-group comment" }),
+  ];
+  const out = pulse(rows);
+  assert.deepEqual(out.periods.map((p) => p.shown), [true, true, false]);
+  assert.equal(out.periods[2].responses, null);
+  assert.deepEqual(out.periods[2].comments_for_themes, []);
+  assert.equal(out.periods[0].areas.fairness.shown, false);
+  assert.equal(out.periods[1].areas.workload.mean, 2);
+  const wl = out.direction.find((d) => d.area === "workload")!;
+  assert.equal(wl.direction, "down");
+  assert.ok(out.warnings.some((w) => /email/.test(w)));
+  assert.ok(!JSON.stringify(out).includes("x1@example.com"));
+  assert.ok(!JSON.stringify(out).includes("Secret small-group"));
 });
