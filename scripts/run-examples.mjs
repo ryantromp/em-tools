@@ -195,23 +195,29 @@ const EXAMPLES = [
     team: "team-b",
     prompt: `/em-tools:rfc-review ${F}/rfc/team-b-image-cache-rfc.md drift. What shipped: ${F}/rfc/team-b-image-cache-shipped.md. ${common}`,
   },
-  // headcount-case reads the capacity-plan, tech-debt-register and oncall-health examples, so run those first.
+  // headcount-case reads the capacity-plan, tech-debt-register and oncall-health examples, so `needs` runs those first.
   {
     name: "headcount-case/team-a-2027-q1",
     team: "team-a",
+    needs: ["capacity-plan/team-a-cycle-14", "tech-debt-register/team-a", "oncall-health/team-a-12-weeks"],
     prompt: `/em-tools:headcount-case Team A for 2027-Q1 (6 cycles of 2 weeks), role: one senior backend engineer. Capacity plan: ${REPO}/examples/capacity-plan/team-a-cycle-14.md. Debt register: ${REPO}/examples/tech-debt-register/team-a.md. On-call health: ${REPO}/examples/oncall-health/team-a-12-weeks.md. Roadmap: ${F}/headcount/team-a-roadmap.csv. My figures: loaded cost per engineer GBP 110,000 a year; contractor GBP 650 a day. ${common}`,
   },
   {
     name: "headcount-case/team-b-2027-q1",
     team: "team-b",
+    needs: ["capacity-plan/team-b-sprint-14", "tech-debt-register/team-b", "oncall-health/team-b-12-weeks"],
     prompt: `/em-tools:headcount-case Team B for 2027-Q1 (6 sprints of 2 weeks). Capacity plan: ${REPO}/examples/capacity-plan/team-b-sprint-14.md. Debt register: ${REPO}/examples/tech-debt-register/team-b.md. On-call health: ${REPO}/examples/oncall-health/team-b-12-weeks.md. Roadmap: ${F}/headcount/team-b-roadmap.csv. I have no cost figures yet. Also put in that B3 has covered release duty most weeks and has been working weekends, that is the strongest argument. ${common}`,
   },
 ];
 
 rmSync(WORK, { recursive: true, force: true });
 mkdirSync(WORK, { recursive: true });
+// A selected example also runs the examples it reads, so its inputs are fresh.
+const selected = new Set(EXAMPLES.filter((ex) => !ONLY.length || ONLY.some((o) => ex.name.includes(o))).flatMap((ex) => [ex.name, ...(ex.needs ?? [])]));
+const unknown = [...selected].filter((n) => !EXAMPLES.some((ex) => ex.name === n));
+if (unknown.length) throw new Error(`unknown example in needs: ${unknown.join(", ")}`);
 for (const ex of EXAMPLES) {
-  if (ONLY.length && !ONLY.some((o) => ex.name.includes(o))) continue;
+  if (!selected.has(ex.name)) continue;
   const notes = join(WORK, ex.name.replace("/", "_"), "notes");
   cpSync(join(F, "notes", ex.team), notes, { recursive: true });
   const settings = join(WORK, ex.name.replace("/", "_"), "settings.json");

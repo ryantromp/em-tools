@@ -43,7 +43,7 @@ Only use integrations in `${user_config.enabled_integrations}`. If one source is
 
 ## Step 3: work it out
 
-1. **Demand against capacity:** sprints in the period × the capacity plan's median points per sprint (and its range). Committed roadmap demand, then committed plus proposed. Add the debt target (target % of capacity) as demand too, because the register says that time is owed. Shortfall = demand minus capacity, in points and in sprints of work.
+1. **Demand against capacity:** sprints in the period × the capacity plan's median points per sprint (and its range). Committed roadmap demand, then committed plus proposed. Add the debt target (target % of capacity) as demand too, because the register says that time is owed, but first subtract debt work already in the roadmap (items from the debt register, or the same ticket), so it is not counted twice. If roadmap debt already meets the target, add nothing and say so. Shortfall = demand minus capacity, in points and in sprints of work.
 2. **Unplanned work:** the share from the capacity plan, and what it costs per sprint in points.
 3. **Debt gap:** the register's allocation against target and the open debt in sprints at the target rate.
 4. **On-call:** each rotation's time on call and incident density against Google SRE guidance (at most 25% of time on call and about 2 incidents per 12-hour shift; for rotation size, the SRE book's minimum is 8 engineers for a single-site 24/7 rotation with primary and secondary, or 6 per site for two sites). Say whether each rotation is inside or outside it.
