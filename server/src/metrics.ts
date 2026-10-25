@@ -970,7 +970,11 @@ export function hotspots(opts: {
   }).sort((a, b) => b.score - a.score || a.path.localeCompare(b.path));
   const top = files.slice(0, opts.top ?? 10);
   return {
-    window: { from: opts.from ?? commits[0]?.date ?? null, to: opts.to ?? commits[commits.length - 1]?.date ?? null },
+    // git log lists newest first, so take the earliest and latest dates, not input order.
+    window: {
+      from: opts.from ?? (commits.length ? commits.reduce((m, c) => (c.date < m ? c.date : m), commits[0].date) : null),
+      to: opts.to ?? (commits.length ? commits.reduce((m, c) => (c.date > m ? c.date : m), commits[0].date) : null),
+    },
     commits_read: commits.length,
     files_changed: files.length,
     hotspots: top,
@@ -985,14 +989,21 @@ export function hotspots(opts: {
 
 export function debtAllocation(opts: { debtIssues: Row[]; sprintTotals?: Row[]; targetPct?: number; now?: string }) {
   const now = toDate(opts.now) ?? new Date();
+  // A blank or non-numeric estimate ("Unestimated") is missing, never NaN or zero.
   const pointsOf = (r: Row) => {
     const v = r.estimate ?? r.story_points ?? r.points;
-    return v === undefined || v === null || String(v).trim() === "" ? null : Number(v);
+    if (v === undefined || v === null || String(v).trim() === "") return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
   };
   const doneAt = (r: Row) => toDate(r.completed_at ?? r.resolved);
   const createdAt = (r: Row) => toDate(r.created_at ?? r.created);
   const open = opts.debtIssues
-    .filter((r) => !doneAt(r) || doneAt(r)! > now)
+    .filter((r) => {
+      const created = createdAt(r);
+      const completed = doneAt(r);
+      return (!created || created <= now) && (!completed || completed > now);
+    })
     .map((r) => {
       const c = createdAt(r);
       return {

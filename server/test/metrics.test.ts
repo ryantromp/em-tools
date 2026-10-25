@@ -192,6 +192,19 @@ test("action age: open, overdue, bands, close time, no owners", () => {
   assert.equal(r.open[0].age_days, 96);
   assert.equal(r.by_incident["INC-1"].oldest_open_age_days, 96);
   assert.ok(!JSON.stringify(r).includes("Engineer X1"));
+  const odd = debtAllocation({
+    debtIssues: [
+      { id: "U", created_at: "2026-09-01", completed_at: "2026-09-10", cycle: "C1", estimate: "Unestimated" },
+      { id: "F", created_at: "2026-10-25", completed_at: "", estimate: 5 },
+      { id: "O", created_at: "2026-09-01", completed_at: "", estimate: "n/a" },
+    ],
+    sprintTotals: [{ sprint: "C1", completed_points: 20 }],
+    now: "2026-10-19",
+  });
+  assert.deepEqual(odd.register.map((x) => x.id), ["O"]);
+  assert.equal(odd.open_debt_points, 0);
+  assert.equal(odd.allocation[0].debt_share_pct, 0);
+  assert.equal(odd.allocation[0].debt_items_without_points, 1);
 });
 
 test("action age compares calendar days, not times of day", () => {
@@ -305,6 +318,8 @@ test("hotspots: files from a no-author git log, scored by commits x lines", () =
   const noSize = hotspots({ logText: log, from: "2026-10-05" });
   assert.equal(noSize.score_basis, "commits x churn (no file sizes given)");
   assert.equal(noSize.commits_read, 2);
+  const newestFirst = ["--2026-10-09", "4\t0\ta.ts", "--2026-10-01", "1\t1\ta.ts"].join("\n");
+  assert.deepEqual(hotspots({ logText: newestFirst }).window, { from: "2026-10-01", to: "2026-10-09" });
 });
 
 test("debt allocation: register oldest first, share per sprint, unknown points kept apart", () => {

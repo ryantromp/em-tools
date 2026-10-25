@@ -32,12 +32,14 @@ Help the EM see which debt costs the team most, and make a clear case for time t
 
 | Data | Source |
 |---|---|
-| Git history | `git -C <path> log --since=<YYYY-MM-DD> --no-merges --numstat --format=--%cs` (no author field). Save the output to a file in the session's scratch space and pass the path |
-| File sizes | `git -C <path> ls-files -z \| xargs -0 wc -l`, turned into `path, lines` rows |
-| TODO and FIXME | `git -C <path> grep -c -E "TODO\|FIXME"`, turned into `path, count` rows |
+| Git history | `git log --since=<YYYY-MM-DD> --no-merges --numstat --format=--%cs` (no author field). Save the output to a file in the session's scratch space and pass the path |
+| File sizes | `git ls-files -z \| xargs -0 wc -l`, turned into `path, lines` rows |
+| TODO and FIXME | `git grep -c -E "TODO\|FIXME"`, turned into `path, count` rows |
 | Debt tickets | Linear or Jira read tools filtered by the debt label, or an export |
 | Sprint totals | Completed points per sprint (the capacity-plan sprint export, or Linear `list_cycles`) |
 | Incident links | Files named in postmortems or fix PRs for each incident, as `incident, path` rows, if the EM has them |
+
+Run all three git commands from the root of the clone (`cd <path>` first, in the same command), so the file paths `ls-files` prints are the ones `wc` reads.
 
 Only use integrations in `${user_config.enabled_integrations}`. If git is not available, skip hotspots and say so.
 
