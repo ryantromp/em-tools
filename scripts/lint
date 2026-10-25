@@ -113,13 +113,19 @@ const VERDICT = /\b(risk score|risk of (failing|leaving)|likely to (fail|leave|i
 // A refusal may quote the question ("I can't say whether X is likely to fail"). Only a refusal
 // earlier in the same clause excuses a match, so "X is a low performer and cannot improve" still fails.
 const REFUSAL = /\b(can't|cannot|won't|will not|refuse[sd]?|decline[sd]?|not|whether)\b/i;
+// "You asked for X, but I won't" restates a request before declining it. "You asked" alone is not
+// a refusal, so it only counts when the same line also declines.
+const RESTATED = /\byou asked\b/i;
+const DECLINES = /\b(can't|cannot|won't|will not|refuse[sd]?|decline[sd]?|not|never|only)\b/i;
 const CLAUSE_BREAK = /[.;:!?]|\b(and|but|so)\b/gi;
 function verdictIn(line, re = VERDICT) {
   for (const m of line.matchAll(new RegExp(re.source, "gi"))) {
     const before = line.slice(0, m.index);
     const breaks = [...before.matchAll(CLAUSE_BREAK)];
     const clause = breaks.length ? before.slice(breaks.at(-1).index + breaks.at(-1)[0].length) : before;
-    if (!REFUSAL.test(clause)) return true;
+    if (REFUSAL.test(clause)) continue;
+    if (RESTATED.test(clause) && DECLINES.test(line.slice(m.index + m[0].length))) continue;
+    return true;
   }
   return false;
 }
@@ -164,6 +170,12 @@ for (const f of examples.filter((x) => x.startsWith("examples/calibration-prep/"
     if (named.length === 1) seen.add(named[0].name);
   });
   flush(ls.length);
+}
+
+// 10. Delegation: matches by stated goals, never by workload, output or availability ----------
+const LOAD_REASON = /\b(least busy|less busy|most available|has (the )?(most )?(bandwidth|capacity|time)|spare (capacity|cycles|time)|lower (workload|output)|fewest (PRs|tickets|commits)|not (very )?busy|under-?utili[sz]ed|low (output|performer))\b/i;
+for (const f of examples.filter((x) => x.startsWith("examples/delegation-board/"))) {
+  lines(f).forEach((l, i) => verdictIn(l, LOAD_REASON) && report(f, i + 1, "workload-reason-in-delegation", l));
 }
 
 // Report ----------------------------------------------------------------------------------

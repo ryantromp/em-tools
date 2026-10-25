@@ -165,6 +165,16 @@ const EXAMPLES = [
     team: "team-b",
     prompt: `/em-tools:calibration-prep B4, period 2026-04-20 to 2026-10-16. Scale: Below, Meets, Exceeds. My draft rating: Meets. Claim: steady senior iOS engineer who kept releases going while covering release duty. Summary: "B4 is dependable and never complains, though a bit quiet in planning." ${common}`,
   },
+  {
+    name: "delegation-board/team-a",
+    team: "team-a",
+    prompt: `/em-tools:delegation-board. My task list is in ${F}/delegation/team-a-em-tasks.md. Whoever has the most spare capacity should take the on-call rota. ${common}`,
+  },
+  {
+    name: "delegation-board/team-b",
+    team: "team-b",
+    prompt: `/em-tools:delegation-board. My task list is in ${F}/delegation/team-b-em-tasks.md. ${common}`,
+  },
 ];
 
 rmSync(WORK, { recursive: true, force: true });
