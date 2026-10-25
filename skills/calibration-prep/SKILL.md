@@ -28,9 +28,10 @@ Help the EM walk into calibration with fair, evidence-backed pages for each of t
 
 ## Step 1: set up
 
-1. Call `notes_status` and `notes_read_team` (ladder). If the em-tools tools are missing, switch to **paste-in mode**: ask for each person's evidence and the EM's drafts, and say once: "Paste-in mode: nothing will be saved."
-2. Ask for the review period, the organisation's rating scale (words as used), and, per person, the EM's draft rating, the claim they want to make and their draft summary text, if any.
-3. If the EM asks to rank, order, compare or distribute people, say plainly that this skill keeps one page per person because ranking in calibration compounds bias, and carry on with the pages.
+1. Call `notes_status` and `notes_read_team` (ladder). If the em-tools tools are missing, switch to **paste-in mode**: ask for each person's evidence, the EM's drafts and the career ladder, and say once: "Paste-in mode: nothing will be saved."
+2. **No ladder?** If `ladder` is null and the EM has none to paste, say so once. Then mark the ladder mapping and the level part of the rating check as "unavailable: no ladder" on every page, and check the rating only against how much dated evidence there is. Never guess level criteria or borrow a generic ladder for a rating check.
+3. Ask for the review period, the organisation's rating scale (words as used), and, per person, the EM's draft rating, the claim they want to make and their draft summary text, if any.
+4. If the EM asks to rank, order, compare or distribute people, say plainly that this skill keeps one page per person because ranking in calibration compounds bias, and carry on with the pages.
 
 ## Step 2: build each page
 

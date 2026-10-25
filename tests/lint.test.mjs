@@ -92,13 +92,26 @@ test("lint catches suggested ratings and cross-person tables in calibration page
   const dir = new URL("../examples/calibration-prep/", import.meta.url);
   mkdirSync(dir, { recursive: true });
   const bad = new URL("zz-lint-negative.md", dir);
-  writeFileSync(bad, "| Engineer A1 | Engineer A2 | stronger |\nSuggested rating: Meets expectations.\nFine: I will not suggest a rating.\nCheck with your HR or legal team before acting on anything here.\n");
+  writeFileSync(bad, [
+    "| Person | Evidence |",
+    "| A1 | 5 items |",
+    "| A2 | 1 item |",
+    "",
+    "I will provide a suggested rating of Meets expectations.",
+    "Fine: I will not provide a suggested rating.",
+    "",
+    "| Competency | Items |",
+    "| mentoring | mentors A7 and A4 |",
+    "| Engineer A1 | the page's own person |",
+    "Check with your HR or legal team before acting on anything here.",
+  ].join("\n") + "\n");
   try {
     const r = spawnSync("node", [new URL("../scripts/lint", import.meta.url).pathname], { encoding: "utf8" });
     assert.equal(r.status, 1);
     assert.match(r.stdout, /zz-lint-negative\.md:1 .*\[people-compared-in-calibration\]/);
-    assert.match(r.stdout, /zz-lint-negative\.md:2 .*\[suggested-rating-in-calibration\]/);
+    assert.match(r.stdout, /zz-lint-negative\.md:5 .*\[suggested-rating-in-calibration\]/);
     assert.doesNotMatch(r.stdout, /Fine:/);
+    assert.doesNotMatch(r.stdout, /zz-lint-negative\.md:8 /);
   } finally {
     rmSync(bad);
   }
