@@ -1049,3 +1049,92 @@ export function debtAllocation(opts: { debtIssues: Row[]; sprintTotals?: Row[]; 
     ],
   };
 }
+
+// Team pulse ------------------------------------------------------------------------------------
+// Aggregates an anonymous survey export. Any period or area with fewer than MIN_GROUP_SIZE answers
+// is suppressed. Identifying columns are ignored. Comments come back only for periods that are
+// shown, sorted so their order cannot be matched to response order, for themes, never quotes.
+export const PULSE_AREAS = ["workload", "control", "reward", "community", "fairness", "values"] as const;
+type PulseArea = { shown: boolean; answers: number | null; mean?: number | null; favourable_pct?: number | null; unfavourable_pct?: number | null };
+const IDENTIFYING = /^(name|email|e-mail|person|respondent|user|login|employee|id|respondent_?(id|email|name))$/i;
+
+export function pulse(rows: Row[]) {
+  const warnings: string[] = [];
+  const cols = new Set(rows.flatMap((r) => Object.keys(r)));
+  const identifying = [...cols].filter((c) => IDENTIFYING.test(c.trim()));
+  if (identifying.length) warnings.push(`Ignored identifying column(s): ${identifying.join(", ")}. The check-in should not collect names or emails.`);
+  // Periods are normalised to YYYY-MM so they sort in time order ("2026-9" becomes "2026-09").
+  const badLabels = new Set<string>();
+  const periodOf = (r: Row) => {
+    const raw = r.period !== undefined && String(r.period).trim() !== "" ? String(r.period).trim() : null;
+    if (raw) {
+      const m = /^(\d{4})-(\d{1,2})$/.exec(raw);
+      if (m && Number(m[2]) >= 1 && Number(m[2]) <= 12) return `${m[1]}-${m[2].padStart(2, "0")}`;
+      const d = toDate(raw);
+      if (d && /^\d{4}-\d{2}-\d{2}/.test(raw)) return d.toISOString().slice(0, 7);
+      badLabels.add(raw);
+      return null;
+    }
+    const d = toDate(r.submitted_at ?? r.date);
+    return d ? d.toISOString().slice(0, 7) : null;
+  };
+  const score = (v: unknown) => {
+    if (v === undefined || v === null || String(v).trim() === "") return null;
+    const n = Number(v);
+    return Number.isInteger(n) && n >= 1 && n <= 5 ? n : null;
+  };
+  const byPeriod = new Map<string, Row[]>();
+  let undated = 0;
+  for (const r of rows) {
+    const p = periodOf(r);
+    if (!p) {
+      undated++;
+      continue;
+    }
+    if (!byPeriod.has(p)) byPeriod.set(p, []);
+    byPeriod.get(p)!.push(r);
+  }
+  if (badLabels.size) warnings.push(`Period label(s) ${[...badLabels].join(", ")} are not YYYY-MM or a date. Use YYYY-MM.`);
+  if (undated) warnings.push(`${undated} response(s) had no usable period or date and were left out.`);
+  const periods = [...byPeriod.keys()].sort();
+  const out = periods.map((p) => {
+    const rs = byPeriod.get(p)!;
+    const shown = rs.length >= MIN_GROUP_SIZE;
+    const areas: Record<string, PulseArea> = Object.fromEntries(PULSE_AREAS.map((a): [string, PulseArea] => {
+      const vals = rs.map((r) => score(r[a])).filter((x): x is number => x !== null);
+      if (!shown || vals.length < MIN_GROUP_SIZE) return [a, { shown: false, answers: shown ? vals.length : null }];
+      return [a, {
+        shown: true,
+        answers: vals.length,
+        mean: round(vals.reduce((s, x) => s + x, 0) / vals.length, 1),
+        favourable_pct: round((vals.filter((x) => x >= 4).length / vals.length) * 100, 0),
+        unfavourable_pct: round((vals.filter((x) => x <= 2).length / vals.length) * 100, 0),
+      }];
+    }));
+    const comments = shown
+      ? rs.map((r) => String(r.comment ?? r.comments ?? "").trim()).filter(Boolean).sort((a, b) => a.localeCompare(b))
+      : [];
+    return { period: p, responses: shown ? rs.length : null, shown, areas, comments_for_themes: comments };
+  });
+  for (const p of out) if (!p.shown) warnings.push(`${p.period}: fewer than ${MIN_GROUP_SIZE} responses, so nothing is shown for it.`);
+  // Direction only where an area is shown in both periods.
+  const direction = PULSE_AREAS.map((a) => {
+    const shown = out.filter((p) => p.areas[a].shown);
+    if (shown.length < 2) return { area: a, direction: null };
+    const last = shown[shown.length - 1].areas[a].mean ?? 0;
+    const prev = shown[shown.length - 2].areas[a].mean ?? 0;
+    const delta = round(last - prev, 1)!;
+    return { area: a, from: shown[shown.length - 2].period, to: shown[shown.length - 1].period, change: delta, direction: delta >= 0.3 ? "up" : delta <= -0.3 ? "down" : "steady" };
+  });
+  return {
+    periods: out,
+    direction,
+    warnings,
+    method: [
+      `Scores 1 to 5 per Maslach area. A period with fewer than ${MIN_GROUP_SIZE} responses, or an area with fewer than ${MIN_GROUP_SIZE} answers, is not shown.`,
+      "Favourable is 4 or 5; unfavourable is 1 or 2. Direction compares the two most recent periods where the area is shown (a change of 0.3 or more).",
+      "Comments are returned only for shown periods, sorted alphabetically so they cannot be matched to responses. Use them for themes; never quote them.",
+      "Identifying columns are ignored. No response is ever returned.",
+    ],
+  };
+}

@@ -79,7 +79,7 @@ for (const f of repoFiles().filter((x) => x.startsWith("examples/"))) report(f, 
 for (const f of examples) {
   const ls = lines(f);
   ls.forEach((l, i) => RANKING.test(l) && !/\b(no|never|not|without|don't|doesn't|won't|refuse)\b/i.test(l) && report(f, i + 1, "per-person-ranking", l));
-  const teamLevel = /^examples\/(ai-adoption|team-delivery-health|oncall-health|postmortem-draft|capacity-plan|tech-debt-register)\//.test(f);
+  const teamLevel = /^examples\/(ai-adoption|team-delivery-health|oncall-health|postmortem-draft|capacity-plan|tech-debt-register|team-pulse)\//.test(f);
   const update = /^examples\/(upward-update|dependency-register)\//.test(f);
   ls.forEach((l, i) => {
     const named = people.filter((p) => nameRe(p).test(l));
@@ -90,7 +90,7 @@ for (const f of examples) {
 }
 
 // 4. HR and legal line on outputs that need it ------------------------------------------------
-const NEEDS_HR = /\b(underperform\w*|wellbeing|well-being|burnout|burned out|governance kit|usage policy)\b/i;
+const NEEDS_HR = /\b(underperform\w*|wellbeing|well-being|burnout|burn(ed|t|ing) out|governance kit|usage policy)\b/i;
 for (const f of examples) {
   const text = readFileSync(join(ROOT, f), "utf8");
   const needs = f.startsWith("examples/review-packet/") || f.startsWith("examples/underperformance-record/") || f.startsWith("examples/calibration-prep/") || NEEDS_HR.test(text);
@@ -176,6 +176,48 @@ for (const f of examples.filter((x) => x.startsWith("examples/calibration-prep/"
 const LOAD_REASON = /\b(least busy|less busy|most available|has (the )?(most )?(bandwidth|capacity|time)|spare (capacity|cycles|time)|lower (workload|output)|fewest (PRs|tickets|commits)|not (very )?busy|under-?utili[sz]ed|low (output|performer))\b/i;
 for (const f of examples.filter((x) => x.startsWith("examples/delegation-board/"))) {
   lines(f).forEach((l, i) => verdictIn(l, LOAD_REASON) && report(f, i + 1, "workload-reason-in-delegation", l));
+}
+
+// 11. Team pulse: themes, never quotes ------------------------------------------------------------
+// Any survey comment from the fixtures that appears in a pulse output, even as a 4-word run, fails.
+// A small CSV reader: quoted fields may hold commas, newlines and doubled quotes.
+function parseCsv(text) {
+  const rows = [];
+  let row = [], field = "", quoted = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (quoted) {
+      if (ch === '"' && text[i + 1] === '"') { field += '"'; i++; }
+      else if (ch === '"') quoted = false;
+      else field += ch;
+    } else if (ch === '"') quoted = true;
+    else if (ch === ",") { row.push(field); field = ""; }
+    else if (ch === "\n" || ch === "\r") {
+      if (ch === "\r" && text[i + 1] === "\n") i++;
+      row.push(field); rows.push(row); row = []; field = "";
+    } else field += ch;
+  }
+  if (field || row.length) { row.push(field); rows.push(row); }
+  return rows;
+}
+const pulseComments = [];
+const pulseDir = join(ROOT, "fixtures/pulse");
+for (const name of existsSync(pulseDir) ? readdirSync(pulseDir).filter((x) => x.endsWith(".csv")) : []) {
+  const [header = [], ...body] = parseCsv(readFileSync(join(pulseDir, name), "utf8"));
+  const col = header.findIndex((h) => /^comments?$/i.test(h.trim()));
+  if (col < 0) continue;
+  for (const r of body) if (r[col]?.trim()) pulseComments.push(r[col].trim().toLowerCase());
+}
+const runs = (text, n = 4) => {
+  const w = text.toLowerCase().replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter(Boolean);
+  return w.length < n ? [] : w.slice(0, w.length - n + 1).map((_, i) => w.slice(i, i + n).join(" "));
+};
+const commentRuns = new Set(pulseComments.flatMap((c) => runs(c)));
+for (const f of examples.filter((x) => x.startsWith("examples/team-pulse/"))) {
+  lines(f).forEach((l, i) => {
+    const hit = runs(l).find((r) => commentRuns.has(r));
+    if (hit) report(f, i + 1, "pulse-comment-quoted", `"${hit}" comes from a survey comment`);
+  });
 }
 
 // Report ----------------------------------------------------------------------------------

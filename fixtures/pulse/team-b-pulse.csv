@@ -1,0 +1,17 @@
+respondent_email,period,workload,control,reward,community,fairness,values,comment
+eng-b1@team-b.example,2026-08,3,3,3,4,3,4,Release duty on top of feature work is a lot
+eng-b2@team-b.example,2026-08,4,3,3,4,4,4,
+eng-b3@team-b.example,2026-08,3,2,3,3,3,4,Priorities change without notice
+eng-b4@team-b.example,2026-08,4,3,4,4,3,4,
+eng-b5@team-b.example,2026-08,3,3,3,4,3,3,
+eng-b6@team-b.example,2026-09,3,3,3,4,3,4,
+eng-b1@team-b.example,2026-09,3,2,3,4,2,4,Planning runs long and the outcome changes anyway
+eng-b2@team-b.example,2026-09,4,3,3,4,3,4,
+eng-b3@team-b.example,2026-09,3,3,3,3,3,4,
+eng-b4@team-b.example,2026-09,2,3,3,4,3,4,The checkout crash week was exhausting
+eng-b5@team-b.example,2026-09,3,3,4,4,3,4,
+eng-b6@team-b.example,2026-10,3,4,3,4,4,4,Earlier notice on roadmap changes has helped
+eng-b1@team-b.example,2026-10,3,4,3,4,3,4,
+eng-b2@team-b.example,2026-10,4,3,3,4,4,4,
+eng-b3@team-b.example,2026-10,3,4,3,5,4,4,
+eng-b4@team-b.example,2026-10,3,3,4,4,3,4,Timeboxed planning is much better
