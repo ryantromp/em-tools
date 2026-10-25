@@ -302,7 +302,7 @@ export class Notes {
       .sort((a, b) => a.date.localeCompare(b.date));
   }
 
-  readTeam(): { team: Record<string, unknown>; teamText: string; ladder: string | null } {
+  readTeam(): { team: Record<string, unknown>; teamText: string; ladder: string | null; onboarding: string | null } {
     const teamPath = join(this.folder, "team.md");
     if (!existsSync(teamPath)) throw new NotesError("No team.md in the notes folder. The skills can create one from what you tell them.");
     const teamText = readFileSync(teamPath, "utf8");
@@ -311,7 +311,12 @@ export class Notes {
     const ladderName = typeof team.ladder === "string" ? team.ladder : "ladder.md";
     const ladderPath = join(this.folder, ladderName);
     if (!ladderPath.startsWith(this.folder)) throw new NotesError("The ladder path must be inside the notes folder.");
-    return { team, teamText, ladder: existsSync(ladderPath) ? readFileSync(ladderPath, "utf8") : null };
+    const onboardingPath = join(this.folder, "onboarding.md");
+    return {
+      team, teamText,
+      ladder: existsSync(ladderPath) ? readFileSync(ladderPath, "utf8") : null,
+      onboarding: existsSync(onboardingPath) ? readFileSync(onboardingPath, "utf8") : null,
+    };
   }
 
   expectationsStorage(): StorageMode | null {

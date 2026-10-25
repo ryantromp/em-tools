@@ -98,7 +98,7 @@ server.registerTool("notes_list_evidence", {
 }, async ({ slug, from, to, competency }) => guarded(() => notes().listEvidence(slug, from, to, competency)));
 
 server.registerTool("notes_read_team", {
-  description: "Read team.md (members, sub-teams, 1:1 cadence, channels, ladder path) and the career ladder if present.",
+  description: "Read team.md (members, sub-teams, 1:1 cadence, channels, ladder path), the career ladder if present, and the team's onboarding template (onboarding.md) if present.",
   inputSchema: {},
 }, async () => guarded(() => notes().readTeam()));
 

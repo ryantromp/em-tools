@@ -72,3 +72,18 @@ test("lint catches candidate verdicts in hiring outputs", () => {
     rmSync(bad);
   }
 });
+
+test("lint catches activity quotas in onboarding plans", () => {
+  const dir = new URL("../examples/onboarding-plan/", import.meta.url);
+  mkdirSync(dir, { recursive: true });
+  const bad = new URL("zz-lint-negative.md", dir);
+  writeFileSync(bad, "- Days 31 to 60: merge 3 PRs per week.\nFine: first change merged with a Ledger reviewer.\nFine: I will not set a target of 3 PRs per week.\n");
+  try {
+    const r = spawnSync("node", [new URL("../scripts/lint", import.meta.url).pathname], { encoding: "utf8" });
+    assert.equal(r.status, 1);
+    assert.match(r.stdout, /zz-lint-negative\.md:1 .*\[activity-quota-in-onboarding\]/);
+    assert.doesNotMatch(r.stdout, /Fine:/);
+  } finally {
+    rmSync(bad);
+  }
+});
