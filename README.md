@@ -32,6 +32,7 @@ Spec: [docs/spec.md](docs/spec.md). Research: [docs/research.md](docs/research.m
 | `delegation-board` | `/em-tools:delegation-board` | Your "only I can do" list (max 5), delegation candidates matched to reports' own stated career goals with a check-in date and a draft ask. Never matches on workload, output or availability |
 | `team-pulse` | `/em-tools:team-pulse <export>` | Themes over time on the six Maslach areas from an anonymous check-in you run in your own survey tool, with retro prompts. Hides anything under 4 answers and never quotes comments |
 | `rfc-review` | `/em-tools:rfc-review <rfc>` | A completeness check against your template, open questions and assumptions, reviewers from CODEOWNERS, a review-by date and draft comments, plus a post-launch drift check. Reviews the document, never the author |
+| `headcount-case` | `/em-tools:headcount-case` | A one-page headcount case from your capacity plan, debt register, on-call health and roadmap: demand against capacity, on-call against SRE guidance, unplanned share and debt gap, options including "do nothing" with your cost figures, and what does not point to hiring. Team-level evidence only |
 
 To see what each skill produces, run `node scripts/run-examples.mjs`. It runs every skill against the synthetic fixtures with nothing connected and writes the outputs to `examples/` on your machine. Example outputs are never committed. The fixtures use code names such as Engineer A3, so no output can match a real person.
 
