@@ -1038,6 +1038,75 @@ write("pulse/team-b-pulse.csv", csv([
     .map(([p, sc, c], i) => ({ respondent_email: `eng-b${(i % 6) + 1}@team-b.example`, ...pr(p, sc, c) })),
 ], ["respondent_email", ...pulseCols]));
 
+// RFC review inputs: a Team A RFC with gaps on purpose, CODEOWNERS for both repos, and a Team B
+// RFC plus notes on what shipped, for the drift check. Written last with no random draws.
+write("rfc/team-a-ledger-export-v2.md", `# RFC: Ledger export v2
+
+Author: Engineer A7. Status: In review. Created 2026-10-12.
+
+## Summary
+Replace the nightly ledger CSV export with an incremental export that Finance can pull every hour.
+
+## Background
+Finance reconciles payouts from a CSV that is generated at 02:00 UTC. When a payout batch fails late in the day, Finance cannot see it until the next morning. The legacy CSV path also has three open TODOs and fails about once a month.
+
+## Proposal
+- Add an export table keyed by ledger entry id and updated_at.
+- Expose an authenticated endpoint that returns entries changed since a cursor.
+- Keep the nightly CSV running in parallel for one month, then remove it.
+- Files touched: src/ledger/export.ts, src/ledger/model.ts, src/api/routes/finance.ts.
+
+## Open questions
+- Should the endpoint page by count or by time window?
+- Who in Finance signs off on the field list?
+
+## Alternatives considered
+- Streaming entries to Finance's warehouse directly. Rejected: Finance has no streaming ingest.
+`);
+write("rfc/CODEOWNERS", `# CODEOWNERS (synthetic)
+/src/ledger/            @example-co/payments-ledger
+/src/payouts/           @example-co/payments-ledger
+/src/api/               @example-co/payments-api
+/src/api/routes/finance.ts  @example-co/payments-api @example-co/finance-eng
+/docs/                  @example-co/payments-api
+/ios/                   @example-co/mobile-ios
+/android/               @example-co/mobile-android
+/shared/images/         @example-co/mobile-ios @example-co/mobile-android
+`);
+write("rfc/team-b-image-cache-rfc.md", `# RFC: Replace the image cache
+
+Author: Engineer B6. Status: Accepted 2026-08-20.
+
+## Summary
+Replace the custom image cache with the platform cache on iOS and Android.
+
+## Problem
+The custom cache causes the iOS 18 login loop when it is cleared during sign-in (INC-TEAMB-2), and it has no size limit.
+
+## Proposal
+- Use the platform cache with a 200 MB limit.
+- Remove the custom cache code in /shared/images/.
+- Roll out behind the image-cache-v2 flag to 10%, then 50%, then 100% over two weeks.
+
+## Success criteria
+- No login loops linked to the image cache for 30 days after full rollout.
+- Cache size stays under 200 MB on 99% of devices.
+
+## Rollout and rollback
+Flag-based. Roll back by turning the flag off.
+
+## Risks
+- Offline images may load more slowly on first launch.
+`);
+write("rfc/team-b-image-cache-shipped.md", `What shipped for "Replace the image cache", notes by Manager B, 2026-10-16.
+
+- iOS moved to the platform cache with a 250 MB limit (raised from 200 MB after testing).
+- Android is still on the custom cache; the change is planned for Sprint 15.
+- The rollout went 10% then 100% in one week; the 50% step was skipped.
+- The custom cache code in /shared/images/ is still in the repo because Android uses it.
+- No login loops linked to the image cache since 2026-09-20.
+`);
+
 // Feedback observations: the EM's own words, input for feedback-rehearsal. No random draws.
 write("feedback/team-a-eng-a2.md", `Observation from Manager A about Engineer A2, written 2026-10-19.
 
@@ -1130,6 +1199,7 @@ ${readme.join("\n")}
 | calibration/ | Manager A's draft ratings, claims and summaries for three reports, with vague and coded words left in on purpose |
 | delegation/ | Each EM's current task list (Team A reports have specific career goals; Team B's goals are generic, so matches should not be invented) |
 | pulse/ | Anonymous check-in exports on the six Maslach areas. Team A's October has only 3 responses (must be suppressed); Team B's export wrongly includes an email column (must be ignored). Outputs must never quote comments |
+| rfc/ | A Team A RFC with gaps on purpose, CODEOWNERS for both repos, and a Team B RFC with notes on what shipped, for the drift check |
 | feedback/ | Two EM observations written in the EM's own words, with judgement and coded words left in on purpose, for feedback-rehearsal |
 | notes/team-a/, notes/team-b/ | Each EM's notes folder: team.md, ladder.md (Team A only), one file per person, last week's update. Team A keeps Engineer A3's expectations record in a separate file; Team B has not chosen where records go |
 `);

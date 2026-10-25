@@ -1,0 +1,9 @@
+# CODEOWNERS (synthetic)
+/src/ledger/            @example-co/payments-ledger
+/src/payouts/           @example-co/payments-ledger
+/src/api/               @example-co/payments-api
+/src/api/routes/finance.ts  @example-co/payments-api @example-co/finance-eng
+/docs/                  @example-co/payments-api
+/ios/                   @example-co/mobile-ios
+/android/               @example-co/mobile-android
+/shared/images/         @example-co/mobile-ios @example-co/mobile-android

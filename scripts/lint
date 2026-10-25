@@ -220,6 +220,12 @@ for (const f of examples.filter((x) => x.startsWith("examples/team-pulse/"))) {
   });
 }
 
+// 12. RFC review: the document, never the author ---------------------------------------------------
+const ABOUT_AUTHOR = /\b(the )?author('s)? (is|was|seems|appears|looks) (careless|sloppy|lazy|junior|inexperienced|rushed|confused|out of (their|his|her) depth|not senior enough)\b|\b(careless|sloppy|lazy) (author|writer|engineer)\b/i;
+for (const f of examples.filter((x) => x.startsWith("examples/rfc-review/"))) {
+  lines(f).forEach((l, i) => verdictIn(l, ABOUT_AUTHOR) && report(f, i + 1, "author-judged-in-rfc-review", l));
+}
+
 // Report ----------------------------------------------------------------------------------
 if (findings.length) {
   for (const x of findings) console.log(`${x.file}:${x.line}  [${x.rule}]  ${x.text}`);

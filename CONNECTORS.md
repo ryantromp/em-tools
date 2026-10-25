@@ -15,7 +15,7 @@ Checked on 2026-10-23. See [docs/research.md](docs/research.md#4a-official-vendo
 
 | Source | Integration key | Official MCP server | Auth and admin needs | Status | Used by |
 |---|---|---|---|---|---|
-| GitHub | `github` | `https://api.githubcopilot.com/mcp/` with the `X-MCP-Readonly: true` header | OAuth sign-in. Works with personal accounts | Available | all skills except feedback-rehearsal |
+| GitHub | `github` | `https://api.githubcopilot.com/mcp/` with the `X-MCP-Readonly: true` header | OAuth sign-in. Works with personal accounts | Available | one-on-one, review-packet, upward-update, team-delivery-health, ai-adoption, dependency-register, postmortem-draft, rfc-review |
 | Jira | `jira` | Atlassian Rovo MCP `https://mcp.atlassian.com/v2/mcp?tools=all` | OAuth 2.1. A site admin may need to allow the Rovo MCP server and your domain | Generally available | one-on-one, review-packet, upward-update, team-delivery-health, dependency-register |
 | Linear | `linear` | `https://mcp.linear.app/mcp` | OAuth sign-in | Available | one-on-one, review-packet, upward-update, team-delivery-health, dependency-register, capacity-plan |
 | Google Calendar | `google_calendar` | `https://calendarmcp.googleapis.com/mcp/v1` | OAuth through a Google Cloud project with the Calendar MCP API enabled. Requests the `calendar.readonly` scope | Preview (unverified) | one-on-one, team-delivery-health, capacity-plan |

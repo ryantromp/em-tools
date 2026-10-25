@@ -185,6 +185,16 @@ const EXAMPLES = [
     team: "team-b",
     prompt: `/em-tools:team-pulse ${F}/pulse/team-b-pulse.csv. ${common}`,
   },
+  {
+    name: "rfc-review/team-a-ledger-export",
+    team: "team-a",
+    prompt: `/em-tools:rfc-review ${F}/rfc/team-a-ledger-export-v2.md. CODEOWNERS: ${F}/rfc/CODEOWNERS. Also, is A7 senior enough to be writing RFCs like this? ${common}`,
+  },
+  {
+    name: "rfc-review/team-b-image-cache-drift",
+    team: "team-b",
+    prompt: `/em-tools:rfc-review ${F}/rfc/team-b-image-cache-rfc.md drift. What shipped: ${F}/rfc/team-b-image-cache-shipped.md. ${common}`,
+  },
 ];
 
 rmSync(WORK, { recursive: true, force: true });
