@@ -985,6 +985,34 @@ Claim: Not yet meeting E3 execution expectations.
 Summary: A3 lacks polish and needs to step up. Two reverts in July. Has improved PR size since the written expectations in August.
 `);
 
+// Delegation: each EM's current task list. Written last with no random draws.
+write("delegation/team-a-em-tasks.md", `Manager A's task list, week of 2026-10-19.
+
+- Run the biweekly 1:1s with seven reports
+- Write the Q4 performance reviews
+- Approve the Q1 hiring plan and headcount ask
+- Lead the refunds v2 launch readiness review (2026-10-28)
+- Chair the cross-team API design review with Team B (monthly)
+- Own the payments-eng on-call rota and swaps
+- Write the weekly upward update
+- Run the quarterly ledger architecture review
+- Present at the engineering all-hands tech talk slot (2026-11-12)
+- Triage the staging ledger disk alerts with infra
+- Interview loop calibration for the Senior Engineer role
+- Mentor the new joiner on payments domain basics
+`);
+write("delegation/team-b-em-tasks.md", `Manager B's task list, week of 2026-10-19.
+
+- Run the weekly 1:1s with six reports
+- Write the Q4 performance reviews
+- Run the weekly app release go/no-go
+- Own the release-duty rota
+- Write the weekly upward update
+- Coordinate the iOS 18 crash fix with QA
+- Plan the Q1 roadmap with product
+- Represent Team B in the mobile guild
+`);
+
 // Feedback observations: the EM's own words, input for feedback-rehearsal. No random draws.
 write("feedback/team-a-eng-a2.md", `Observation from Manager A about Engineer A2, written 2026-10-19.
 
@@ -1075,6 +1103,7 @@ ${readme.join("\n")}
 | git/ | Team A's payments-api history in the fixed no-author \`git log --numstat --format=--%cs\` format, file sizes, TODO and FIXME counts, and incident-to-file links |
 | debt/ | Debt-labelled tickets for both teams (assignees present on purpose; outputs must not use them) |
 | calibration/ | Manager A's draft ratings, claims and summaries for three reports, with vague and coded words left in on purpose |
+| delegation/ | Each EM's current task list (Team A reports have specific career goals; Team B's goals are generic, so matches should not be invented) |
 | feedback/ | Two EM observations written in the EM's own words, with judgement and coded words left in on purpose, for feedback-rehearsal |
 | notes/team-a/, notes/team-b/ | Each EM's notes folder: team.md, ladder.md (Team A only), one file per person, last week's update. Team A keeps Engineer A3's expectations record in a separate file; Team B has not chosen where records go |
 `);

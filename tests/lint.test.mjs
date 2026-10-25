@@ -116,3 +116,18 @@ test("lint catches suggested ratings and cross-person tables in calibration page
     rmSync(bad);
   }
 });
+
+test("lint catches workload or output reasons in delegation matches", () => {
+  const dir = new URL("../examples/delegation-board/", import.meta.url);
+  mkdirSync(dir, { recursive: true });
+  const bad = new URL("zz-lint-negative.md", dir);
+  writeFileSync(bad, "Give the rota to A5, who is the least busy.\nFine: I have not matched anyone on who seems least busy.\nFine: You asked for it to go to whoever has the most spare capacity, but I match on goals.\n");
+  try {
+    const r = spawnSync("node", [new URL("../scripts/lint", import.meta.url).pathname], { encoding: "utf8" });
+    assert.equal(r.status, 1);
+    assert.match(r.stdout, /zz-lint-negative\.md:1 .*\[workload-reason-in-delegation\]/);
+    assert.doesNotMatch(r.stdout, /Fine:/);
+  } finally {
+    rmSync(bad);
+  }
+});
