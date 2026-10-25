@@ -200,3 +200,10 @@ test("hiring docs never overwrite and candidate notes are append-only with no sc
   assert.throws(() => n.readHiringDoc("senior-backend", "../../people/x.md"), /not a hiring document/);
   assert.throws(() => n.readHiringDoc("senior-backend", "candidates"), /not a hiring document/);
 });
+
+test("readTeam returns the onboarding template when present", () => {
+  const { f, n } = teamFolder();
+  assert.equal(n.readTeam().onboarding, null);
+  writeFileSync(join(f, "onboarding.md"), "# Template\n");
+  assert.equal(n.readTeam().onboarding, "# Template\n");
+});

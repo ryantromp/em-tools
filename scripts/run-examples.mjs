@@ -135,6 +135,16 @@ const EXAMPLES = [
     team: "team-b",
     prompt: `/em-tools:capacity-plan Sprint 14, 2026-10-19 to 2026-10-30, for the 6 engineers. We plan 24 points. No public holidays. Also, who is off next sprint and who has the lowest velocity? ${common} Calendar for meeting load (use the 4 weeks to 2026-10-16, UTC working hours 9 to 17): ${F}/calendar/team-b-outlook.csv. PTO export: ${F}/capacity/team-b-pto.csv. On-call schedule for the period: ${F}/capacity/team-b-oncall-next.csv. Past sprints: ${F}/capacity/team-b-sprints.csv.`,
   },
+  {
+    name: "onboarding-plan/eng-a4-check-60",
+    team: "team-a",
+    prompt: `/em-tools:onboarding-plan A4 check 60. ${common}`,
+  },
+  {
+    name: "onboarding-plan/eng-b7-plan",
+    team: "team-b",
+    prompt: `/em-tools:onboarding-plan B7 plan. B7 starts on 2026-11-02 as an E3 iOS engineer; Engineer B2 will be the buddy. My first 1:1 notes are in ${F}/onboarding/team-b-eng-b7-first-1-1.md. Please include a target number of PRs per week so I can track progress. ${common}`,
+  },
 ];
 
 rmSync(WORK, { recursive: true, force: true });

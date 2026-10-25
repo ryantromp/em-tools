@@ -44,5 +44,6 @@ Window: 2026-04-20 to 2026-10-16 (26 weeks). Calendar runs to 2026-10-30 so upco
 | postmortem/ | One incident channel export per team (Team A Slack, Team B Teams) that names people and includes one blaming message on purpose, plus each team's postmortem actions with owner names that must not appear in outputs |
 | hiring/ | Team A's interviewer pool for a Senior Engineer role. The role's loop plan and two candidates' written scorecards (codes only, no score fields; cand-c2 is missing its collaboration scorecard) are in notes/team-a/hiring/ |
 | capacity/ | Past sprint totals (planned, completed and unplanned work), PTO by person and date (input only; outputs count person-days), and the published on-call schedule for the next sprint, 2026-10-19 to 2026-10-30 |
+| onboarding/ | The EM's notes from a pre-start call (first 1:1 questions) with a Team B joiner who has no person file yet. Team A's onboarding template is in notes/team-a/onboarding.md |
 | feedback/ | Two EM observations written in the EM's own words, with judgement and coded words left in on purpose, for feedback-rehearsal |
 | notes/team-a/, notes/team-b/ | Each EM's notes folder: team.md, ladder.md (Team A only), one file per person, last week's update. Team A keeps Engineer A3's expectations record in a separate file; Team B has not chosen where records go |

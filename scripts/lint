@@ -134,6 +134,12 @@ for (const f of examples.filter((x) => x.startsWith("examples/hiring-loop-kit/")
   lines(f).forEach((l, i) => verdictIn(l, HIRING_VERDICT) && report(f, i + 1, "verdict-in-hiring", l));
 }
 
+// 8. No activity quotas in onboarding plans -----------------------------------------------------
+const QUOTA = /\b\d+\s*(PRs?|pull requests|commits|tickets|issues|story points|points|lines( of code)?)\s*(per|a|each|every)\s*(day|week|sprint|cycle|month)\b/i;
+for (const f of examples.filter((x) => x.startsWith("examples/onboarding-plan/"))) {
+  lines(f).forEach((l, i) => QUOTA.test(l) && report(f, i + 1, "activity-quota-in-onboarding", l));
+}
+
 // Report ----------------------------------------------------------------------------------
 if (findings.length) {
   for (const x of findings) console.log(`${x.file}:${x.line}  [${x.rule}]  ${x.text}`);

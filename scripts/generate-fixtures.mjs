@@ -867,6 +867,50 @@ write("capacity/team-b-oncall-next.csv", csv([
   { rotation: "Release duty", start: "2026-10-29T09:00:00Z", end: "2026-10-29T21:00:00Z", member: "eng-b6" },
 ], ["rotation", "start", "end", "member"]));
 
+// Onboarding: Team A's team template, and the EM's notes from a first 1:1 with a Team B joiner
+// who starts on 2026-11-02 (no person file yet). Written last with no random draws.
+write("notes/team-a/onboarding.md", `# Team A onboarding template
+
+Used by onboarding-plan. Milestones are outcomes the new joiner agrees to, never activity counts.
+
+## Before day 1
+- Laptop, accounts and access to payments-api, the ledger dashboards and the payments-eng channel.
+- Buddy named and introduced.
+
+## First 30 days
+- Local setup working; can run the payments-api tests.
+- Read the ledger onboarding guide and the refunds v2 RFC.
+- First change merged with a reviewer from the Ledger sub-team.
+- Shadow one on-call week (no pager).
+
+## By day 60
+- Own a small, scoped change end to end (design note, code, rollout).
+- Join the on-call rotation as secondary.
+- Present one thing learned at the team demo.
+
+## By day 90
+- Own an area or service with the buddy as backup.
+- Join the primary on-call rotation if they feel ready.
+- Agree career goals for the next six months.
+
+## Check-in questions
+- What has been easier or harder than you expected?
+- What do you wish you had known in week one?
+- Where do you feel blocked, and who could help?
+`);
+write("onboarding/team-b-eng-b7-first-1-1.md", `Pre-start call with Engineer B7 (first 1:1 questions), notes by Manager B, 2026-10-15. B7 starts on 2026-11-02.
+
+Role: Engineer (E3), iOS. Came from a web team; first native mobile role.
+
+- How do you like to receive feedback? Written first, then a chat.
+- How do you like recognition? In the team channel is fine.
+- What does a great manager do for you? Tells me early when priorities change.
+- What are you most excited to learn? SwiftUI and how app releases work.
+- What worries you? Being slow while I learn Swift; release duty sounds stressful.
+- Anything about how you work best? Pairing for the first weeks, then quiet focus time.
+- Goals for the first quarter: ship a visible feature in the app; understand the release process.
+`);
+
 // Feedback observations: the EM's own words, input for feedback-rehearsal. No random draws.
 write("feedback/team-a-eng-a2.md", `Observation from Manager A about Engineer A2, written 2026-10-19.
 
@@ -953,6 +997,7 @@ ${readme.join("\n")}
 | postmortem/ | One incident channel export per team (Team A Slack, Team B Teams) that names people and includes one blaming message on purpose, plus each team's postmortem actions with owner names that must not appear in outputs |
 | hiring/ | Team A's interviewer pool for a Senior Engineer role. The role's loop plan and two candidates' written scorecards (codes only, no score fields; cand-c2 is missing its collaboration scorecard) are in notes/team-a/hiring/ |
 | capacity/ | Past sprint totals (planned, completed and unplanned work), PTO by person and date (input only; outputs count person-days), and the published on-call schedule for the next sprint, 2026-10-19 to 2026-10-30 |
+| onboarding/ | The EM's notes from a pre-start call (first 1:1 questions) with a Team B joiner who has no person file yet. Team A's onboarding template is in notes/team-a/onboarding.md |
 | feedback/ | Two EM observations written in the EM's own words, with judgement and coded words left in on purpose, for feedback-rehearsal |
 | notes/team-a/, notes/team-b/ | Each EM's notes folder: team.md, ladder.md (Team A only), one file per person, last week's update. Team A keeps Engineer A3's expectations record in a separate file; Team B has not chosen where records go |
 `);
