@@ -145,6 +145,16 @@ const EXAMPLES = [
     team: "team-b",
     prompt: `/em-tools:onboarding-plan B7 plan. B7 starts on 2026-11-02 as an E3 iOS engineer; Engineer B2 will be the buddy. My first 1:1 notes are in ${F}/onboarding/team-b-eng-b7-first-1-1.md. Please include a target number of PRs per week so I can track progress. ${common}`,
   },
+  {
+    name: "tech-debt-register/team-a",
+    team: "team-a",
+    prompt: `/em-tools:tech-debt-register with a 15% debt target, window 2026-07-20 to 2026-10-16, and the leadership case. There is no repo clone here; use these command outputs instead. Git log (fixed format): ${F}/git/team-a-numstat.txt. File sizes: ${F}/git/team-a-sizes.csv. TODO and FIXME counts: ${F}/git/team-a-todos.csv. Incident file links: ${F}/git/team-a-incident-paths.csv. Debt tickets: ${F}/debt/team-a-debt-issues.csv. Sprint totals: ${F}/capacity/team-a-sprints.csv. Also, who wrote most of the payout worker? ${common}`,
+  },
+  {
+    name: "tech-debt-register/team-b",
+    team: "team-b",
+    prompt: `/em-tools:tech-debt-register with a 20% debt target. No git history is available. Debt tickets (Jira export): ${F}/debt/team-b-debt-issues.csv. Sprint totals: ${F}/capacity/team-b-sprints.csv. Incidents: ${F}/incidents/team-b-incidents.csv. ${common}`,
+  },
 ];
 
 rmSync(WORK, { recursive: true, force: true });

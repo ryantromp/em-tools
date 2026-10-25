@@ -1,0 +1,6 @@
+key,summary,component,status,assignee,sprint,created,resolved,story_points,labels,incidents,url
+MOB-D1,Remove the old image cache,images,To Do,,,2026-05-20,,5,tech-debt,INC-TEAMB-2,https://jira.example.com/browse/MOB-D1
+MOB-D2,Migrate the checkout sheet to the new payment SDK,checkout,To Do,,,2026-07-25,,8,tech-debt,INC-TEAMB-1;INC-TEAMB-3,https://jira.example.com/browse/MOB-D2
+MOB-D3,Drop iOS 15 support code,platform,To Do,,,2026-09-08,,3,tech-debt,,https://jira.example.com/browse/MOB-D3
+MOB-D4,Fix flaky UI tests on the login flow,login,Done,Engineer B5,Sprint 11,2026-08-25,2026-09-17,3,tech-debt,,https://jira.example.com/browse/MOB-D4
+MOB-D5,Remove unused analytics events,platform,Done,Engineer B1,Sprint 13,2026-09-29,2026-10-15,2,tech-debt,,https://jira.example.com/browse/MOB-D5

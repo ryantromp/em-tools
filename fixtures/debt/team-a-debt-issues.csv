@@ -1,0 +1,11 @@
+id,title,area,state,assignee,cycle,created_at,completed_at,estimate,labels,incidents,url
+ATL-D1,Stream payout batches instead of loading them into memory,payouts,Backlog,,,2026-07-15,,8,tech-debt,INC-TEAMA-7;INC-TEAMA-2,https://linear.example.com/example-co/issue/ATL-D1
+ATL-D2,"Split the payout worker into fetch, build and send steps",payouts,Backlog,,,2026-05-12,,13,tech-debt,INC-TEAMA-6,https://linear.example.com/example-co/issue/ATL-D2
+ATL-D3,Retire the v1 refunds webhook signer,refunds,Backlog,,,2026-06-02,,5,tech-debt,INC-TEAMA-1,https://linear.example.com/example-co/issue/ATL-D3
+ATL-D4,Remove the legacy ledger export CSV path,ledger,Backlog,,,2026-04-28,,3,tech-debt,,https://linear.example.com/example-co/issue/ATL-D4
+ATL-D5,Replace hand-rolled currency rounding with the shared library,currency,Backlog,,,2026-09-30,,,tech-debt,,https://linear.example.com/example-co/issue/ATL-D5
+ATL-D6,Add limit check on batch size config,payouts,Done,Engineer A6,Cycle 9,2026-07-15,2026-08-14,2,tech-debt,INC-TEAMA-7,https://linear.example.com/example-co/issue/ATL-D6
+ATL-D7,Delete dead pagination code paths,api,Done,Engineer A6,Cycle 10,2026-08-03,2026-08-28,3,tech-debt,,https://linear.example.com/example-co/issue/ATL-D7
+ATL-D8,Upgrade the HTTP client and drop the retry shim,api,Done,Engineer A6,Cycle 11,2026-08-20,2026-09-16,5,tech-debt,,https://linear.example.com/example-co/issue/ATL-D8
+ATL-D9,Flaky reconciliation tests: fix ordering,ledger,Done,Engineer A6,Cycle 12,2026-09-01,2026-09-30,2,tech-debt,,https://linear.example.com/example-co/issue/ATL-D9
+ATL-D10,Move error codes into one table,api,Done,Engineer A6,Cycle 13,2026-09-22,2026-10-14,,tech-debt,,https://linear.example.com/example-co/issue/ATL-D10
