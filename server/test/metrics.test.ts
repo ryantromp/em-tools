@@ -358,4 +358,12 @@ test("pulse: k of 4 per period and area, no identities, comments only for shown 
   assert.ok(out.warnings.some((w) => /email/.test(w)));
   assert.ok(!JSON.stringify(out).includes("x1@example.com"));
   assert.ok(!JSON.stringify(out).includes("Secret small-group"));
+  const order = pulse([
+    ...[1, 2, 3, 4].map(() => ({ period: "2026-10", workload: 2 })),
+    ...[1, 2, 3, 4].map(() => ({ period: "2026-9", workload: 4 })),
+    { period: "Sept", workload: 5 },
+  ]);
+  assert.deepEqual(order.periods.map((p) => p.period), ["2026-09", "2026-10"]);
+  assert.equal(order.direction.find((d) => d.area === "workload")!.direction, "down");
+  assert.ok(order.warnings.some((w) => /Sept/.test(w)));
 });

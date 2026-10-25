@@ -1063,8 +1063,18 @@ export function pulse(rows: Row[]) {
   const cols = new Set(rows.flatMap((r) => Object.keys(r)));
   const identifying = [...cols].filter((c) => IDENTIFYING.test(c.trim()));
   if (identifying.length) warnings.push(`Ignored identifying column(s): ${identifying.join(", ")}. The check-in should not collect names or emails.`);
+  // Periods are normalised to YYYY-MM so they sort in time order ("2026-9" becomes "2026-09").
+  const badLabels = new Set<string>();
   const periodOf = (r: Row) => {
-    if (r.period !== undefined && String(r.period).trim() !== "") return String(r.period).trim();
+    const raw = r.period !== undefined && String(r.period).trim() !== "" ? String(r.period).trim() : null;
+    if (raw) {
+      const m = /^(\d{4})-(\d{1,2})$/.exec(raw);
+      if (m && Number(m[2]) >= 1 && Number(m[2]) <= 12) return `${m[1]}-${m[2].padStart(2, "0")}`;
+      const d = toDate(raw);
+      if (d && /^\d{4}-\d{2}-\d{2}/.test(raw)) return d.toISOString().slice(0, 7);
+      badLabels.add(raw);
+      return null;
+    }
     const d = toDate(r.submitted_at ?? r.date);
     return d ? d.toISOString().slice(0, 7) : null;
   };
@@ -1084,7 +1094,8 @@ export function pulse(rows: Row[]) {
     if (!byPeriod.has(p)) byPeriod.set(p, []);
     byPeriod.get(p)!.push(r);
   }
-  if (undated) warnings.push(`${undated} response(s) had no period or date and were left out.`);
+  if (badLabels.size) warnings.push(`Period label(s) ${[...badLabels].join(", ")} are not YYYY-MM or a date. Use YYYY-MM.`);
+  if (undated) warnings.push(`${undated} response(s) had no usable period or date and were left out.`);
   const periods = [...byPeriod.keys()].sort();
   const out = periods.map((p) => {
     const rs = byPeriod.get(p)!;
