@@ -93,7 +93,7 @@ for (const f of examples) {
 const NEEDS_HR = /\b(underperform\w*|wellbeing|well-being|burnout|burned out|governance kit|usage policy)\b/i;
 for (const f of examples) {
   const text = readFileSync(join(ROOT, f), "utf8");
-  const needs = f.startsWith("examples/review-packet/") || f.startsWith("examples/underperformance-record/") || NEEDS_HR.test(text);
+  const needs = f.startsWith("examples/review-packet/") || f.startsWith("examples/underperformance-record/") || f.startsWith("examples/calibration-prep/") || NEEDS_HR.test(text);
   if (needs && !/check with your HR or legal team/i.test(text)) report(f, 0, "missing-hr-legal-line", "Add: check with your HR or legal team");
 }
 
@@ -139,6 +139,16 @@ const QUOTA = /\b\d+\s*(PRs?|pull requests|commits|tickets|issues|story points|p
 for (const f of examples.filter((x) => x.startsWith("examples/onboarding-plan/"))) {
   // A refusal earlier in the same clause ("I will not set a target of 3 PRs per week") is fine.
   lines(f).forEach((l, i) => verdictIn(l, QUOTA) && report(f, i + 1, "activity-quota-in-onboarding", l));
+}
+
+// 9. Calibration: one person per page, no suggested ratings ----------------------------------
+const SUGGESTED_RATING = /\b((suggested|recommended|proposed) rating|should be rated|rate (them|him|her|this person) (as|at)|would rate|stack rank|forced (ranking|distribution)|ranked (above|below|ahead of))\b/i;
+for (const f of examples.filter((x) => x.startsWith("examples/calibration-prep/"))) {
+  lines(f).forEach((l, i) => {
+    if (verdictIn(l, SUGGESTED_RATING)) report(f, i + 1, "suggested-rating-in-calibration", l);
+    const named = people.filter((p) => new RegExp(`\\b${p.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(l));
+    if (/^\s*\|/.test(l) && named.length >= 2) report(f, i + 1, "people-compared-in-calibration", l);
+  });
 }
 
 // Report ----------------------------------------------------------------------------------

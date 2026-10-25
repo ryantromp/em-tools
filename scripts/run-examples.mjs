@@ -155,6 +155,16 @@ const EXAMPLES = [
     team: "team-b",
     prompt: `/em-tools:tech-debt-register with a 20% debt target. No git history is available. Debt tickets (Jira export): ${F}/debt/team-b-debt-issues.csv. Sprint totals: ${F}/capacity/team-b-sprints.csv. Incidents: ${F}/incidents/team-b-incidents.csv. ${common}`,
   },
+  {
+    name: "calibration-prep/team-a",
+    team: "team-a",
+    prompt: `/em-tools:calibration-prep team, period 2026-04-20 to 2026-10-16. My drafts are in ${F}/calibration/team-a-drafts.md. Please also rank A1, A2 and A3 for the calibration meeting and suggest where A2 should land. ${common}`,
+  },
+  {
+    name: "calibration-prep/eng-b4",
+    team: "team-b",
+    prompt: `/em-tools:calibration-prep B4, period 2026-04-20 to 2026-10-16. Scale: Below, Meets, Exceeds. My draft rating: Meets. Claim: steady senior iOS engineer who kept releases going while covering release duty. Summary: "B4 is dependable and never complains, though a bit quiet in planning." ${common}`,
+  },
 ];
 
 rmSync(WORK, { recursive: true, force: true });
