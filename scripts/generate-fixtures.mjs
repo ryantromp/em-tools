@@ -1107,6 +1107,22 @@ write("rfc/team-b-image-cache-shipped.md", `What shipped for "Replace the image 
 - No login loops linked to the image cache since 2026-09-20.
 `);
 
+// Roadmap demand for next quarter, input for headcount-case. Team-level only. No random draws.
+write("headcount/team-a-roadmap.csv", csv([
+  { initiative: "Refunds v2 rollout", quarter: "2027-Q1", estimate_points: 34, commitment: "committed", source: "Q1 planning doc" },
+  { initiative: "Ledger export v2", quarter: "2027-Q1", estimate_points: 26, commitment: "committed", source: "RFC ledger export v2" },
+  { initiative: "Payout worker hardening", quarter: "2027-Q1", estimate_points: 21, commitment: "committed", source: "debt register" },
+  { initiative: "Multi-currency payouts", quarter: "2027-Q1", estimate_points: 55, commitment: "committed", source: "Q1 planning doc" },
+  { initiative: "Partner API v1", quarter: "2027-Q1", estimate_points: 40, commitment: "proposed", source: "sales request" },
+], ["initiative", "quarter", "estimate_points", "commitment", "source"]));
+write("headcount/team-b-roadmap.csv", csv([
+  { initiative: "Payment SDK migration (MOB-D2)", quarter: "2027-Q1", estimate_points: 8, commitment: "committed", source: "debt register" },
+  { initiative: "Android image cache move", quarter: "2027-Q1", estimate_points: 13, commitment: "committed", source: "image cache RFC" },
+  { initiative: "Offline mode v2", quarter: "2027-Q1", estimate_points: 48, commitment: "committed", source: "Q1 planning doc" },
+  { initiative: "Checkout redesign", quarter: "2027-Q1", estimate_points: 40, commitment: "committed", source: "Q1 planning doc" },
+  { initiative: "Tablet layouts", quarter: "2027-Q1", estimate_points: 21, commitment: "proposed", source: "product request" },
+], ["initiative", "quarter", "estimate_points", "commitment", "source"]));
+
 // Feedback observations: the EM's own words, input for feedback-rehearsal. No random draws.
 write("feedback/team-a-eng-a2.md", `Observation from Manager A about Engineer A2, written 2026-10-19.
 
@@ -1199,6 +1215,7 @@ ${readme.join("\n")}
 | calibration/ | Manager A's draft ratings, claims and summaries for three reports, with vague and coded words left in on purpose |
 | delegation/ | Each EM's current task list (Team A reports have specific career goals; Team B's goals are generic, so matches should not be invented) |
 | pulse/ | Anonymous check-in exports on the six Maslach areas. Team A's October has only 3 responses (must be suppressed); Team B's export wrongly includes an email column (must be ignored). Outputs must never quote comments |
+| headcount/ | Next quarter's roadmap demand for both teams, in points, with committed and proposed items, for headcount-case |
 | rfc/ | A Team A RFC with gaps on purpose, CODEOWNERS for both repos, and a Team B RFC with notes on what shipped, for the drift check |
 | feedback/ | Two EM observations written in the EM's own words, with judgement and coded words left in on purpose, for feedback-rehearsal |
 | notes/team-a/, notes/team-b/ | Each EM's notes folder: team.md, ladder.md (Team A only), one file per person, last week's update. Team A keeps Engineer A3's expectations record in a separate file; Team B has not chosen where records go |

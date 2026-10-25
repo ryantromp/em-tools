@@ -79,7 +79,7 @@ for (const f of repoFiles().filter((x) => x.startsWith("examples/"))) report(f, 
 for (const f of examples) {
   const ls = lines(f);
   ls.forEach((l, i) => RANKING.test(l) && !/\b(no|never|not|without|don't|doesn't|won't|refuse)\b/i.test(l) && report(f, i + 1, "per-person-ranking", l));
-  const teamLevel = /^examples\/(ai-adoption|team-delivery-health|oncall-health|postmortem-draft|capacity-plan|tech-debt-register|team-pulse)\//.test(f);
+  const teamLevel = /^examples\/(ai-adoption|team-delivery-health|oncall-health|postmortem-draft|capacity-plan|tech-debt-register|team-pulse|headcount-case)\//.test(f);
   const update = /^examples\/(upward-update|dependency-register)\//.test(f);
   ls.forEach((l, i) => {
     const named = people.filter((p) => nameRe(p).test(l));
@@ -95,6 +95,10 @@ for (const f of examples) {
   const text = readFileSync(join(ROOT, f), "utf8");
   const needs = f.startsWith("examples/review-packet/") || f.startsWith("examples/underperformance-record/") || f.startsWith("examples/calibration-prep/") || NEEDS_HR.test(text);
   if (needs && !/check with your HR or legal team/i.test(text)) report(f, 0, "missing-hr-legal-line", "Add: check with your HR or legal team");
+}
+for (const f of examples.filter((x) => x.startsWith("examples/headcount-case/"))) {
+  const text = readFileSync(join(ROOT, f), "utf8");
+  if (!/check your budget process and with your HR team/i.test(text)) report(f, 0, "missing-budget-hr-line", "Add: check your budget process and with your HR team");
 }
 
 // 6. Blameless postmortems: no managers named and no blame wording ----------------------------

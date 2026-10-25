@@ -181,3 +181,19 @@ test("lint catches judgements of the author in RFC reviews", () => {
     rmSync(bad);
   }
 });
+
+test("lint catches named people and a missing budget line in headcount cases", () => {
+  const dir = new URL("../examples/headcount-case/", import.meta.url);
+  mkdirSync(dir, { recursive: true });
+  const bad = new URL("zz-lint-negative.md", dir);
+  writeFileSync(bad, "Release duty is a 3-person rotation.\nEngineer B3 has covered release duty most weeks.\n");
+  try {
+    const r = spawnSync("node", [new URL("../scripts/lint", import.meta.url).pathname], { encoding: "utf8" });
+    assert.equal(r.status, 1);
+    assert.match(r.stdout, /zz-lint-negative\.md:2 .*\[person-named-in-team-output\]/);
+    assert.doesNotMatch(r.stdout, /zz-lint-negative\.md:1 /);
+    assert.match(r.stdout, /zz-lint-negative\.md:0 .*\[missing-budget-hr-line\]/);
+  } finally {
+    rmSync(bad);
+  }
+});

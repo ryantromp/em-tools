@@ -1,0 +1,6 @@
+initiative,quarter,estimate_points,commitment,source
+Refunds v2 rollout,2027-Q1,34,committed,Q1 planning doc
+Ledger export v2,2027-Q1,26,committed,RFC ledger export v2
+Payout worker hardening,2027-Q1,21,committed,debt register
+Multi-currency payouts,2027-Q1,55,committed,Q1 planning doc
+Partner API v1,2027-Q1,40,proposed,sales request

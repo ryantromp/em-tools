@@ -1,0 +1,6 @@
+initiative,quarter,estimate_points,commitment,source
+Payment SDK migration (MOB-D2),2027-Q1,8,committed,debt register
+Android image cache move,2027-Q1,13,committed,image cache RFC
+Offline mode v2,2027-Q1,48,committed,Q1 planning doc
+Checkout redesign,2027-Q1,40,committed,Q1 planning doc
+Tablet layouts,2027-Q1,21,proposed,product request
