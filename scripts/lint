@@ -137,7 +137,8 @@ for (const f of examples.filter((x) => x.startsWith("examples/hiring-loop-kit/")
 // 8. No activity quotas in onboarding plans -----------------------------------------------------
 const QUOTA = /\b\d+\s*(PRs?|pull requests|commits|tickets|issues|story points|points|lines( of code)?)\s*(per|a|each|every)\s*(day|week|sprint|cycle|month)\b/i;
 for (const f of examples.filter((x) => x.startsWith("examples/onboarding-plan/"))) {
-  lines(f).forEach((l, i) => QUOTA.test(l) && report(f, i + 1, "activity-quota-in-onboarding", l));
+  // A refusal earlier in the same clause ("I will not set a target of 3 PRs per week") is fine.
+  lines(f).forEach((l, i) => verdictIn(l, QUOTA) && report(f, i + 1, "activity-quota-in-onboarding", l));
 }
 
 // Report ----------------------------------------------------------------------------------
