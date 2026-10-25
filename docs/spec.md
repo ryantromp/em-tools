@@ -301,7 +301,7 @@ Build plan: one `feature/<skill>` branch and PR per skill, in this order. Each a
 - **Outputs:** team capacity for the period, in hours, worked out in one unit:
   1. **Available hours** = (members × working days in the period, minus person-days of PTO and public holidays) × working hours per day (default 8, stated).
   2. **Minus meetings:** the team's average meeting hours per person per week (from the meeting-load maths) × people × weeks in the period.
-  3. **Minus on-call:** on-call hours in the period from the schedule × an on-call load factor (default 0.5, stated), because time on call is not all lost.
+  3. **Minus on-call:** on-call time that falls inside working hours in the period, from the schedule, × an on-call load factor (default 0.3, stated: research puts on-call at 20 to 30% of one engineer's time). Nights and weekends are not working time, so they are not deducted.
   4. **Times a focus factor** (default 0.7, stated) for context switching and review time.
   5. **Buffer for unplanned work:** the unplanned share of completed work over the last 3 to 5 sprints, not a fixed 20%.
 - **Points (only if the team estimates in points):** never converted from hours. The range is the team's completed points over the last 3 to 5 sprints, scaled by this period's available hours over each past sprint's available hours, then reduced by the same buffer. A carryover and overcommit warning when planned work exceeds the range.

@@ -17,12 +17,12 @@ Checked on 2026-10-23. See [docs/research.md](docs/research.md#4a-official-vendo
 |---|---|---|---|---|---|
 | GitHub | `github` | `https://api.githubcopilot.com/mcp/` with the `X-MCP-Readonly: true` header | OAuth sign-in. Works with personal accounts | Available | all skills except feedback-rehearsal |
 | Jira | `jira` | Atlassian Rovo MCP `https://mcp.atlassian.com/v2/mcp?tools=all` | OAuth 2.1. A site admin may need to allow the Rovo MCP server and your domain | Generally available | one-on-one, review-packet, upward-update, team-delivery-health, dependency-register |
-| Linear | `linear` | `https://mcp.linear.app/mcp` | OAuth sign-in | Available | one-on-one, review-packet, upward-update, team-delivery-health, dependency-register |
-| Google Calendar | `google_calendar` | `https://calendarmcp.googleapis.com/mcp/v1` | OAuth through a Google Cloud project with the Calendar MCP API enabled. Requests the `calendar.readonly` scope | Preview (unverified) | one-on-one, team-delivery-health |
+| Linear | `linear` | `https://mcp.linear.app/mcp` | OAuth sign-in | Available | one-on-one, review-packet, upward-update, team-delivery-health, dependency-register, capacity-plan |
+| Google Calendar | `google_calendar` | `https://calendarmcp.googleapis.com/mcp/v1` | OAuth through a Google Cloud project with the Calendar MCP API enabled. Requests the `calendar.readonly` scope | Preview (unverified) | one-on-one, team-delivery-health, capacity-plan |
 | Slack | `slack` | `https://mcp.slack.com/mcp` | OAuth. A workspace admin must approve MCP access | Available | upward-update, review-packet, dependency-register, postmortem-draft |
-| Outlook calendar | `outlook` | Microsoft Work IQ (`npx -y @microsoft/workiq mcp`) | Entra ID sign-in with tenant admin consent, and a Microsoft 365 Copilot licence per user. Accept the Work IQ licence terms yourself in a terminal; em-tools blocks `accept_eula` | Public preview | one-on-one, team-delivery-health |
+| Outlook calendar | `outlook` | Microsoft Work IQ (`npx -y @microsoft/workiq mcp`) | Entra ID sign-in with tenant admin consent, and a Microsoft 365 Copilot licence per user. Accept the Work IQ licence terms yourself in a terminal; em-tools blocks `accept_eula` | Public preview | one-on-one, team-delivery-health, capacity-plan |
 | Microsoft Teams | `teams` | Microsoft Work IQ (same server as Outlook) | Same as Outlook | Public preview | upward-update, review-packet, dependency-register, postmortem-draft |
-| PagerDuty | `pagerduty` | Hosted `https://mcp.pagerduty.com/mcp` (EU: `https://mcp.eu.pagerduty.com/mcp`) | OAuth; some setups need a pre-registered OAuth client, or a user API key header. The old local server is deprecated | Available | oncall-health, postmortem-draft |
+| PagerDuty | `pagerduty` | Hosted `https://mcp.pagerduty.com/mcp` (EU: `https://mcp.eu.pagerduty.com/mcp`) | OAuth; some setups need a pre-registered OAuth client, or a user API key header. The old local server is deprecated | Available | oncall-health, postmortem-draft, capacity-plan |
 | incident.io | `incident_io` | Hosted `https://mcp.incident.io/mcp` | OAuth sign-in | Available; tool names not yet verified, so em-tools blocks all its tools for now | oncall-health, postmortem-draft (export until verified) |
 
 ### Gaps and fallbacks
@@ -35,6 +35,7 @@ Every v1 source has an official MCP server, but some are hard to reach for an in
 | Slack needs workspace admin approval | Export the public channel (Slack workspace export) or copy the messages into a text file |
 | Google Calendar needs a Google Cloud project and OAuth client; sign-in fails with "does not support dynamic client registration" without one | Use your existing claude.ai Google Calendar connector (em-tools blocks its write tools while a skill runs), or export ICS from Google Calendar settings |
 | Jira sites can turn off Rovo MCP | Export issues to CSV from a Jira filter |
+| Jira sprint tools in Rovo MCP are reported but not verified | Export a sprint report (completed and unplanned work per sprint) for capacity-plan. Once you see the read tools in `/mcp`, add them to `hooks/read-allowlist.json`; keep `manageJiraSprint` off it |
 | incident.io tool names are unverified, so all its tools are blocked | Export alerts and the on-call schedule as CSV. Once you see the read tool names in `/mcp`, add them to `hooks/read-allowlist.json` |
 | Opsgenie reaches end of support on 5 April 2027 and has no MCP server | Export alerts and schedules as CSV, or move to Jira Service Management |
 | Ashby and Greenhouse are not connected yet (Ashby's MCP server is in open beta; Greenhouse's is unverified) | Export candidates and stage counts from your applicant tracking system, and paste written scorecards. Candidate notes stay in your notes folder under `hiring/` |
