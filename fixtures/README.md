@@ -47,5 +47,6 @@ Window: 2026-04-20 to 2026-10-16 (26 weeks). Calendar runs to 2026-10-30 so upco
 | onboarding/ | The EM's notes from a pre-start call (first 1:1 questions) with a Team B joiner who has no person file yet. Team A's onboarding template is in notes/team-a/onboarding.md |
 | git/ | Team A's payments-api history in the fixed no-author `git log --numstat --format=--%cs` format, file sizes, TODO and FIXME counts, and incident-to-file links |
 | debt/ | Debt-labelled tickets for both teams (assignees present on purpose; outputs must not use them) |
+| calibration/ | Manager A's draft ratings, claims and summaries for three reports, with vague and coded words left in on purpose |
 | feedback/ | Two EM observations written in the EM's own words, with judgement and coded words left in on purpose, for feedback-rehearsal |
 | notes/team-a/, notes/team-b/ | Each EM's notes folder: team.md, ladder.md (Team A only), one file per person, last week's update. Team A keeps Engineer A3's expectations record in a separate file; Team B has not chosen where records go |

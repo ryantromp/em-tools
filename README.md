@@ -1,6 +1,6 @@
 # em-tools
 
-Free, open, local-first help for software engineering managers. em-tools prepares your 1:1s, assembles evidence for reviews and promotion cases, drafts your weekly update, writes a team delivery health narrative, reports on team AI adoption, keeps a cross-team dependency register, checks on-call health, helps you shape and rehearse feedback, keeps a factual record when someone is not meeting expectations, drafts blameless postmortems, plans structured hiring loops, works out team capacity, builds 30/60/90 onboarding plans, and keeps a tech debt register. It reads your data, cites its sources, and leaves every judgement to you.
+Free, open, local-first help for software engineering managers. em-tools prepares your 1:1s, assembles evidence for reviews and promotion cases, drafts your weekly update, writes a team delivery health narrative, reports on team AI adoption, keeps a cross-team dependency register, checks on-call health, helps you shape and rehearse feedback, keeps a factual record when someone is not meeting expectations, drafts blameless postmortems, plans structured hiring loops, works out team capacity, builds 30/60/90 onboarding plans, keeps a tech debt register, and prepares calibration pages. It reads your data, cites its sources, and leaves every judgement to you.
 
 - **Local-first.** Your people notes are markdown files in a folder you pick. Nothing is uploaded, and there is no telemetry, analytics or cloud storage.
 - **Read-only.** Integrations only read. A hook blocks write tools, and em-tools never sends, posts or comments. You copy the drafts.
@@ -28,6 +28,7 @@ Spec: [docs/spec.md](docs/spec.md). Research: [docs/research.md](docs/research.m
 | `capacity-plan` | `/em-tools:capacity-plan next sprint` | Team capacity in hours with every deduction shown, a buffer from your own sprint history, a points range scaled from past sprints, and an overcommit warning. PTO shows as team person-days only |
 | `onboarding-plan` | `/em-tools:onboarding-plan <name> plan` | A 30/60/90 plan from your team template and the first 1:1, with a buddy checklist and dated check-ins, then day-30, 60 and 90 check-in prep. Milestones are agreed outcomes, never activity counts |
 | `tech-debt-register` | `/em-tools:tech-debt-register` | A debt register from tickets, TODOs and code hotspots (git history with no authors) with linked incidents and plain-words impact, debt allocation against your target, and a one-page leadership case |
+| `calibration-prep` | `/em-tools:calibration-prep team` | One page per report: your claim, the 3 strongest dated evidence items, ladder mapping and gaps, plus a self-check of your own draft rating and wording. Never ranks, compares or suggests ratings |
 
 To see what each skill produces, run `node scripts/run-examples.mjs`. It runs every skill against the synthetic fixtures with nothing connected and writes the outputs to `examples/` on your machine. Example outputs are never committed. The fixtures use code names such as Engineer A3, so no output can match a real person.
 
@@ -80,7 +81,7 @@ Each person file is plain markdown with YAML frontmatter, so you can read and ed
 
 ## Not legal or HR advice
 
-Review packets, promotion cases, anything that mentions underperformance, wellbeing or burnout, and the AI governance kit all end with "check with your HR or legal team". em-tools prepares evidence; you and your organisation make the decisions.
+Review packets, promotion cases, calibration pages, anything that mentions underperformance, wellbeing or burnout, and the AI governance kit all end with "check with your HR or legal team". em-tools prepares evidence; you and your organisation make the decisions.
 
 ## Develop
 

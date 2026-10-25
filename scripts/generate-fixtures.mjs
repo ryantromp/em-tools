@@ -963,6 +963,28 @@ write("debt/team-b-debt-issues.csv", csv([
   { key: "MOB-D5", summary: "Remove unused analytics events", component: "platform", status: "Done", assignee: "Engineer B1", sprint: "Sprint 13", created: "2026-09-29", resolved: "2026-10-15", story_points: 2, labels: "tech-debt", incidents: "", url: "https://jira.example.com/browse/MOB-D5" },
 ], ["key", "summary", "component", "status", "assignee", "sprint", "created", "resolved", "story_points", "labels", "incidents", "url"]));
 
+// Calibration: Manager A's draft ratings and summaries for three reports, using the
+// organisation's own scale. The EM's words are left with vague and personality language on
+// purpose. Written last with no random draws.
+write("calibration/team-a-drafts.md", `Calibration drafts, Manager A, review period 2026-04-20 to 2026-10-16.
+Scale used by ExampleCo: Below expectations, Meets expectations, Exceeds expectations.
+
+## Engineer A1 (E4)
+Draft rating: Exceeds expectations
+Claim: Ready to operate at E5 in technical design and mentoring.
+Summary: A1 is a rock star. Wrote the refunds v2 RFC, led the July payout incident, and mentors A7 and A4. Always the first to help.
+
+## Engineer A2 (E4)
+Draft rating: Exceeds expectations
+Claim: Strong senior engineer who drives cross-team decisions.
+Summary: A2 is very strategic and a natural leader. Got Finance to agree on multi-currency rounding. Sometimes a bit abrasive in reviews.
+
+## Engineer A3 (E3)
+Draft rating: Below expectations
+Claim: Not yet meeting E3 execution expectations.
+Summary: A3 lacks polish and needs to step up. Two reverts in July. Has improved PR size since the written expectations in August.
+`);
+
 // Feedback observations: the EM's own words, input for feedback-rehearsal. No random draws.
 write("feedback/team-a-eng-a2.md", `Observation from Manager A about Engineer A2, written 2026-10-19.
 
@@ -1052,6 +1074,7 @@ ${readme.join("\n")}
 | onboarding/ | The EM's notes from a pre-start call (first 1:1 questions) with a Team B joiner who has no person file yet. Team A's onboarding template is in notes/team-a/onboarding.md |
 | git/ | Team A's payments-api history in the fixed no-author \`git log --numstat --format=--%cs\` format, file sizes, TODO and FIXME counts, and incident-to-file links |
 | debt/ | Debt-labelled tickets for both teams (assignees present on purpose; outputs must not use them) |
+| calibration/ | Manager A's draft ratings, claims and summaries for three reports, with vague and coded words left in on purpose |
 | feedback/ | Two EM observations written in the EM's own words, with judgement and coded words left in on purpose, for feedback-rehearsal |
 | notes/team-a/, notes/team-b/ | Each EM's notes folder: team.md, ladder.md (Team A only), one file per person, last week's update. Team A keeps Engineer A3's expectations record in a separate file; Team B has not chosen where records go |
 `);
