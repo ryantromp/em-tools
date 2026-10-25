@@ -35,7 +35,7 @@ Use [references/review-template.md](references/review-template.md):
 
 1. **Completeness:** each template section as present, thin or missing, with one line on what a reviewer would need. Success criteria, rollout and rollback, and risks matter most.
 2. **Open questions:** those the doc lists, plus unstated assumptions you can see (for example "assumes Finance can call an authenticated endpoint"). Each with who could answer it.
-3. **Reviewers:** match the paths the doc touches to CODEOWNERS (`get_file_contents` for `CODEOWNERS` or `.github/CODEOWNERS`, or a local file). List owning teams or handles per path, and flag any stakeholder named in the doc with no reviewer (for example Finance). Suggest the smallest set that covers every path and stakeholder.
+3. **Reviewers:** match the paths the doc touches to CODEOWNERS (use a local file, or use `get_file_contents` to check `.github/CODEOWNERS`, then `CODEOWNERS`, then `docs/CODEOWNERS`, using the first file found). List owning teams or handles per path, and flag any stakeholder named in the doc with no reviewer (for example Finance). Suggest the smallest set that covers every path and stakeholder.
 4. **Review-by date:** propose one (default 5 working days from today) and a note on what "approved" means (for example two owning-team approvals and the stakeholder's sign-off).
 5. **Draft comments:** 3 to 6, each on one section, phrased as questions or concrete asks.
 

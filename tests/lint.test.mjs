@@ -169,12 +169,14 @@ test("lint catches judgements of the author in RFC reviews", () => {
   const dir = new URL("../examples/rfc-review/", import.meta.url);
   mkdirSync(dir, { recursive: true });
   const bad = new URL("zz-lint-negative.md", dir);
-  writeFileSync(bad, "The author seems inexperienced with rollouts.\nFine: the rollout section is missing a rollback step.\n");
+  writeFileSync(bad, "The author seems inexperienced with rollouts.\nFine: the rollout section is missing a rollback step.\nA7 is not senior enough to write RFCs like this.\nI can't judge whether A7 is senior enough to write RFCs like this.\n");
   try {
     const r = spawnSync("node", [new URL("../scripts/lint", import.meta.url).pathname], { encoding: "utf8" });
     assert.equal(r.status, 1);
     assert.match(r.stdout, /zz-lint-negative\.md:1 .*\[author-judged-in-rfc-review\]/);
     assert.doesNotMatch(r.stdout, /zz-lint-negative\.md:2 /);
+    assert.match(r.stdout, /zz-lint-negative\.md:3 .*\[author-judged-in-rfc-review\]/);
+    assert.doesNotMatch(r.stdout, /zz-lint-negative\.md:4 /);
   } finally {
     rmSync(bad);
   }
