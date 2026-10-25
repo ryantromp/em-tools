@@ -7,7 +7,7 @@ Check, could this be shared?: <any extra that qualified>
 
 ## Delegation candidates
 
-| Task | Fits the stated goal of | Goal (quoted) | Support needed | Check-in | Draft ask |
+| Task | Fits the stated goal of | Goal (quoted, with source) | Support needed | Check-in | Draft ask |
 |---|---|---|---|---|---|
 
 No match from stated goals: <task>: <person-independent option>

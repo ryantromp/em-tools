@@ -27,8 +27,9 @@ Help the EM hand off work in a way that grows people, not just clears a list. Th
 
 ## Step 1: set up
 
-1. Call `notes_status`, `notes_read_team` and `notes_list_people` (which includes `career_goals`). If the em-tools tools are missing, switch to **paste-in mode**: ask for the task list and each report's stated goals, and say once: "Paste-in mode: nothing will be saved."
-2. Get the EM's task list, pasted or from a file they name.
+1. Call `notes_status`, `notes_read_team` and `notes_list_people`. If the em-tools tools are missing, switch to **paste-in mode**: ask for the task list and each report's stated goals, and say once: "Paste-in mode: nothing will be saved."
+2. Read each report with `notes_read_person`. Their stated goals are `career_goals` plus any goal they voiced in a dated 1:1 entry (for example "Career: wants more design work"). Cite which: "career goal" or "1:1 on <date>". Only say someone has no specific goal after checking both.
+3. Get the EM's task list, pasted or from a file they name.
 
 ## Step 2: sort the list
 
