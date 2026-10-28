@@ -5,7 +5,7 @@
 // Usage: node scripts/run-examples.mjs [work-dir] [example-name ...]
 // The work dir holds throwaway copies of the fixture notes folders, so fixtures stay clean.
 
-import { cpSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -215,25 +215,27 @@ mkdirSync(WORK, { recursive: true });
 // EM_TOOLS_NO_SERVER=1 runs a copy of the plugin without .mcp.json, to test file mode.
 // Outputs go to examples/<name>.no-server.md so the lint checks them too.
 const NO_SERVER = process.env.EM_TOOLS_NO_SERVER === "1";
-const PLUGIN_DIR = NO_SERVER ? join(WORK, "plugin-no-server") : REPO;
+// The copy lives in the system temp folder, so it is never inside the repo it copies.
+const PLUGIN_DIR = NO_SERVER ? mkdtempSync(join(tmpdir(), "em-tools-no-server-")) : REPO;
 
 // A selected example also runs the examples it reads, so its inputs are fresh.
 const selected = new Set(EXAMPLES.filter((ex) => !ONLY.length || ONLY.some((o) => ex.name.includes(o))).flatMap((ex) => [ex.name, ...(ex.needs ?? [])]));
 const unknown = [...selected].filter((n) => !EXAMPLES.some((ex) => ex.name === n));
 if (unknown.length) throw new Error(`unknown example in needs: ${unknown.join(", ")}`);
 if (NO_SERVER) {
-  cpSync(REPO, PLUGIN_DIR, { recursive: true, filter: (src) => !/[\\/](\.git|examples|node_modules)$/.test(src) });
+  cpSync(REPO, PLUGIN_DIR, { recursive: true, filter: (src) => src !== WORK && !/[\\/](\.git|examples|node_modules)$/.test(src) });
   rmSync(join(PLUGIN_DIR, ".mcp.json"));
 }
 for (const ex of EXAMPLES) {
   if (!selected.has(ex.name)) continue;
-  if (NO_SERVER && ex.needs) continue;
   const notes = join(WORK, ex.name.replace("/", "_"), "notes");
   cpSync(join(F, "notes", ex.team), notes, { recursive: true });
   const settings = join(WORK, ex.name.replace("/", "_"), "settings.json");
   writeFileSync(settings, JSON.stringify({ pluginConfigs: { "em-tools@inline": { options: { locale: ex.team === "team-a" ? "en-GB" : "en-US", notes_folder: notes, enabled_integrations: [] } } } }));
+  // In no-server mode, an example that reads other examples reads their .no-server outputs.
+  const prompt = NO_SERVER ? ex.prompt.replace(/(\/examples\/[^\s]+?)\.md\b/g, "$1.no-server.md") : ex.prompt;
   process.stdout.write(`running ${ex.name} ... `);
-  const r = spawnSync("claude", ["-p", "--plugin-dir", PLUGIN_DIR, "--settings", settings, "--permission-mode", "bypassPermissions", ex.prompt], {
+  const r = spawnSync("claude", ["-p", "--plugin-dir", PLUGIN_DIR, "--settings", settings, "--permission-mode", "bypassPermissions", prompt], {
     cwd: dirname(notes), encoding: "utf8", timeout: 900_000, maxBuffer: 20 * 1024 * 1024,
   });
   const out = join(REPO, "examples", `${ex.name}${NO_SERVER ? ".no-server" : ""}.md`);

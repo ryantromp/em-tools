@@ -29,7 +29,7 @@ Help the EM understand how AI coding tools are working for the team as a whole, 
 
 ## Step 1: set up
 
-1. Call `notes_status` and `notes_read_team` for members, sub-teams and AI tools. If the em-tools tools are missing, use **file mode** when you can read files and the notes folder `${user_config.notes_folder}` is a real path (if it reads as a placeholder, ask the EM for the path): read `team.md`, `ladder.md`, `onboarding.md`, `people/<slug>.md`, `hiring/` and `drafts/` directly from that folder as this skill needs them, never write, edit or delete anything there, and say once: "File mode: the em-tools server is not running, so I read your notes folder directly and will not save anything." If you cannot read the folder either, switch to **paste-in mode** and say once: "Paste-in mode: nothing will be saved."
+1. Call `notes_status` and `notes_read_team` for members, sub-teams and AI tools. If the em-tools tools are missing, use **file mode** when you can read files and the notes folder `${user_config.notes_folder}` is a real path (if it reads as a placeholder, ask the EM for the path): read `team.md`, `ladder.md`, `onboarding.md`, `people/<slug>.md`, `people/<slug>.expectations.md`, `hiring/` and `drafts/` directly from that folder as this skill needs them, never write, edit or delete anything there, and say once: "File mode: the em-tools server is not running, so I read your notes folder directly and will not save anything." If you cannot read the folder either, switch to **paste-in mode** and say once: "Paste-in mode: nothing will be saved."
 2. Build groups: the whole team, plus each sub-team in `team.md`. Use the member ids that appear in the usage and PR data (for example GitHub logins).
 
 ## Step 2: gather

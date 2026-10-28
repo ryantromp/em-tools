@@ -94,7 +94,7 @@ const PREFIX_WORDS = new Set(["sudo", "env", "command", "exec", "time", "nohup",
 const GH_READ = /^(pr|issue|repo|run|release|workflow|label|search|status|browse)$/;
 const GH_READ_SUB = /^(view|list|diff|status|checks|search)$/;
 const INTERPRETERS = new Set(["python", "python3", "node", "ruby", "perl", "deno", "bun", "php"]);
-const NETWORK_CODE = /https?:\/\/|urllib|requests\.|fetch\(|socket|http\.client|net\.connect|XMLHttpRequest|LWP|Net::HTTP/;
+const NETWORK_CODE = /https?:\/\/|urllib|\brequests\b|\bfetch\s*\(|socket|http\.client|\bnet\.connect|XMLHttpRequest|LWP|Net::HTTP|\baxios\b|\bundici\b|require\(\s*["'](node:)?(https?|net|dgram|tls)["']|from\s+["'](node:)?(https?|net|dgram|tls)["']|\bimport\s+(https?|http\.client|smtplib|ftplib)\b|smtplib/;
 
 export function segments(command) {
   return String(command).split(/\|\||&&|[;|&\n]|\$\(|`|\(|\)/).map((x) => x.trim()).filter(Boolean);
@@ -108,6 +108,9 @@ function commandWords(segment) {
 }
 
 export function shellSends(command) {
+  // Inline code for an interpreter spans quotes, parentheses and semicolons, so check the whole command.
+  const runsInterpreter = segments(command).some((seg) => INTERPRETERS.has((commandWords(seg)[0] ?? "").replace(/[0-9.]+$/, "")));
+  if (runsInterpreter && NETWORK_CODE.test(String(command))) return "an interpreter with network code";
   for (const seg of segments(command)) {
     const [cmd, ...args] = commandWords(seg);
     if (!cmd) continue;
@@ -123,7 +126,6 @@ export function shellSends(command) {
       if (group === "search" || (group && GH_READ.test(group) && (!sub || GH_READ_SUB.test(sub)))) continue;
       return `gh ${[group, sub].filter(Boolean).join(" ")}`;
     }
-    if (INTERPRETERS.has(cmd.replace(/[0-9.]+$/, "")) && NETWORK_CODE.test(seg)) return `${cmd} with network code`;
   }
   return null;
 }
