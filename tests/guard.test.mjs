@@ -116,6 +116,8 @@ test("session mode blocks shell commands that send data out", () => {
     "node scripts/lint",
     "node --test tests/*.test.mjs",
     "python3 -c \"print(len(open('notes.md').read()))\"",
+    "python3 -c \"print(open('requests.csv').read())\"",
+    "node -e \"console.log(require('fs').readFileSync('socket-notes.md','utf8'))\"",
   ]) assert.equal(shellSends(c), null, c);
 });
 
