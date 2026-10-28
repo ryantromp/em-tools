@@ -121,6 +121,8 @@ test("session mode blocks shell commands that send data out", () => {
     "node --test tests/*.test.mjs",
     "python3 -c \"print(len(open('notes.md').read()))\"",
     "python3 -c \"print(open('requests.csv').read())\"",
+    "python3 -c \"print(__import__('json').load(open('export.json')))\"",
+    "python3 -c \"import importlib; print(importlib.import_module('csv').__name__)\"",
     "node -e \"console.log(require('fs').readFileSync('socket-notes.md','utf8'))\"",
   ]) assert.equal(shellSends(c), null, c);
 });
