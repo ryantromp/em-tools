@@ -135,7 +135,7 @@ em-tools/
 | Linear | `https://mcp.linear.app/mcp` | OAuth | Hook allowlist (a `/readonly` path is unverified) |
 | Google Calendar | `https://calendarmcp.googleapis.com/mcp/v1` (live-probed) | OAuth via a Google Cloud project | Hook allowlist of 5 read tools (`readOnlyHint: true`) |
 | Slack | `https://mcp.slack.com/mcp` | OAuth; workspace admin must approve | Hook allowlist of `slack_search_*` and `slack_read_*` |
-| Outlook and Teams | Microsoft Work IQ, local `npx -y @microsoft/workiq mcp` (public preview; hosted `https://workiq.svc.cloud.microsoft/mcp` also exists) | Entra ID with tenant admin consent and an M365 Copilot licence per user | Hook allowlist of the read tools (`ask`, `list_agents`, `ask_work_iq`, `fetch_work_iq` and similar); entity, action and `accept_eula` tools blocked |
+| Outlook and Teams | Microsoft Work IQ, local `@microsoft/workiq@1.0.1` via `server/workiq-launch.mjs`, started only when enabled (public preview; hosted `https://workiq.svc.cloud.microsoft/mcp` also exists) | Entra ID with tenant admin consent and an M365 Copilot licence per user | Hook allowlist of the read tools (`ask`, `list_agents`, `ask_work_iq`, `fetch_work_iq` and similar); entity, action and `accept_eula` tools blocked |
 
 **Gaps:** every source has an official server, but Microsoft's needs a paid licence and admin consent, and Slack's needs admin approval. The fallback is CSV or ICS export, documented per source in `CONNECTORS.md`.
 
