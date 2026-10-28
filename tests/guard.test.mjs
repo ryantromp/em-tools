@@ -107,6 +107,10 @@ test("session mode blocks shell commands that send data out", () => {
     "python3 -c \"from smtplib import SMTP; SMTP('smtp.example.com')\"",
     "python3 -c \"__import__('socket').create_connection(('example.com', 80))\"",
     "node -e \"import('node:https').then((h) => h.request('x'))\"",
+    "python3 -c \"s=__import__(name='socket'); s.create_connection(('example.com',80))\"",
+    "python3 -c \"m='soc'+'ket'; __import__(m)\"",
+    "python3 -c \"import importlib; importlib.import_module(n)\"",
+    "node -e \"const m='ht'+'tps'; import(m)\"",
   ]) assert.match(decideShell(c) ?? "", /blocked a shell command/, c);
   for (const c of [
     "git log --since=2026-07-20 --no-merges --numstat --format=--%cs",
@@ -123,6 +127,8 @@ test("session mode blocks shell commands that send data out", () => {
     "python3 -c \"print(open('requests.csv').read())\"",
     "python3 -c \"print(__import__('json').load(open('export.json')))\"",
     "python3 -c \"import importlib; print(importlib.import_module('csv').__name__)\"",
+    "python3 -c \"from collections import (Counter, defaultdict); print(Counter('aab'))\"",
+    "node -e \"import('node:fs').then((fs) => console.log(fs.readFileSync('notes.md', 'utf8')))\"",
     "node -e \"console.log(require('fs').readFileSync('socket-notes.md','utf8'))\"",
   ]) assert.equal(shellSends(c), null, c);
 });

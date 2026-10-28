@@ -104,14 +104,32 @@ const NETWORK_CODE = new RegExp([
   String.raw`\bfrom\s+(${NET_MODULES})\b`,
   String.raw`\b(${NET_MODULES})\.\w+\s*\(`,
   String.raw`\burlopen\s*\(`,
-  String.raw`(__import__|\bimport_module)\s*\(\s*["'](${NET_MODULES})\b`,
   String.raw`\bfetch\s*\(`,
   String.raw`\b(axios|undici)\b\s*[.(]`,
   String.raw`require\(\s*["'](node:)?(https?|net|dgram|tls|axios|undici|nodemailer)["']`,
   String.raw`from\s+["'](node:)?(https?|net|dgram|tls|axios|undici|nodemailer)["']`,
-  String.raw`\bimport\s*\(\s*["'](node:)?(https?|net|dgram|tls)["']`,
   String.raw`\bnet\.connect\b|XMLHttpRequest|\bLWP::|Net::HTTP|Net::SMTP`,
 ].join("|"));
+
+// Dynamic imports (__import__, importlib.import_module, JavaScript import()) pass only when they
+// name a module from this local-only list as a plain string. Anything else, including a keyword
+// argument or a variable, is treated as a send.
+const LOCAL_MODULES = new Set([
+  "json", "csv", "os", "os.path", "sys", "re", "math", "statistics", "datetime", "time", "pathlib",
+  "collections", "itertools", "functools", "decimal", "fractions", "string", "textwrap", "glob",
+  "fs", "node:fs", "fs/promises", "node:fs/promises", "path", "node:path", "util", "node:util",
+]);
+const DYNAMIC_IMPORT = /(\b__import__|\bimport_module|(?<![\w.])import)\s*\(/g;
+
+export function unsafeDynamicImport(code) {
+  for (const m of String(code).matchAll(DYNAMIC_IMPORT)) {
+    if (m[1] === "import" && /\bfrom\s+[\w.]+\s*$/.test(code.slice(0, m.index))) continue; // from x import (a, b)
+    const rest = code.slice(m.index + m[0].length);
+    const lit = /^\s*\\?["']([\w./:-]+)\\?["']\s*[,)]/.exec(rest);
+    if (!lit || !LOCAL_MODULES.has(lit[1])) return true;
+  }
+  return false;
+}
 
 export function segments(command) {
   return String(command).split(/\|\||&&|[;|&\n]|\$\(|`|\(|\)/).map((x) => x.trim()).filter(Boolean);
@@ -127,7 +145,7 @@ function commandWords(segment) {
 export function shellSends(command) {
   // Inline code for an interpreter spans quotes, parentheses and semicolons, so check the whole command.
   const runsInterpreter = segments(command).some((seg) => INTERPRETERS.has((commandWords(seg)[0] ?? "").replace(/[0-9.]+$/, "")));
-  if (runsInterpreter && NETWORK_CODE.test(String(command))) return "an interpreter with network code";
+  if (runsInterpreter && (NETWORK_CODE.test(String(command)) || unsafeDynamicImport(String(command)))) return "an interpreter with network code";
   for (const seg of segments(command)) {
     const [cmd, ...args] = commandWords(seg);
     if (!cmd) continue;
