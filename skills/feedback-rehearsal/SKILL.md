@@ -4,7 +4,7 @@ description: Shape a piece of feedback before the EM gives it, then rehearse the
 argument-hint: "<person> [the observation, or paste it after]"
 hooks:
   PreToolUse:
-    - matcher: "mcp__.*"
+    - matcher: "^(mcp__.*|Bash)$"
       hooks:
         - type: command
           command: node
@@ -27,7 +27,7 @@ Help the EM say one piece of feedback clearly and kindly, and practise the conve
 
 ## Step 1: set up
 
-1. Call `notes_status`. If the em-tools tools are missing, switch to **paste-in mode**: ask for the observation and, if the EM wants, how the person likes feedback. Say once: "Paste-in mode: nothing will be saved."
+1. Call `notes_status`. If the em-tools tools are missing, use **file mode** when you can read files and the notes folder `${user_config.notes_folder}` is a real path (if it reads as a placeholder, ask the EM for the path): read `team.md`, `ladder.md`, `onboarding.md`, `people/<slug>.md`, `people/<slug>.expectations.md`, `hiring/` and `drafts/` directly from that folder as this skill needs them, never write, edit or delete anything there, and say once: "File mode: the em-tools server is not running, so I read your notes folder directly and will not save anything." If you cannot read the folder either, switch to **paste-in mode**: ask for the observation and, if the EM wants, how the person likes feedback. Say once: "Paste-in mode: nothing will be saved."
 2. Resolve the person with `notes_list_people` and read them with `notes_read_person`. Use only `feedback_preferences`, `career_goals` and the open threads; do not pull PRs, tickets or messages.
 3. If the EM has not given the observation yet, ask for it in their own words: what happened, when, and what they want to change.
 
@@ -63,4 +63,4 @@ Before finishing, remove any sentence that adds a fact the EM did not give, rate
 
 ## Step 7: save (only if asked)
 
-If the EM asks to save, offer a short log entry (date, topic, the observation and request as agreed, and "Feedback given" or "Feedback planned"). Write it with `notes_append_entry` (section `Log`) only after the EM confirms the exact text. Never save the rehearsal or the language check. In paste-in mode, skip this.
+If the EM asks to save, offer a short log entry (date, topic, the observation and request as agreed, and "Feedback given" or "Feedback planned"). Write it with `notes_append_entry` (section `Log`) only after the EM confirms the exact text. Never save the rehearsal or the language check. In file or paste-in mode, skip this.

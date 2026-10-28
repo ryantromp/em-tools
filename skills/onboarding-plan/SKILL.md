@@ -4,7 +4,7 @@ description: Build a 30/60/90 onboarding plan for a new joiner from the team's o
 argument-hint: "<person> [plan|check 30|check 60|check 90]"
 hooks:
   PreToolUse:
-    - matcher: "mcp__.*"
+    - matcher: "^(mcp__.*|Bash)$"
       hooks:
         - type: command
           command: node
@@ -27,7 +27,7 @@ Help the EM give a new joiner a clear, humane first 90 days that the joiner shap
 
 ## Step 1: set up
 
-1. Call `notes_status` and `notes_read_team` (members, ladder, and the onboarding template if the team has one). If the em-tools tools are missing, switch to **paste-in mode**: ask for the first 1:1 notes and any template, and say once: "Paste-in mode: nothing will be saved."
+1. Call `notes_status` and `notes_read_team` (members, ladder, and the onboarding template if the team has one). If the em-tools tools are missing, use **file mode** when you can read files and the notes folder `${user_config.notes_folder}` is a real path (if it reads as a placeholder, ask the EM for the path): read `team.md`, `ladder.md`, `onboarding.md`, `people/<slug>.md`, `people/<slug>.expectations.md`, `hiring/` and `drafts/` directly from that folder as this skill needs them, never write, edit or delete anything there, and say once: "File mode: the em-tools server is not running, so I read your notes folder directly and will not save anything." If you cannot read the folder either, switch to **paste-in mode**: ask for the first 1:1 notes and any template, and say once: "Paste-in mode: nothing will be saved."
 2. Resolve the person with `notes_list_people`. If they have no file yet, offer `notes_create_person` (name, role, level, team, start date, cadence) after the EM confirms.
 3. If they have a file, read it with `notes_read_person` in both modes: `feedback_preferences`, `career_goals`, the first 1:1 entry in the log, any saved plan, open threads and evidence since the start date.
 4. For a plan, if the first 1:1 answers (feedback and recognition, worries, how they work best, goals) are in neither the notes nor what the EM gave you, ask for them before drafting the "How they like to work" section; never guess them.
@@ -60,6 +60,6 @@ Once the joiner has agreed the plan, offer to save it, and write it only after t
 - **Log** (`notes_append_entry`, section `Log`): a `### <date> 30/60/90 plan agreed` entry listing every agreed milestone under days 1 to 30, 31 to 60 and 61 to 90, plus the buddy and check-in dates. A later `check` reads this entry, so it must hold the full list, not a summary.
 - **Open threads**: one line per upcoming check-in ("30/60/90 plan: day 60 check-in due <date>").
 
-In paste-in mode, skip this and remind the EM to keep the plan.
+In file or paste-in mode, skip this and remind the EM to keep the plan.
 
 Before finishing, remove any activity target, any comparison with other people, and any milestone the joiner has not been given a say in.

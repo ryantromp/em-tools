@@ -4,7 +4,7 @@ description: Prepare for and record a 1:1 with one direct report. Builds a prep 
 argument-hint: "<person> [prep|log|overdue]"
 hooks:
   PreToolUse:
-    - matcher: "mcp__.*"
+    - matcher: "^(mcp__.*|Bash)$"
       hooks:
         - type: command
           command: node
@@ -26,7 +26,7 @@ Help the EM run a better 1:1 with one report. The EM owns the conversation and e
 
 ## Step 1: set up
 
-1. Call `notes_status`. If the em-tools tools are missing, switch to **paste-in mode**: ask the EM to paste the person's notes and any PR or ticket list, and say once: "Paste-in mode: nothing will be saved."
+1. Call `notes_status`. If the em-tools tools are missing, use **file mode** when you can read files and the notes folder `${user_config.notes_folder}` is a real path (if it reads as a placeholder, ask the EM for the path): read `team.md`, `ladder.md`, `onboarding.md`, `people/<slug>.md`, `people/<slug>.expectations.md`, `hiring/` and `drafts/` directly from that folder as this skill needs them, never write, edit or delete anything there, and say once: "File mode: the em-tools server is not running, so I read your notes folder directly and will not save anything." If you cannot read the folder either, switch to **paste-in mode**: ask the EM to paste the person's notes and any PR or ticket list, and say once: "Paste-in mode: nothing will be saved."
 2. Resolve the person with `notes_list_people` (match on name, slug or email). If there is no file, offer to create one with `notes_create_person` after the EM confirms name, role, level, team and cadence.
 3. Read the person with `notes_read_person` and the team with `notes_read_team`.
 

@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
-import { decide, looksReadOnly, parseEnabled } from "../hooks/guard.mjs";
+import { decide, decideShell, looksReadOnly, parseEnabled, shellSends } from "../hooks/guard.mjs";
 
 const allowlist = JSON.parse(readFileSync(new URL("../hooks/read-allowlist.json", import.meta.url)));
 const all = ["github", "jira", "linear", "google_calendar", "outlook", "slack", "teams"];
@@ -85,4 +85,50 @@ test("pagerduty reads pass, writes and per-person tools are blocked; incident.io
   }
   assert.match(decide("mcp__plugin_em-tools_incident-io__list_incidents", "plugin", allowlist, on), /blocked/);
   assert.match(decide("mcp__plugin_em-tools_pagerduty__list_incidents", "plugin", allowlist, all), /not enabled/);
+});
+
+test("session mode blocks shell commands that send data out", () => {
+  for (const c of [
+    "curl -X POST https://hooks.slack.com/services/x -d @draft.json",
+    "gh pr comment 3 --body hi",
+    "gh issue create --title x",
+    "gh api -X POST repos/a/b/issues -f title=x",
+    "gh api repos/a/b/issues --input body.json",
+    "cd /repo && git push origin main",
+    "FOO=1 /usr/bin/wget -q https://example.com",
+    "echo hi | sudo nc example.com 80",
+    "ls $(curl -s https://example.com)",
+    "python3 -c \"import urllib.request; urllib.request.urlopen('https://example.com')\"",
+    "scp notes.md host:/tmp",
+    "node -e \"fetch('https://example.com', {method: 'POST', body: 'draft'})\"",
+    "python3 -c \"import requests; requests.post('https://example.com', data='draft')\"",
+    "cd /tmp && node -e 'require(\"https\").request({host: \"example.com\"})'",
+    "python3 -c \"import sys, smtplib; smtplib.SMTP('smtp.example.com').sendmail('a@example.com', 'b@example.com', sys.stdin.read())\"",
+    "python3 -c \"from smtplib import SMTP; SMTP('smtp.example.com')\"",
+    "python3 -c \"__import__('socket').create_connection(('example.com', 80))\"",
+    "node -e \"import('node:https').then((h) => h.request('x'))\"",
+  ]) assert.match(decideShell(c) ?? "", /blocked a shell command/, c);
+  for (const c of [
+    "git log --since=2026-07-20 --no-merges --numstat --format=--%cs",
+    "cd /repo && git ls-files -z | xargs -0 wc -l",
+    "git grep -c -E \"TODO|FIXME\"",
+    "gh pr view 3 --json title",
+    "gh pr list --state merged",
+    "gh api repos/a/b/pulls",
+    "gh api -X GET search/issues -f q=repo:a/b",
+    "grep curl notes.md",
+    "node scripts/lint",
+    "node --test tests/*.test.mjs",
+    "python3 -c \"print(len(open('notes.md').read()))\"",
+    "python3 -c \"print(open('requests.csv').read())\"",
+    "node -e \"console.log(require('fs').readFileSync('socket-notes.md','utf8'))\"",
+  ]) assert.equal(shellSends(c), null, c);
+});
+
+test("CLI checks Bash only in session mode", () => {
+  const input = JSON.stringify({ tool_name: "Bash", tool_input: { command: "curl -d x https://example.com" } });
+  assert.equal(spawnSync("node", ["hooks/guard.mjs", "session"], { input }).status, 2);
+  assert.equal(spawnSync("node", ["hooks/guard.mjs", "plugin"], { input }).status, 0);
+  const ok = JSON.stringify({ tool_name: "Bash", tool_input: { command: "git log --numstat" } });
+  assert.equal(spawnSync("node", ["hooks/guard.mjs", "session"], { input: ok }).status, 0);
 });

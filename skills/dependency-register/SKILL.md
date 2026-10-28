@@ -4,7 +4,7 @@ description: Keep a register of cross-team dependencies for an engineering team:
 argument-hint: "[now YYYY-MM-DD]"
 hooks:
   PreToolUse:
-    - matcher: "mcp__.*"
+    - matcher: "^(mcp__.*|Bash)$"
       hooks:
         - type: command
           command: node
@@ -25,7 +25,7 @@ Show the EM where cross-team waiting is slowing the team down, so they can ask f
 
 ## Step 1: set up
 
-1. Call `notes_status` and `notes_read_team` for the team name, tracker, repos and channels. If the em-tools tools are missing, switch to **paste-in mode**: ask for a ticket export, and say once: "Paste-in mode: nothing will be saved."
+1. Call `notes_status` and `notes_read_team` for the team name, tracker, repos and channels. If the em-tools tools are missing, use **file mode** when you can read files and the notes folder `${user_config.notes_folder}` is a real path (if it reads as a placeholder, ask the EM for the path): read `team.md`, `ladder.md`, `onboarding.md`, `people/<slug>.md`, `people/<slug>.expectations.md`, `hiring/` and `drafts/` directly from that folder as this skill needs them, never write, edit or delete anything there, and say once: "File mode: the em-tools server is not running, so I read your notes folder directly and will not save anything." If you cannot read the folder either, switch to **paste-in mode**: ask for a ticket export, and say once: "Paste-in mode: nothing will be saved."
 2. **Today:** use the date the EM gives, or today's date.
 
 ## Step 2: find dependencies
@@ -43,7 +43,7 @@ For each item record: id, title, direction, other team, since (the `blocked_sinc
 
 Call `metrics_dependency_age` with the items and today's date. Pass finished tickets (with `started_at`, `completed_at` and `blocked_days`) as `finished_rows` to get the blocked share of cycle time. The defaults flag items at 5 working days as aging and 10 as stale. Report how many finished tickets had no blocked-days history, so a low share is not mistaken for a measured one.
 
-In **paste-in mode**, work it out by hand and show the method:
+In **file or paste-in mode**, work it out by hand and show the method:
 
 - **Age:** count weekdays (Monday to Friday) after the `since` date up to and including today. Ignore public holidays and say so.
 - **Status:** under 5 working days is ok, 5 to 9 is aging, 10 or more is stale.
@@ -64,4 +64,4 @@ Use [references/register-template.md](references/register-template.md):
 
 ## Step 5: save (optional)
 
-Offer to save the register with `notes_save_draft` (skill `dependency-register`) after the EM confirms. In paste-in mode there is nowhere to save, so skip the offer and remind the EM to copy the register. Never send the nudges.
+Offer to save the register with `notes_save_draft` (skill `dependency-register`) after the EM confirms. In file or paste-in mode nothing is saved, so skip the offer and remind the EM to copy the register. Never send the nudges.

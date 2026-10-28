@@ -2,13 +2,15 @@
   "name": "em-tools",
   "displayName": "EM Tools",
   "version": "0.1.0",
-  "description": "Local-first help for software engineering managers: 1:1 prep, evidence-based review packets, upward updates, team delivery health and team AI adoption. Read-only integrations; drafts only.",
+  "description": "Local-first help for software engineering managers: 1:1 prep, review and promotion evidence, weekly updates, delivery and on-call health, feedback, postmortems, hiring loops, capacity, onboarding, tech debt, calibration, delegation, team pulse, RFC reviews and headcount cases. Read-only integrations; drafts only.",
   "author": {
     "name": "Ryan Tromp",
     "email": "ryan.tromp@gmail.com"
   },
   "homepage": "https://github.com/ryantromp/em-tools",
   "repository": "https://github.com/ryantromp/em-tools",
+  "icon": "./.claude-plugin/icon.png",
+  "privacyPolicyUrl": "https://github.com/ryantromp/em-tools/blob/main/PRIVACY.md",
   "license": "MIT",
   "keywords": [
     "engineering-management",

@@ -5,7 +5,7 @@ em-tools is a free, open plugin for software engineering managers. It reads your
 How it behaves:
 
 - Your people notes are markdown files in a folder you choose, and nothing is uploaded.
-- Integrations only read. A hook blocks write tools, and em-tools never sends, posts or comments. You copy the drafts.
+- Integrations only read, and em-tools never sends, posts or comments. You copy the drafts. While an em-tools skill is in use, a hook blocks connector tools that write and shell commands that send data out (such as `curl`, `gh pr comment` or `git push`). The hook catches mistakes; it is not a sandbox. [CONNECTORS.md](CONNECTORS.md#how-writes-are-blocked) has deny rules for a hard block.
 - Ratings, verdicts and promotion decisions are left blank for you to fill in.
 - Engineers are never ranked or compared. Team metrics stay at team level, and AI adoption figures appear only for groups of 4 or more.
 - You don't need to connect anything. Every skill works from pasted notes or CSV exports, and connectors just add data.
@@ -61,9 +61,14 @@ To try it for one session without installing: `claude --plugin-dir ./em-tools`.
 
 The `skills/` folders use the open SKILL.md format, so you can copy them into your agent's skills folder. If your agent supports MCP, also run the notes and metrics server: `node server/dist/em-tools-server.mjs`, with `EM_TOOLS_NOTES_FOLDER` and `EM_TOOLS_LOCALE` set. The read-only hook is Claude Code only. Elsewhere, connect each source in its own read-only mode (see [CONNECTORS.md](CONNECTORS.md)).
 
-### Claude on the web, or anywhere without local disk or MCP
+### Without the em-tools server
 
-The skills still work in paste-in mode: paste your notes and exports and you get the same outputs. Nothing is stored in this mode, so save anything you want to keep.
+Some setups don't run the bundled server: claude.ai chat, Cowork sessions that don't run on your computer, and workspaces whose policy turns off plugin MCP servers. The skills then fall back in two steps:
+
+1. File mode: if Claude can read your notes folder, the skills read the markdown files directly and save nothing.
+2. Paste-in mode: otherwise, paste your notes and exports and you get the same outputs. Nothing is stored, so save anything you want to keep.
+
+The read-only hook also runs only where plugin hooks run (Claude Code and Cowork). Check `/mcp` for the `em-tools` server before relying on saved notes.
 
 ## Your notes
 
@@ -82,7 +87,9 @@ Each person file is plain markdown with YAML frontmatter, so you can read and ed
 
 ## Privacy
 
-- People notes stay on your disk. The em-tools server reads and writes only inside your notes folder and makes no network calls.
+The full policy is in [PRIVACY.md](PRIVACY.md).
+
+- Your notes files stay on your disk. The em-tools server reads and writes only inside your notes folder and makes no network calls. What a skill reads becomes part of your Claude conversation, which Anthropic processes under your Claude plan's terms.
 - Integrations go through each vendor's own MCP server, signed in as you, and em-tools calls only their read tools.
 - AI usage data is summed in memory, and per-person rows are never shown or saved.
 - No telemetry, analytics or cloud storage.

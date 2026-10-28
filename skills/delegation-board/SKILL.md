@@ -4,7 +4,7 @@ description: Help the EM delegate well. Sorts the EM's task list into what only 
 argument-hint: "[task list, or paste it after]"
 hooks:
   PreToolUse:
-    - matcher: "mcp__.*"
+    - matcher: "^(mcp__.*|Bash)$"
       hooks:
         - type: command
           command: node
@@ -27,7 +27,7 @@ Help the EM hand off work in a way that grows people, not just clears a list. Th
 
 ## Step 1: set up
 
-1. Call `notes_status`, `notes_read_team` and `notes_list_people`. If the em-tools tools are missing, switch to **paste-in mode**: ask for the task list and each report's stated goals, and say once: "Paste-in mode: nothing will be saved."
+1. Call `notes_status`, `notes_read_team` and `notes_list_people`. If the em-tools tools are missing, use **file mode** when you can read files and the notes folder `${user_config.notes_folder}` is a real path (if it reads as a placeholder, ask the EM for the path): read `team.md`, `ladder.md`, `onboarding.md`, `people/<slug>.md`, `people/<slug>.expectations.md`, `hiring/` and `drafts/` directly from that folder as this skill needs them, never write, edit or delete anything there, and say once: "File mode: the em-tools server is not running, so I read your notes folder directly and will not save anything." If you cannot read the folder either, switch to **paste-in mode**: ask for the task list and each report's stated goals, and say once: "Paste-in mode: nothing will be saved."
 2. Read each report with `notes_read_person`. Their stated goals are `career_goals` plus any goal they voiced in a dated 1:1 entry (for example "Career: wants more design work"). Cite which: "career goal" or "1:1 on <date>". Only say someone has no specific goal after checking both.
 3. Get the EM's task list, pasted or from a file they name.
 
@@ -56,4 +56,4 @@ Before finishing, remove any sentence that justifies a match by workload, output
 
 ## Step 5: save (optional)
 
-Offer to save with `notes_save_draft` (skill `delegation-board`) after the EM confirms. If the EM later agrees a hand-off with someone, offer a log entry in that person's file via `notes_append_entry`, only after the EM confirms the text. In paste-in mode, skip this.
+Offer to save with `notes_save_draft` (skill `delegation-board`) after the EM confirms. If the EM later agrees a hand-off with someone, offer a log entry in that person's file via `notes_append_entry`, only after the EM confirms the text. In file or paste-in mode, skip this.

@@ -44,12 +44,13 @@
       }
     },
     "workiq": {
-      "command": "npx",
+      "command": "node",
       "args": [
-        "-y",
-        "@microsoft/workiq",
-        "mcp"
-      ]
+        "${CLAUDE_PLUGIN_ROOT}/server/workiq-launch.mjs"
+      ],
+      "env": {
+        "EM_TOOLS_ENABLED_INTEGRATIONS": "${user_config.enabled_integrations}"
+      }
     },
     "pagerduty": {
       "type": "http",
