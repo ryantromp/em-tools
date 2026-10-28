@@ -4,7 +4,9 @@
 // Mode "plugin" (hooks/hooks.json): every tool from an em-tools MCP server must be on
 // the read allowlist, and its integration must be enabled. Anything else is blocked.
 // Mode "session" (skill frontmatter): also blocks write and send tools on any other
-// MCP server for the rest of the session once an em-tools skill has run.
+// MCP server for the rest of the session once an em-tools skill has run, and shell
+// commands that send data out (curl, wget, gh writes, git push and similar).
+// The shell check catches mistakes; it is not a sandbox. See CONNECTORS.md.
 //
 // Blocking uses exit code 2 with the reason on stderr. No data is logged or sent.
 
@@ -83,6 +85,56 @@ export function decide(toolName, mode, allowlist, enabled) {
   return null;
 }
 
+// Shell commands that send data out of the machine. Checked per command segment.
+const SEND_COMMANDS = new Set([
+  "curl", "wget", "http", "https", "xh", "httpie", "nc", "ncat", "netcat", "telnet", "socat",
+  "ssh", "scp", "sftp", "rsync", "ftp", "mail", "mailx", "sendmail", "mutt", "osascript",
+]);
+const PREFIX_WORDS = new Set(["sudo", "env", "command", "exec", "time", "nohup", "nice", "xargs", "builtin"]);
+const GH_READ = /^(pr|issue|repo|run|release|workflow|label|search|status|browse)$/;
+const GH_READ_SUB = /^(view|list|diff|status|checks|search)$/;
+const INTERPRETERS = new Set(["python", "python3", "node", "ruby", "perl", "deno", "bun", "php"]);
+const NETWORK_CODE = /https?:\/\/|urllib|requests\.|fetch\(|socket|http\.client|net\.connect|XMLHttpRequest|LWP|Net::HTTP/;
+
+export function segments(command) {
+  return String(command).split(/\|\||&&|[;|&\n]|\$\(|`|\(|\)/).map((x) => x.trim()).filter(Boolean);
+}
+
+function commandWords(segment) {
+  const w = segment.split(/\s+/);
+  let i = 0;
+  while (i < w.length && (PREFIX_WORDS.has(w[i]) || /^[A-Za-z_][A-Za-z0-9_]*=/.test(w[i]) || (i > 0 && PREFIX_WORDS.has(w[i - 1]) && /^-/.test(w[i])))) i++;
+  return w.slice(i).map((x, j) => (j === 0 ? x.split("/").pop() : x));
+}
+
+export function shellSends(command) {
+  for (const seg of segments(command)) {
+    const [cmd, ...args] = commandWords(seg);
+    if (!cmd) continue;
+    if (SEND_COMMANDS.has(cmd)) return cmd;
+    if (cmd === "git" && args.some((a) => a === "push" || a === "send-email" || a === "request-pull")) return `git ${args.find((a) => !a.startsWith("-"))}`;
+    if (cmd === "gh") {
+      const [group, sub] = args.filter((a) => !a.startsWith("-"));
+      if (group === "api") {
+        const writes = args.some((a) => /^(-X|--method|-f|-F|--field|--raw-field|--input)(=|$)/.test(a) || /^-[XfF]./.test(a));
+        if (writes && !args.some((a, k) => /^(-X|--method)$/.test(a) && /^get$/i.test(args[k + 1] ?? "")) ) return "gh api with a write method or fields";
+        continue;
+      }
+      if (group === "search" || (group && GH_READ.test(group) && (!sub || GH_READ_SUB.test(sub)))) continue;
+      return `gh ${[group, sub].filter(Boolean).join(" ")}`;
+    }
+    if (INTERPRETERS.has(cmd.replace(/[0-9.]+$/, "")) && NETWORK_CODE.test(seg)) return `${cmd} with network code`;
+  }
+  return null;
+}
+
+export function decideShell(command) {
+  const hit = shellSends(command);
+  return hit
+    ? `em-tools blocked a shell command (${hit}): an em-tools skill ran in this session, so commands that send data out are blocked. Produce a draft for the EM to copy instead.`
+    : null;
+}
+
 function loadAllowlist() {
   const here = dirname(fileURLToPath(import.meta.url));
   return JSON.parse(readFileSync(join(here, "read-allowlist.json"), "utf8"));
@@ -93,15 +145,20 @@ async function main() {
   let input = "";
   for await (const chunk of process.stdin) input += chunk;
   let toolName = "";
+  let toolInput = {};
   try {
-    toolName = JSON.parse(input).tool_name || "";
+    const parsed = JSON.parse(input);
+    toolName = parsed.tool_name || "";
+    toolInput = parsed.tool_input || {};
   } catch {
     process.stderr.write("em-tools guard could not read the hook input, so the call is blocked.\n");
     process.exit(2);
   }
   let reason;
   try {
-    reason = decide(toolName, mode, loadAllowlist(), parseEnabled(process.env.CLAUDE_PLUGIN_OPTION_ENABLED_INTEGRATIONS));
+    reason = toolName === "Bash"
+      ? (mode === "session" ? decideShell(toolInput.command ?? "") : null)
+      : decide(toolName, mode, loadAllowlist(), parseEnabled(process.env.CLAUDE_PLUGIN_OPTION_ENABLED_INTEGRATIONS));
   } catch (err) {
     reason = `em-tools guard failed (${err.message}), so the call is blocked.`;
   }
