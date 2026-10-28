@@ -104,7 +104,7 @@ const NETWORK_CODE = new RegExp([
   String.raw`\bfrom\s+(${NET_MODULES})\b`,
   String.raw`\b(${NET_MODULES})\.\w+\s*\(`,
   String.raw`\burlopen\s*\(`,
-  String.raw`__import__\s*\(|\bimport_module\s*\(`,
+  String.raw`(__import__|\bimport_module)\s*\(\s*["'](${NET_MODULES})\b`,
   String.raw`\bfetch\s*\(`,
   String.raw`\b(axios|undici)\b\s*[.(]`,
   String.raw`require\(\s*["'](node:)?(https?|net|dgram|tls|axios|undici|nodemailer)["']`,
