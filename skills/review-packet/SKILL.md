@@ -4,7 +4,7 @@ description: Build an evidence pack for one direct report's performance review o
 argument-hint: "<person> [review|promo <target-level>|lint] [period]"
 hooks:
   PreToolUse:
-    - matcher: "mcp__.*"
+    - matcher: "^(mcp__.*|Bash)$"
       hooks:
         - type: command
           command: node
@@ -28,7 +28,7 @@ Assemble the evidence so the EM can write a fair review in their own words. You 
 
 ## Step 1: set up
 
-1. Call `notes_status`. If the em-tools tools are missing, switch to **paste-in mode**: ask the EM to paste notes, evidence and the ladder, and say once: "Paste-in mode: nothing will be saved."
+1. Call `notes_status`. If the em-tools tools are missing, use **file mode** when you can read files and the notes folder `${user_config.notes_folder}` is a real path (if it reads as a placeholder, ask the EM for the path): read `team.md`, `ladder.md`, `onboarding.md`, `people/<slug>.md`, `hiring/` and `drafts/` directly from that folder as this skill needs them, never write, edit or delete anything there, and say once: "File mode: the em-tools server is not running, so I read your notes folder directly and will not save anything." If you cannot read the folder either, switch to **paste-in mode**: ask the EM to paste notes, evidence and the ladder, and say once: "Paste-in mode: nothing will be saved."
 2. Resolve the person (`notes_list_people`), read them (`notes_read_person`) and the team (`notes_read_team`).
 3. **Ladder:** use the ladder from `notes_read_team`. If there is none, use [references/generic-ladder.md](references/generic-ladder.md) and say so at the top.
 4. **Period:** default to the last 6 months. Confirm with the EM if a review cycle date is in `team.md`.

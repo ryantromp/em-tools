@@ -4,7 +4,7 @@ description: Work out team capacity for the next sprint or quarter in hours, wit
 argument-hint: "[sprint or period] [planned work]"
 hooks:
   PreToolUse:
-    - matcher: "mcp__.*"
+    - matcher: "^(mcp__.*|Bash)$"
       hooks:
         - type: command
           command: node
@@ -26,7 +26,7 @@ Help the EM plan with a realistic capacity number and show the working, so the t
 
 ## Step 1: set up
 
-1. Call `notes_status` and `notes_read_team` (members, sub-teams). If the em-tools tools are missing, switch to **paste-in mode** and say once: "Paste-in mode: nothing will be saved."
+1. Call `notes_status` and `notes_read_team` (members, sub-teams). If the em-tools tools are missing, use **file mode** when you can read files and the notes folder `${user_config.notes_folder}` is a real path (if it reads as a placeholder, ask the EM for the path): read `team.md`, `ladder.md`, `onboarding.md`, `people/<slug>.md`, `hiring/` and `drafts/` directly from that folder as this skill needs them, never write, edit or delete anything there, and say once: "File mode: the em-tools server is not running, so I read your notes folder directly and will not save anything." If you cannot read the folder either, switch to **paste-in mode** and say once: "Paste-in mode: nothing will be saved."
 2. **Period:** the next sprint by default, or the period the EM names. **People:** the engineers who will do the work (not the EM, unless they say so).
 3. Ask for, or confirm, the defaults: 8 working hours a day starting 09:00 in the team's time zone, focus factor 0.7, on-call load factor 0.3. Ask about public holidays in the period.
 
@@ -46,7 +46,7 @@ Use only integrations in `${user_config.enabled_integrations}`, or files the EM 
 
 Call `metrics_capacity` with the members count, period, holidays, PTO rows, meeting hours per person per week, the on-call shift rows (or on-call hours), sprint rows, planned work, and the working-day start hour and time zone offset. Report every warning, and show the per-sprint scaling from `past_sprints`.
 
-In **paste-in mode**, work it out by hand, one unit throughout:
+In **file or paste-in mode**, work it out by hand, one unit throughout:
 
 1. Available hours = (people × working days − PTO person-days, with holidays removed) × hours per day.
 2. Minus meetings = hours per person per week × people × weeks.
@@ -69,4 +69,4 @@ Before finishing, remove any sentence that names who is off, gives a per-person 
 
 ## Step 5: save (optional)
 
-Offer to save with `notes_save_draft` (skill `capacity-plan`) after the EM confirms. In paste-in mode, skip the offer.
+Offer to save with `notes_save_draft` (skill `capacity-plan`) after the EM confirms. In file or paste-in mode, skip the offer.

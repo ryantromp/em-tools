@@ -4,7 +4,7 @@ description: Draft a blameless postmortem from an incident channel export, the a
 argument-hint: "<incident id or channel> | actions"
 hooks:
   PreToolUse:
-    - matcher: "mcp__.*"
+    - matcher: "^(mcp__.*|Bash)$"
       hooks:
         - type: command
           command: node
@@ -27,7 +27,7 @@ Help the EM and the team write a blameless postmortem quickly, and keep its acti
 
 ## Step 1: set up
 
-1. Call `notes_status` and `notes_read_team`. If the em-tools tools are missing, switch to **paste-in mode**: ask for the channel export and any alert or deploy list, and say once: "Paste-in mode: nothing will be saved."
+1. Call `notes_status` and `notes_read_team`. If the em-tools tools are missing, use **file mode** when you can read files and the notes folder `${user_config.notes_folder}` is a real path (if it reads as a placeholder, ask the EM for the path): read `team.md`, `ladder.md`, `onboarding.md`, `people/<slug>.md`, `hiring/` and `drafts/` directly from that folder as this skill needs them, never write, edit or delete anything there, and say once: "File mode: the em-tools server is not running, so I read your notes folder directly and will not save anything." If you cannot read the folder either, switch to **paste-in mode**: ask for the channel export and any alert or deploy list, and say once: "Paste-in mode: nothing will be saved."
 2. Pick the mode: a named incident or channel means **draft**; `actions` means **action age** (Step 5) only.
 
 ## Step 2: gather (draft mode)
@@ -59,13 +59,13 @@ Then run the blame check in the template over the whole draft. Fix every hit. If
 
 ## Step 4: save (optional)
 
-Offer to save with `notes_save_draft` (skill `postmortem-draft`) after the EM confirms. In paste-in mode, skip the offer and remind the EM to copy the draft.
+Offer to save with `notes_save_draft` (skill `postmortem-draft`) after the EM confirms. In file or paste-in mode, skip the offer and remind the EM to copy the draft.
 
 ## Step 5: action age (actions mode, or at the end of a draft)
 
 Call `metrics_action_age` with the tracker's postmortem actions (columns in the tool description; the tool ignores owner names).
 
-In **paste-in mode**, ask for the actions (action, incident, owner role, created, due, completed) and work it out by hand, showing the method. Age is calendar days from created to today; an action is open if it has no completed date; overdue means the due date is before today. Ignore any owner names in the paste. If there are no actions to paste, skip this section and say so.
+In **file or paste-in mode**, ask for the actions (action, incident, owner role, created, due, completed) and work it out by hand, showing the method. Age is calendar days from created to today; an action is open if it has no completed date; overdue means the due date is before today. Ignore any owner names in the paste. If there are no actions to paste, skip this section and say so.
 
 Show:
 

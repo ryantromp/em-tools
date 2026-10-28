@@ -4,7 +4,7 @@ description: Write a team-level delivery health narrative from GitHub, tracker a
 argument-hint: "[weeks, default 12]"
 hooks:
   PreToolUse:
-    - matcher: "mcp__.*"
+    - matcher: "^(mcp__.*|Bash)$"
       hooks:
         - type: command
           command: node
@@ -27,7 +27,7 @@ Help the EM understand how the team's delivery system is working, so they can as
 
 ## Step 1: set up
 
-1. Call `notes_status` and `notes_read_team` for repos, members (with emails) and calendar. If the em-tools tools are missing, switch to **paste-in mode**: ask for PR, deployment and calendar exports, and say once: "Paste-in mode: nothing will be saved." Do the arithmetic carefully by hand and show the method.
+1. Call `notes_status` and `notes_read_team` for repos, members (with emails) and calendar. If the em-tools tools are missing, use **file mode** when you can read files and the notes folder `${user_config.notes_folder}` is a real path (if it reads as a placeholder, ask the EM for the path): read `team.md`, `ladder.md`, `onboarding.md`, `people/<slug>.md`, `hiring/` and `drafts/` directly from that folder as this skill needs them, never write, edit or delete anything there, and say once: "File mode: the em-tools server is not running, so I read your notes folder directly and will not save anything." If you cannot read the folder either, switch to **paste-in mode**: ask for PR, deployment and calendar exports, and say once: "Paste-in mode: nothing will be saved." Do the arithmetic carefully by hand and show the method.
 2. **Window:** default to the last 12 complete weeks, plus the 12 weeks before as the comparison period when data allows.
 
 ## Step 2: gather

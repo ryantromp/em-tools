@@ -4,7 +4,7 @@ description: Review an RFC or design doc before it goes out, and check it agains
 argument-hint: "<rfc path or link> [drift <what shipped>]"
 hooks:
   PreToolUse:
-    - matcher: "mcp__.*"
+    - matcher: "^(mcp__.*|Bash)$"
       hooks:
         - type: command
           command: node
@@ -25,7 +25,7 @@ Help the EM get an RFC ready for review quickly, with the right reviewers, and k
 
 ## Step 1: set up
 
-1. Call `notes_status` and `notes_read_team`. If the em-tools tools are missing, switch to **paste-in mode**: ask for the RFC text and, if they have one, CODEOWNERS and the team's template. Say once: "Paste-in mode: nothing will be saved."
+1. Call `notes_status` and `notes_read_team`. If the em-tools tools are missing, use **file mode** when you can read files and the notes folder `${user_config.notes_folder}` is a real path (if it reads as a placeholder, ask the EM for the path): read `team.md`, `ladder.md`, `onboarding.md`, `people/<slug>.md`, `hiring/` and `drafts/` directly from that folder as this skill needs them, never write, edit or delete anything there, and say once: "File mode: the em-tools server is not running, so I read your notes folder directly and will not save anything." If you cannot read the folder either, switch to **paste-in mode**: ask for the RFC text and, if they have one, CODEOWNERS and the team's template. Say once: "Paste-in mode: nothing will be saved."
 2. Get the RFC: a local file, a GitHub file (`get_file_contents` on an enabled GitHub integration), or pasted text.
 3. Template: the team's own if the EM points to one, else [references/rfc-template.md](references/rfc-template.md).
 
@@ -47,4 +47,4 @@ Before finishing, remove any sentence about the author rather than the document.
 
 ## Step 4: save (optional)
 
-Offer to save with `notes_save_draft` (skill `rfc-review`) after the EM confirms. In paste-in mode, skip the offer.
+Offer to save with `notes_save_draft` (skill `rfc-review`) after the EM confirms. In file or paste-in mode, skip the offer.

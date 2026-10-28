@@ -4,7 +4,7 @@ description: Draft a one-page headcount business case from team-level evidence o
 argument-hint: "[team] [quarter]"
 hooks:
   PreToolUse:
-    - matcher: "mcp__.*"
+    - matcher: "^(mcp__.*|Bash)$"
       hooks:
         - type: command
           command: node
@@ -27,7 +27,7 @@ Help the EM make an honest case to leadership for more people, or see that the e
 
 ## Step 1: set up
 
-1. Call `notes_status` and `notes_read_team` (members, rotations). If the em-tools tools are missing, switch to **paste-in mode**: ask for the outputs below, and say once: "Paste-in mode: nothing will be saved."
+1. Call `notes_status` and `notes_read_team` (members, rotations). If the em-tools tools are missing, use **file mode** when you can read files and the notes folder `${user_config.notes_folder}` is a real path (if it reads as a placeholder, ask the EM for the path): read `team.md`, `ladder.md`, `onboarding.md`, `people/<slug>.md`, `hiring/` and `drafts/` directly from that folder as this skill needs them, never write, edit or delete anything there, and say once: "File mode: the em-tools server is not running, so I read your notes folder directly and will not save anything." If you cannot read the folder either, switch to **paste-in mode**: ask for the outputs below, and say once: "Paste-in mode: nothing will be saved."
 2. Ask for: the period the case covers (default next quarter), the roadmap demand for that period, the role being considered (if any), and the EM's cost figures (loaded cost per hire, contractor rate, or budget line). All figures stay as the EM gives them.
 
 ## Step 2: gather
@@ -66,4 +66,4 @@ Before finishing, remove any sentence that names a person or uses one person's w
 
 ## Step 5: save (optional)
 
-Offer to save with `notes_save_draft` (skill `headcount-case`) after the EM confirms. In paste-in mode, skip the offer.
+Offer to save with `notes_save_draft` (skill `headcount-case`) after the EM confirms. In file or paste-in mode, skip the offer.

@@ -4,7 +4,7 @@ description: Show on-call load per rotation and the noisy alerts behind it. Read
 argument-hint: "[weeks, default 12]"
 hooks:
   PreToolUse:
-    - matcher: "mcp__.*"
+    - matcher: "^(mcp__.*|Bash)$"
       hooks:
         - type: command
           command: node
@@ -26,7 +26,7 @@ Help the EM see whether on-call is sustainable for the team and which alerts to 
 
 ## Step 1: set up
 
-1. Call `notes_status` and `notes_read_team`. If the em-tools tools are missing, switch to **paste-in mode**: ask for a pages export and a schedule export, and say once: "Paste-in mode: nothing will be saved."
+1. Call `notes_status` and `notes_read_team`. If the em-tools tools are missing, use **file mode** when you can read files and the notes folder `${user_config.notes_folder}` is a real path (if it reads as a placeholder, ask the EM for the path): read `team.md`, `ladder.md`, `onboarding.md`, `people/<slug>.md`, `hiring/` and `drafts/` directly from that folder as this skill needs them, never write, edit or delete anything there, and say once: "File mode: the em-tools server is not running, so I read your notes folder directly and will not save anything." If you cannot read the folder either, switch to **paste-in mode**: ask for a pages export and a schedule export, and say once: "Paste-in mode: nothing will be saved."
 2. **Window:** default to the last 12 complete weeks, plus the 12 weeks before when data allows.
 3. **Time zone:** ask for the team's working hours and time zone (a named zone such as `Europe/London`, so daylight saving is handled) if `team.md` does not say. Default to 09:00 to 17:00 UTC and say so.
 
@@ -46,7 +46,7 @@ If "actionable" is not recorded, ask the EM whether each top alert usually leads
 
 Call `metrics_oncall` with the pages, shifts, window, `time_zone` and working hours. Run it for the comparison period too. Report every item in its `warnings` (for example rotations with pages but no schedule), and say how many top-alert pages have unknown actionability rather than treating them as noise.
 
-In **paste-in mode**, work it out by hand per rotation and show the method:
+In **file or paste-in mode**, work it out by hand per rotation and show the method:
 
 - **Pages per week:** pages in the window divided by weeks in the window.
 - **Off-hours share:** pages on weekends or outside working hours, over all pages.
@@ -69,4 +69,4 @@ Before finishing, remove any sentence that names a person, lists a shift date, o
 
 ## Step 5: save (optional)
 
-Offer to save with `notes_save_draft` (skill `oncall-health`) after the EM confirms. In paste-in mode, skip the offer and remind the EM to copy the report.
+Offer to save with `notes_save_draft` (skill `oncall-health`) after the EM confirms. In file or paste-in mode, skip the offer and remind the EM to copy the report.

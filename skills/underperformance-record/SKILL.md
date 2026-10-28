@@ -4,7 +4,7 @@ description: Keep a dated, factual record when a direct report is not meeting ex
 argument-hint: "<person> [record|review|storage]"
 hooks:
   PreToolUse:
-    - matcher: "mcp__.*"
+    - matcher: "^(mcp__.*|Bash)$"
       hooks:
         - type: command
           command: node
@@ -29,7 +29,7 @@ Help the EM keep a fair, factual record when a report is not meeting expectation
 
 ## Step 1: set up
 
-1. Call `notes_status`. If the em-tools tools are missing, switch to **paste-in mode**: ask the EM to paste their notes for this person, and say once: "Paste-in mode: nothing will be saved." Skip to Step 3.
+1. Call `notes_status`. If the em-tools tools are missing, use **file mode** when you can read files and the notes folder `${user_config.notes_folder}` is a real path (if it reads as a placeholder, ask the EM for the path): read `team.md`, `ladder.md`, `onboarding.md`, `people/<slug>.md`, `hiring/` and `drafts/` directly from that folder as this skill needs them, never write, edit or delete anything there, and say once: "File mode: the em-tools server is not running, so I read your notes folder directly and will not save anything." If you cannot read the folder either, switch to **paste-in mode**: ask the EM to paste their notes for this person, and say once: "Paste-in mode: nothing will be saved." Skip to Step 3.
 2. Resolve the person with `notes_list_people`, then read `notes_read_person`, `notes_read_team` and `notes_list_expectations` (pass today as `now`).
 3. **Storage.** If `storage` is null, ask once, before saving anything:
 
@@ -69,7 +69,7 @@ Use [references/record-template.md](references/record-template.md):
 3. **Gaps:** each item from `gaps`, in plain words, plus any records with a missing date. A gap is a missing step in the record, not a judgement about the person.
 4. **Next steps for the EM:** 2 or 3 concrete, process-only actions, such as "send a written summary of the 2026-10-20 conversation" or "book a review date". Never an outcome.
 
-In paste-in mode, build the same view by hand from the pasted notes, and remind the EM to save the record themselves.
+In file or paste-in mode, build the same view by hand from the pasted notes, and remind the EM to save the record themselves.
 
 ## Step 4: written follow-up (optional)
 

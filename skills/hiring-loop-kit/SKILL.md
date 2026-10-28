@@ -4,7 +4,7 @@ description: Plan a structured interview loop for a role and run a written-first
 argument-hint: "<role> [plan|debrief <candidate>|funnel]"
 hooks:
   PreToolUse:
-    - matcher: "mcp__.*"
+    - matcher: "^(mcp__.*|Bash)$"
       hooks:
         - type: command
           command: node
@@ -27,7 +27,7 @@ Help the EM run a fair, structured hiring loop. Structured interviews with fixed
 
 ## Step 1: set up
 
-1. Call `notes_status` and `notes_read_team` (for the ladder). If the em-tools tools are missing, switch to **paste-in mode**: ask for the role, level and any scorecards, and say once: "Paste-in mode: nothing will be saved."
+1. Call `notes_status` and `notes_read_team` (for the ladder). If the em-tools tools are missing, use **file mode** when you can read files and the notes folder `${user_config.notes_folder}` is a real path (if it reads as a placeholder, ask the EM for the path): read `team.md`, `ladder.md`, `onboarding.md`, `people/<slug>.md`, `hiring/` and `drafts/` directly from that folder as this skill needs them, never write, edit or delete anything there, and say once: "File mode: the em-tools server is not running, so I read your notes folder directly and will not save anything." If you cannot read the folder either, switch to **paste-in mode**: ask for the role, level and any scorecards, and say once: "Paste-in mode: nothing will be saved."
 2. Call `notes_list_hiring` for the role (a lowercase slug such as `senior-engineer-payments`) to see existing documents and scorecards.
 3. **Read what is saved.** Open the latest `loop-plan` and `question-bank` with `notes_read_hiring_doc`. The plan's stages are the list a debrief checks scorecards against, and its questions stay fixed for every candidate. Change them only when the EM asks, and save the change as a new dated document. If there is no saved plan, say so; in a debrief, ask the EM for the planned stages.
 4. Ashby or Greenhouse: em-tools has no connector for them yet. Use an export the EM points to.
@@ -55,6 +55,6 @@ Show the exact text and the stage, interviewer and date. After the EM confirms, 
 
 ## Step 5: funnel (the `funnel` mode)
 
-Ask for counts per stage, in order (for example applied, screened, onsite, offer, accepted). Call `metrics_hiring_funnel`, or in paste-in mode divide each stage by the one before and show the method. Report pass-through per stage and any warnings. Suggest where to look (for example a stage that passes very few people may need its bar or questions checked), and remind the EM that a loop is worth reviewing after 10 to 20 runs. Never list or compare candidates.
+Ask for counts per stage, in order (for example applied, screened, onsite, offer, accepted). Call `metrics_hiring_funnel`, or in file or paste-in mode divide each stage by the one before and show the method. Report pass-through per stage and any warnings. Suggest where to look (for example a stage that passes very few people may need its bar or questions checked), and remind the EM that a loop is worth reviewing after 10 to 20 runs. Never list or compare candidates.
 
 Before finishing, remove any sentence that scores, ranks, compares or recommends a candidate, or mentions a protected characteristic.

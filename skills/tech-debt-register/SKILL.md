@@ -4,7 +4,7 @@ description: Build a tech debt register the team and leadership can act on. Comb
 argument-hint: "[repo path] [target % for debt]"
 hooks:
   PreToolUse:
-    - matcher: "mcp__.*"
+    - matcher: "^(mcp__.*|Bash)$"
       hooks:
         - type: command
           command: node
@@ -25,7 +25,7 @@ Help the EM see which debt costs the team most, and make a clear case for time t
 
 ## Step 1: set up
 
-1. Call `notes_status` and `notes_read_team` (repos, tracker). If the em-tools tools are missing, switch to **paste-in mode**: ask for the outputs below and a debt ticket export, and say once: "Paste-in mode: nothing will be saved."
+1. Call `notes_status` and `notes_read_team` (repos, tracker). If the em-tools tools are missing, use **file mode** when you can read files and the notes folder `${user_config.notes_folder}` is a real path (if it reads as a placeholder, ask the EM for the path): read `team.md`, `ladder.md`, `onboarding.md`, `people/<slug>.md`, `hiring/` and `drafts/` directly from that folder as this skill needs them, never write, edit or delete anything there, and say once: "File mode: the em-tools server is not running, so I read your notes folder directly and will not save anything." If you cannot read the folder either, switch to **paste-in mode**: ask for the outputs below and a debt ticket export, and say once: "Paste-in mode: nothing will be saved."
 2. Ask for: the repo path on this machine (optional), the window (default 90 days), the debt label the tracker uses (default `tech-debt`), and the target share of capacity for debt (common practice is 15 to 20%; the EM sets it).
 
 ## Step 2: gather
@@ -48,7 +48,7 @@ Only use integrations in `${user_config.enabled_integrations}`. If git is not av
 1. Call `metrics_hotspots` with the log, sizes, TODO counts and incident links. Take the top 10.
 2. Call `metrics_debt_allocation` with the debt tickets, sprint totals and the target.
 
-In **paste-in mode**: count commits per file in the window, multiply by the file's lines (or churned lines), and sort; for allocation, divide each sprint's completed debt points by its completed points.
+In **file or paste-in mode**: count commits per file in the window, multiply by the file's lines (or churned lines), and sort; for allocation, divide each sprint's completed debt points by its completed points.
 
 ## Step 4: write the register
 
@@ -68,4 +68,4 @@ Before finishing, remove any sentence that names or implies who wrote or changed
 
 ## Step 6: save (optional)
 
-Offer to save with `notes_save_draft` (skill `tech-debt-register`) after the EM confirms. In paste-in mode, skip the offer.
+Offer to save with `notes_save_draft` (skill `tech-debt-register`) after the EM confirms. In file or paste-in mode, skip the offer.
